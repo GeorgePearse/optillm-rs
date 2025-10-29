@@ -67,6 +67,8 @@ pub use strategies::{
     RTOAggregator, RTOConfig, RTOMetadata,
     // PVG
     PVGAggregator, PVGConfig, PVGMetadata,
+    // LEAP
+    LEAPAggregator, LEAPConfig, LEAPMetadata,
 };
 
 // Re-export provider types

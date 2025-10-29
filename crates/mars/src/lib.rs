@@ -53,6 +53,7 @@ pub mod moa;
 pub mod best_of_n;
 pub mod self_consistency;
 pub mod rsa;
+pub mod cot_reflection;
 pub mod model_router;
 pub mod provider_config;
 
@@ -68,6 +69,7 @@ pub use moa::MoaAggregator;
 pub use best_of_n::{BestOfNAggregator, BestOfNConfig, SelectionMethod};
 pub use self_consistency::{SelfConsistencyAggregator, SelfConsistencyConfig, AnswerExtractionStrategy, VotingStrategy};
 pub use rsa::{RSAAggregator, RSAConfig, SelectionCriterion, RefinementStrategy};
+pub use cot_reflection::{CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata};
 pub use model_router::{LLMProvider, ModelClientRouter, ModelStream};
 pub use provider_config::{ProviderRoutingConfig, ProviderSpec, RoutingStrategy};
 

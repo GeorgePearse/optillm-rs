@@ -13,9 +13,24 @@
 //! - plansearch: Observation-guided problem solving through planning and implementation
 //! - reread: Simple re-reading strategy for improved answer quality
 //! - diverse_sampling: Temperature-varied sampling for exploring response space
+//! - autothink: Query complexity classification with adaptive reasoning depth
+//! - deep_thinking: Inference-time scaling based on problem difficulty
+//! - entropy_decoding: Entropy-based sampling for controlled diversity
+//! - cot_decoding: Structured chain-of-thought decoding guidance
+//! - r_star: Enhanced Monte Carlo Tree Search with learned value estimates
 
 /// Best-of-N sampling strategy
 pub mod best_of_n;
+/// AutoThink: Query complexity classification with adaptive reasoning depth
+pub mod autothink;
+/// Deep Thinking: Inference-time scaling based on problem difficulty
+pub mod deep_thinking;
+/// Entropy Decoding: Entropy-based sampling for controlled diversity
+pub mod entropy_decoding;
+/// CoT Decoding: Structured chain-of-thought decoding guidance
+pub mod cot_decoding;
+/// R* Algorithm: Enhanced MCTS with learned value estimates
+pub mod r_star;
 /// Self-consistency strategy with majority voting
 pub mod self_consistency;
 /// Reinforced self-aggregation strategy
@@ -55,3 +70,8 @@ pub use leap::{LEAPAggregator, LEAPConfig, LEAPMetadata};
 pub use plansearch::{PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata};
 pub use reread::{ReReadAggregator, ReReadConfig, ReReadMetadata};
 pub use diverse_sampling::{DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata};
+pub use autothink::{AutoThinkAggregator, AutoThinkConfig, ComplexityLevel, AutoThinkMetadata};
+pub use deep_thinking::{DeepThinkingAggregator, DeepThinkingConfig, DeepThinkingMetadata};
+pub use entropy_decoding::{EntropyDecodingAggregator, EntropyDecodingConfig, EntropyDecodingMetadata};
+pub use cot_decoding::{CotDecodingAggregator, CotDecodingConfig, CotDecodingMetadata};
+pub use r_star::{RStarAggregator, RStarConfig, RStarMetadata};

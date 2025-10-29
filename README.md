@@ -299,6 +299,11 @@ The following strategies are available for integration into code:
 | **PlanSearch** | Observation-guided problem solving combining planning phase with implementation and verification. |
 | **ReRead** | Simple but effective strategy of re-reading and refining answers for improved clarity and accuracy. |
 | **Diverse Sampling** | Explore solution space using temperature-varied sampling to balance exploration and exploitation. |
+| **AutoThink** | Query complexity classification with adaptive reasoning depth and temperature adjustment for optimal strategy selection. |
+| **Deep Thinking** | Inference-time scaling that allocates more computation and tokens to harder problems based on difficulty estimation. |
+| **Entropy Decoding** | Entropy-based sampling for controlled diversity, providing fine-grained control over answer quality versus novelty. |
+| **CoT Decoding** | Structured chain-of-thought decoding that guides models to follow step-by-step reasoning patterns for better quality. |
+| **R* Algorithm** | Enhanced Monte Carlo Tree Search with learned value estimates and sophisticated node selection for solution exploration. |
 
 ### Custom Strategies
 

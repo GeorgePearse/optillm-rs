@@ -50,6 +50,7 @@ pub mod prompts;
 // New strategy implementations
 pub mod mcts;
 pub mod moa;
+pub mod best_of_n;
 pub mod model_router;
 pub mod provider_config;
 
@@ -62,6 +63,7 @@ pub use strategy::StrategyNetwork;
 
 // Strategy implementations
 pub use moa::MoaAggregator;
+pub use best_of_n::{BestOfNAggregator, BestOfNConfig, SelectionMethod};
 pub use model_router::{LLMProvider, ModelClientRouter, ModelStream};
 pub use provider_config::{ProviderRoutingConfig, ProviderSpec, RoutingStrategy};
 

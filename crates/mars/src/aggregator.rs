@@ -138,6 +138,30 @@ impl Aggregator {
             })
     }
 
+    /// Run Best-of-N sampling using any LLM provider
+    ///
+    /// This process:
+    /// 1. Generates N diverse solutions with different temperatures
+    /// 2. Evaluates each solution using the configured selection method
+    /// 3. Returns the best solution based on the criteria
+    /// 4. Simple but effective strategy for many use cases
+    pub async fn aggregate_best_of_n(
+        query: &str,
+        system_prompt: &str,
+        config: crate::best_of_n::BestOfNConfig,
+        client: &dyn crate::ModelClient,
+    ) -> Result<Vec<Solution>> {
+        let (solution, _metadata) = crate::best_of_n::BestOfNAggregator::run_best_of_n(
+            query,
+            system_prompt,
+            config,
+            client,
+        )
+        .await?;
+
+        Ok(vec![solution])
+    }
+
     /// Check if aggregation would benefit from more iterations
     pub fn should_continue_aggregation(
         solutions: &[Solution],

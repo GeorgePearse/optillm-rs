@@ -114,12 +114,13 @@ impl MarsCoordinator {
 
         let solutions = self.workspace.get_all_solutions().await;
 
-        let aggregated = Aggregator::aggregate_rsa(
-            &solutions,
+        let rsa_config = crate::RSAConfig::new(
             self.config.aggregation_population_size,
             self.config.aggregation_selection_size,
             self.config.aggregation_loops,
-        ).await?;
+        );
+
+        let aggregated = Aggregator::aggregate_rsa(&solutions, rsa_config)?;
 
         for solution in aggregated {
             let _result = tx.send(MarsEvent::SolutionsAggregated {

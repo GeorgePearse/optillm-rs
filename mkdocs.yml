@@ -85,6 +85,7 @@ nav:
     - Mixture of Agents (MOA): strategies/moa.md
     - Best-of-N: strategies/best-of-n.md
     - Self-Consistency: strategies/self-consistency.md
+    - RSA (Reinforced Self-Aggregation): strategies/rsa.md
     - Monte Carlo Tree Search: strategies/mcts.md
     - Provider Routing: strategies/provider-routing.md
   - Development:

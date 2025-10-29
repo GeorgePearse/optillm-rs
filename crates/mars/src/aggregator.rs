@@ -9,48 +9,6 @@ use std::collections::HashSet;
 pub struct Aggregator;
 
 impl Aggregator {
-    /// Run RSA-inspired aggregation on solutions
-    ///
-    /// This process:
-    /// 1. Maintains a population of N solutions
-    /// 2. Selects K solutions for refinement
-    /// 3. Repeats T times to iteratively improve
-    pub async fn aggregate_rsa(
-        solutions: &[Solution],
-        population_size: usize,
-        selection_size: usize,
-        num_loops: usize,
-    ) -> Result<Vec<Solution>> {
-        let mut aggregated = Vec::new();
-
-        // Ensure we have solutions to work with
-        if solutions.is_empty() {
-            return Ok(aggregated);
-        }
-
-        let mut population = solutions.to_vec();
-
-        // Limit population to requested size
-        if population.len() > population_size {
-            population.truncate(population_size);
-        }
-
-        // Perform aggregation loops
-        for loop_idx in 0..num_loops {
-            let selected = Self::select_diverse_solutions(&population, selection_size)?;
-
-            // Create aggregated solution from selected ones
-            if !selected.is_empty() {
-                let aggregated_solution = Self::synthesize_solution(&selected, loop_idx)?;
-                aggregated.push(aggregated_solution);
-
-                // Add back to population for next iteration
-                population.push(aggregated[aggregated.len() - 1].clone());
-            }
-        }
-
-        Ok(aggregated)
-    }
 
     /// Select diverse solutions from the population
     ///
@@ -183,6 +141,22 @@ impl Aggregator {
         )
         .await?;
 
+        Ok(vec![solution])
+    }
+
+    /// Run RSA (Reinforced Self-Aggregation) on solutions
+    ///
+    /// This process:
+    /// 1. Maintains a population of N solutions
+    /// 2. Selects K solutions for refinement each iteration
+    /// 3. Refines and adds them back to population
+    /// 4. Repeats for T iterations to improve population quality
+    /// 5. Returns the best solution from final population
+    pub fn aggregate_rsa(
+        solutions: &[Solution],
+        config: crate::rsa::RSAConfig,
+    ) -> Result<Vec<Solution>> {
+        let (solution, _metadata) = crate::rsa::RSAAggregator::run_rsa(solutions, config)?;
         Ok(vec![solution])
     }
 

@@ -81,6 +81,7 @@ pub use strategies::{
 pub use providers::{
     LLMProvider, ModelClientRouter, ModelStream,
     ProviderRoutingConfig, ProviderSpec, RoutingStrategy,
+    OllamaClient, OllamaConfig,
 };
 
 /// MARS module version

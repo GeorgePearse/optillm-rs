@@ -1,0 +1,27 @@
+[package]
+name = "optillm-cli"
+version.workspace = true
+edition.workspace = true
+description = "CLI interface for OptimLLM optimization strategies"
+license = "MIT"
+authors = ["OptimLLM Contributors"]
+keywords = ["llm", "optimization", "cli", "reasoning"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "optillm"
+path = "src/main.rs"
+
+[dependencies]
+optillm-core = { path = "../core" }
+optillm-mars = { path = "../mars" }
+
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+clap = { version = "4.4", features = ["derive", "env"] }
+clap_complete = "4.4"
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+anyhow = { workspace = true }
+thiserror = { workspace = true }

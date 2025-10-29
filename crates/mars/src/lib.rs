@@ -14,25 +14,29 @@
 //! ## Example
 //!
 //! ```ignore
-//! use code_mars::{MarsCoordinator, MarsConfig};
+//! use optillm_mars::{MarsCoordinator, MarsConfig};
+//! use optillm_core::ModelClient;
 //!
 //! let config = MarsConfig::default();
 //! let coordinator = MarsCoordinator::new(config);
-//! let result = coordinator.run(query, client).await?;
+//! let result = coordinator.optimize(query, client).await?;
 //! println!("Answer: {}", result.answer);
 //! ```
 
-pub mod core;
+// Re-export commonly used types from optillm-core
+pub use optillm_core::{
+    ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem, TokenUsage,
+    Optimizer, OptimizerConfig, OptillmError,
+};
+
 pub mod config;
 pub mod error;
 pub mod types;
+pub mod core_compat;
 
-pub use config::MarsConfig;
+// Re-export MARS-specific types
 pub use error::{MarsError, Result};
-pub use types::{MarsEvent, MarsOutput, Solution};
-
-// Re-export core as code_core for backward compatibility with original code
-pub use core as code_core;
+pub use config::MarsConfig;
 
 // These will be implemented next
 pub mod coordinator;

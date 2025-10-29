@@ -1,6 +1,6 @@
 /// Individual agents that explore solution paths with different temperatures.
 
-use crate::core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
+use crate::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 use crate::prompts;
 use crate::types::Solution;
 use crate::Result;

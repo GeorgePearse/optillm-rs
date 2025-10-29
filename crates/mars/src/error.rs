@@ -57,3 +57,9 @@ impl From<Box<dyn StdError>> for MarsError {
         MarsError::CoreError(err.to_string())
     }
 }
+
+impl From<optillm_core::OptillmError> for MarsError {
+    fn from(err: optillm_core::OptillmError) -> Self {
+        MarsError::CoreError(err.to_string())
+    }
+}

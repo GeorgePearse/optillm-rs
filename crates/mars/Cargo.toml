@@ -6,6 +6,8 @@ description = "MARS (Multi-Agent Reasoning System) - Production-ready Rust imple
 license = "MIT"
 
 [dependencies]
+optillm-core = { path = "../core" }
+
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"] }
 reqwest = { workspace = true, features = ["json", "stream"] }
 serde = { workspace = true, features = ["derive"] }

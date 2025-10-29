@@ -1,46 +1,59 @@
 # Agent Guidelines
 
-## Pre-Commit Hooks Setup
+## Prek Hooks Setup
 
-This project uses pre-commit hooks to automatically maintain code quality and documentation.
+This project uses prek hooks to automatically maintain code quality and documentation.
 
 ### Installation
 
 ```bash
-# Install pre-commit framework (one time)
-pip install pre-commit
+# Install prek framework (one time)
+pip install prek
 
 # Set up hooks in this repository
-pre-commit install
+prek install
 
 # Run all hooks manually
-pre-commit run --all-files
+prek run --all-files
 
-# Skip hooks for emergency commits
-SKIP=update-readme-structure,rustfmt,clippy git commit -m "emergency"
+# View hook status
+prek status
+
+# Skip specific hooks for emergency commits
+prek run --skip update-readme-structure,rustfmt git commit -m "emergency"
 ```
 
 ### Available Hooks
 
 - **update-readme-structure** - Automatically updates project structure in README.md
+- **rustfmt** - Formats Rust code with rustfmt
+- **clippy** - Lints Rust code and prevents warnings
 - **trailing-whitespace** - Removes trailing whitespace
-- **end-of-file-fixer** - Ensures files end with newline
-- **check-yaml/toml/json** - Validates configuration files
+- **check-yaml** - Validates YAML syntax
+- **check-toml** - Validates TOML syntax
+- **check-json** - Validates JSON syntax
 - **detect-private-key** - Prevents committing secrets
-- **rustfmt** - Formats Rust code
-- **clippy** - Lints Rust code
-- **markdownlint** - Lints and fixes markdown files
+- **markdown-lint** - Lints and fixes markdown files
 
 ### How It Works
 
-When you commit:
-1. Pre-commit hooks automatically run
+When you commit with prek:
+1. Prek hooks automatically run before commit
 2. README.md is updated with current project structure
-3. Code is formatted and checked for quality
-4. If changes are made, re-stage and commit again
-5. Commit succeeds when all hooks pass
+3. Rust code is formatted and checked for quality
+4. Configuration files are validated
+5. If changes are made, re-stage and commit again
+6. Commit succeeds when all hooks pass
 
 **Note:** The README structure hook will update automatically - just re-run your commit!
+
+### Configuration
+
+Prek configuration is in `.prek.yaml`. Edit this file to:
+- Add or remove hooks
+- Modify hook behavior
+- Configure parallel execution
+- Set up different stages (commit, push, etc.)
 
 ---
 

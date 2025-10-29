@@ -1,0 +1,76 @@
+---
+# Prek pre-commit hooks configuration
+# Install with: pip install prek && prek install
+# Run all hooks: prek run --all-files
+# View status: prek status
+
+hooks:
+  # File structure documentation updater
+  - id: update-readme-structure
+    name: Update project structure in README
+    entry: python3 scripts/update_readme_structure.py
+    language: system
+    stages: [commit]
+    always_run: true
+
+  # Code quality and formatting
+  - id: rustfmt
+    name: Format Rust code
+    entry: rustfmt --edition 2021
+    language: system
+    types: [rust]
+    files: '\.(rs)$'
+
+  - id: clippy
+    name: Lint Rust code with clippy
+    entry: cargo clippy --all-targets --all-features -- -D warnings
+    language: system
+    types: [rust]
+    pass_filenames: false
+    always_run: true
+
+  # File validation
+  - id: trailing-whitespace
+    name: Trim trailing whitespace
+    entry: sed -i 's/[[:space:]]*$//'
+    language: system
+    types: [text]
+
+  - id: check-yaml
+    name: Check YAML syntax
+    entry: python3 -c "import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]"
+    language: system
+    types: [yaml]
+
+  - id: check-toml
+    name: Check TOML syntax
+    entry: python3 -c "import sys, tomllib; [tomllib.loads(open(f).read()) for f in sys.argv[1:]]"
+    language: system
+    types: [toml]
+
+  - id: check-json
+    name: Check JSON syntax
+    entry: python3 -c "import sys, json; [json.load(open(f)) for f in sys.argv[1:]]"
+    language: system
+    types: [json]
+
+  - id: detect-private-key
+    name: Detect private keys
+    entry: python3 -c "import sys, re; pattern=r'(password|secret|api_key|token)[\"\\']?\\s*[:=]'; [sys.exit(1) if re.search(pattern, open(f).read(), re.I) else None for f in sys.argv[1:]]"
+    language: system
+    types: [text]
+
+  - id: markdown-lint
+    name: Lint Markdown
+    entry: python3 -m mdformat --in-place
+    language: system
+    types: [markdown]
+
+config:
+  parallel: true
+  fail_fast: false
+  color_output: true
+  verbose: false
+  stages:
+    - commit
+    - push

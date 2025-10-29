@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:codelion/optillm.git
+	branch = main
+	commit = 427b8fe5ecbd8994aaa5c9df0e0a07117b7d13fd
+	parent = 9e1e1fce2486080903b2d32835183640a3ac7943
+	method = merge
+	cmdver = 0.4.9

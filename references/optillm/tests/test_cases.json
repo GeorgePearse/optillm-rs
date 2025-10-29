@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Arena Bench Hard",
+    "system_prompt": "",
+    "query": "Write a Python program to build an RL model to recite text from any position that the user provides, using only numpy."
+  },
+  {
+    "name": "Big Code Bench",
+    "system_prompt": "",
+    "query": "Calculates the average of the sums of absolute differences between each pair of consecutive numbers for all permutations of a given list. Each permutation is shuffled before calculating the differences. Args: - numbers (list): A list of numbers. Default is numbers from 1 to 10. The function should output with: float: The average of the sums of absolute differences for each shuffled permutation of the list. You should write self-contained code starting with: ``` import itertools from random import shuffle def task_func(numbers=list(range(1, 3))): ```"
+  },
+  {
+    "name": "Maths Problem",
+    "system_prompt": "You are a helpful AI assistant with expertise in mathematical and logical problem-solving.",
+    "query": "Maximize x + y subject to: x + 2y <= 10, x >= 0, y >= 0"
+  },
+  {
+    "name": "GSM8K",
+    "system_prompt": "",
+    "query": "If there are 3 cars in the parking lot and 2 more cars arrive, how many cars are in the parking lot?"
+  },
+  {
+    "name": "r/LocalLLaMA",
+    "system_prompt": "",
+    "query" : "I have a dish of potatoes. The following statements are true: No potatoes of mine, that are new, have >been boiled. All my potatoes in this dish are fit to eat. No unboiled potatoes of mine are fit to eat. Are there any new potatoes in this dish?"
+  },
+  {
+    "name" : "reddit",
+    "system_prompt": "",
+    "query" : "There are 24 volunteers. Over the next 3 weeks, each volunteer is assigned to a different task. There are 8 tasks. Each week, the volunteers switch tasks. Each task has 3 volunteers assigned to it. Volunteers cannot be assigned to the same task more than once, and volunteers cannot share the same task more than once."
+  },
+  {
+    "name" : "GH",
+    "system_prompt" : "",
+    "query" : "Find the largest possible real part of[(75+117i)z+\frac{96+144i}{z}]where z is a complex number with |z|=4"
+  },
+  {
+    "name": "GenSelect Math",
+    "system_prompt": "You are a helpful AI assistant with expertise in mathematical reasoning.",
+    "query": "A farmer has 17 sheep. All but 9 die. How many sheep does the farmer have left? Explain your reasoning step by step."
+  },
+  {
+    "name": "Simple Math Problem",
+    "system_prompt": "You are a helpful assistant.",
+    "query": "What is 2 + 2?"
+  },
+  {
+    "name": "Reasoning Token Test - Complex Logic",
+    "system_prompt": "You are an AI assistant that thinks step by step. Use <think> tags to show your reasoning process.",
+    "query": "Three friends Alice, Bob, and Charlie each have a different number of marbles. Alice has twice as many as Bob. Charlie has 3 more than Alice. Together they have 23 marbles. How many marbles does each person have?"
+  },
+  {
+    "name": "Reasoning Token Test - Strategic Thinking",
+    "system_prompt": "Think carefully before responding. Show your work using thinking tags.",
+    "query": "You're playing a game where you can choose door A or door B. Behind one door is a prize worth $1000, behind the other is nothing. You know that if the prize is behind door A, there's a 70% chance a light above door A will flash. If the prize is behind door B, there's a 30% chance the light above door A will flash. The light above door A is flashing. Which door should you choose?"
+  },
+  {
+    "name": "Reasoning Token Test - Multi-Step Problem",
+    "system_prompt": "Please think through this problem step by step, showing your reasoning.",
+    "query": "A bakery sells cupcakes in boxes of 6 and cookies in boxes of 8. If someone buys the same number of cupcakes and cookies, what is the smallest number of each type of baked good they could buy? Show all your work."
+  },
+  {
+    "name": "Reasoning Token Test - Counter-intuitive",
+    "system_prompt": "This problem might seem simple but requires careful analysis. Think it through.",
+    "query": "In a family with two children, you know that at least one of them is a boy. What is the probability that both children are boys? Explain your reasoning carefully."
+  },
+  {
+    "name": "Reasoning Token Test - Algorithm Design", 
+    "system_prompt": "Think through the algorithm design process step by step.",
+    "query": "Design an efficient algorithm to find the second largest element in an unsorted array. Explain your approach, analyze the time complexity, and provide pseudocode."
+  }
+]

@@ -63,6 +63,8 @@ pub use strategies::{
     MoaAggregator, MoaMetadata,
     // CoT Reflection
     CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata,
+    // RTO
+    RTOAggregator, RTOConfig, RTOMetadata,
 };
 
 // Re-export provider types

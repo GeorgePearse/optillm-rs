@@ -2,7 +2,7 @@
 
 use crate::types::{GenerationPhase, Solution};
 use crate::Result;
-use rand::prelude::IndexedRandom;
+use rand::seq::SliceRandom;
 use std::collections::HashSet;
 
 /// Aggregator that combines multiple solutions to produce refined ones
@@ -64,7 +64,7 @@ impl Aggregator {
         }
 
         let num_to_select = num_to_select.min(solutions.len());
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let selected: Vec<Solution> = solutions
             .choose_multiple(&mut rng, num_to_select)
             .cloned()

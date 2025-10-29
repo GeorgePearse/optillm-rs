@@ -1,6 +1,6 @@
 /// Error types for MARS operations.
 
-use code_core::error::CodexErr;
+use std::error::Error as StdError;
 use thiserror::Error;
 
 /// Result type for MARS operations
@@ -52,9 +52,8 @@ pub enum MarsError {
     CoordinatorError(String),
 }
 
-// Implement conversion from code_core's CodexErr
-impl From<CodexErr> for MarsError {
-    fn from(err: CodexErr) -> Self {
+impl From<Box<dyn StdError>> for MarsError {
+    fn from(err: Box<dyn StdError>) -> Self {
         MarsError::CoreError(err.to_string())
     }
 }

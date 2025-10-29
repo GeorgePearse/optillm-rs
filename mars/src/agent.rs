@@ -1,5 +1,6 @@
 /// Individual agents that explore solution paths with different temperatures.
 
+use crate::core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 use crate::prompts;
 use crate::types::Solution;
 use crate::Result;
@@ -32,7 +33,7 @@ impl Agent {
         &self,
         query: &str,
         use_thinking_tags: bool,
-        client: &code_core::ModelClient,
+        client: &dyn ModelClient,
     ) -> Result<Solution> {
         // Build the system and user prompts
         let system_prompt = if use_thinking_tags {
@@ -48,11 +49,11 @@ impl Agent {
         );
 
         // Build prompt for ModelClient
-        let mut prompt = code_core::Prompt::default();
-        prompt.input = vec![code_core::ResponseItem::Message {
+        let mut prompt = Prompt::default();
+        prompt.input = vec![ResponseItem::Message {
             id: None,
             role: "user".to_string(),
-            content: vec![code_core::ContentItem::InputText {
+            content: vec![ContentItem::InputText {
                 text: user_prompt,
             }],
         }];
@@ -60,18 +61,18 @@ impl Agent {
         prompt.set_log_tag(&format!("mars_agent_{}", self.id));
 
         // Stream the response from LLM
-        let mut stream = client.stream(&prompt).await?;
+        let mut stream = client.stream(&prompt);
         let mut full_response = String::new();
         let mut token_count = 0;
 
         while let Some(event) = stream.next().await {
             match event? {
-                code_core::ResponseEvent::OutputTextDelta { delta, .. } => {
+                ResponseEvent::OutputTextDelta { delta, .. } => {
                     full_response.push_str(&delta);
                 }
-                code_core::ResponseEvent::Completed { token_usage, .. } => {
+                ResponseEvent::Completed { token_usage, .. } => {
                     if let Some(usage) = token_usage {
-                        token_count = usage.total_tokens as usize;
+                        token_count = usage.total_tokens() as usize;
                     }
                     break;
                 }
@@ -99,7 +100,7 @@ impl Agent {
     pub async fn verify_solution_with_client(
         &self,
         solution: &Solution,
-        client: &code_core::ModelClient,
+        client: &dyn ModelClient,
     ) -> Result<f32> {
         let verification_prompt = format!(
             "{}\n\nSolution to verify:\n{}\n\nAnswer: {}",
@@ -107,26 +108,26 @@ impl Agent {
         );
 
         // Build prompt for ModelClient
-        let mut prompt = code_core::Prompt::default();
-        prompt.input = vec![code_core::ResponseItem::Message {
+        let mut prompt = Prompt::default();
+        prompt.input = vec![ResponseItem::Message {
             id: None,
             role: "user".to_string(),
-            content: vec![code_core::ContentItem::InputText {
+            content: vec![ContentItem::InputText {
                 text: verification_prompt,
             }],
         }];
         prompt.set_log_tag(&format!("mars_verifier_{}", self.id));
 
         // Stream the verification response
-        let mut stream = client.stream(&prompt).await?;
+        let mut stream = client.stream(&prompt);
         let mut verification_response = String::new();
 
         while let Some(event) = stream.next().await {
             match event? {
-                code_core::ResponseEvent::OutputTextDelta { delta, .. } => {
+                ResponseEvent::OutputTextDelta { delta, .. } => {
                     verification_response.push_str(&delta);
                 }
-                code_core::ResponseEvent::Completed { .. } => {
+                ResponseEvent::Completed { .. } => {
                     break;
                 }
                 _ => {}
@@ -147,7 +148,7 @@ impl Agent {
         solution: &Solution,
         feedback: &str,
         use_thinking_tags: bool,
-        client: &code_core::ModelClient,
+        client: &dyn ModelClient,
     ) -> Result<Solution> {
         let system_prompt = if use_thinking_tags {
             prompts::MARS_SYSTEM_PROMPT_WITH_THINKING.to_string()
@@ -164,11 +165,11 @@ impl Agent {
         );
 
         // Build prompt for ModelClient
-        let mut prompt = code_core::Prompt::default();
-        prompt.input = vec![code_core::ResponseItem::Message {
+        let mut prompt = Prompt::default();
+        prompt.input = vec![ResponseItem::Message {
             id: None,
             role: "user".to_string(),
-            content: vec![code_core::ContentItem::InputText {
+            content: vec![ContentItem::InputText {
                 text: improvement_prompt,
             }],
         }];
@@ -176,15 +177,15 @@ impl Agent {
         prompt.set_log_tag(&format!("mars_improve_{}", self.id));
 
         // Stream the improved response
-        let mut stream = client.stream(&prompt).await?;
+        let mut stream = client.stream(&prompt);
         let mut improved_response = String::new();
 
         while let Some(event) = stream.next().await {
             match event? {
-                code_core::ResponseEvent::OutputTextDelta { delta, .. } => {
+                ResponseEvent::OutputTextDelta { delta, .. } => {
                     improved_response.push_str(&delta);
                 }
-                code_core::ResponseEvent::Completed { .. } => {
+                ResponseEvent::Completed { .. } => {
                     break;
                 }
                 _ => {}
@@ -213,7 +214,7 @@ impl Agent {
     pub async fn extract_strategies_with_client(
         &self,
         solution: &Solution,
-        client: &code_core::ModelClient,
+        client: &dyn ModelClient,
     ) -> Result<Vec<String>> {
         let extraction_prompt = format!(
             "{}\n\nSolution:\n{}",
@@ -221,26 +222,26 @@ impl Agent {
         );
 
         // Build prompt for ModelClient
-        let mut prompt = code_core::Prompt::default();
-        prompt.input = vec![code_core::ResponseItem::Message {
+        let mut prompt = Prompt::default();
+        prompt.input = vec![ResponseItem::Message {
             id: None,
             role: "user".to_string(),
-            content: vec![code_core::ContentItem::InputText {
+            content: vec![ContentItem::InputText {
                 text: extraction_prompt,
             }],
         }];
         prompt.set_log_tag(&format!("mars_strategy_{}", self.id));
 
         // Stream the strategy extraction response
-        let mut stream = client.stream(&prompt).await?;
+        let mut stream = client.stream(&prompt);
         let mut response = String::new();
 
         while let Some(event) = stream.next().await {
             match event? {
-                code_core::ResponseEvent::OutputTextDelta { delta, .. } => {
+                ResponseEvent::OutputTextDelta { delta, .. } => {
                     response.push_str(&delta);
                 }
-                code_core::ResponseEvent::Completed { .. } => {
+                ResponseEvent::Completed { .. } => {
                     break;
                 }
                 _ => {}

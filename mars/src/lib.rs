@@ -22,6 +22,7 @@
 //! println!("Answer: {}", result.answer);
 //! ```
 
+pub mod core;
 pub mod config;
 pub mod error;
 pub mod types;
@@ -29,6 +30,9 @@ pub mod types;
 pub use config::MarsConfig;
 pub use error::{MarsError, Result};
 pub use types::{MarsEvent, MarsOutput, Solution};
+
+// Re-export core as code_core for backward compatibility with original code
+pub use core as code_core;
 
 // These will be implemented next
 pub mod coordinator;

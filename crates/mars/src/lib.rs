@@ -73,6 +73,8 @@ pub use strategies::{
     PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata,
     // ReRead
     ReReadAggregator, ReReadConfig, ReReadMetadata,
+    // Diverse Sampling
+    DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata,
 };
 
 // Re-export provider types

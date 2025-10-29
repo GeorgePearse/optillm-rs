@@ -12,6 +12,7 @@
 //! - leap: Learning from Errors for Adaptive Process using few-shot examples
 //! - plansearch: Observation-guided problem solving through planning and implementation
 //! - reread: Simple re-reading strategy for improved answer quality
+//! - diverse_sampling: Temperature-varied sampling for exploring response space
 
 pub mod best_of_n;
 pub mod self_consistency;
@@ -24,6 +25,7 @@ pub mod pvg;
 pub mod leap;
 pub mod plansearch;
 pub mod reread;
+pub mod diverse_sampling;
 
 // Re-export commonly used types from each strategy
 pub use best_of_n::{BestOfNAggregator, BestOfNConfig, BestOfNMetadata, SelectionMethod, SelectionStatistics};
@@ -40,3 +42,4 @@ pub use pvg::{PVGAggregator, PVGConfig, PVGMetadata};
 pub use leap::{LEAPAggregator, LEAPConfig, LEAPMetadata};
 pub use plansearch::{PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata};
 pub use reread::{ReReadAggregator, ReReadConfig, ReReadMetadata};
+pub use diverse_sampling::{DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata};

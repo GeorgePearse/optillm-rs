@@ -1,13 +1,22 @@
-/// Deep Thinking: Inference-time scaling based on problem difficulty
+/// Deep Thinking: Inference-time scaling based on problem difficulty.
+///
+/// Deep Thinking allocates computation (tokens) proportionally to problem difficulty,
+/// allowing harder problems to receive more reasoning capacity.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
 use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
+/// Configuration for Deep Thinking strategy.
+///
+/// Controls token allocation and iteration count for difficulty-based scaling.
 #[derive(Clone, Debug)]
 pub struct DeepThinkingConfig {
+    /// Minimum token allocation for any problem.
     pub min_tokens: usize,
+    /// Maximum token allocation for highly complex problems.
     pub max_tokens: usize,
+    /// Number of reasoning iterations to perform.
     pub num_iterations: usize,
 }
 
@@ -21,6 +30,10 @@ impl Default for DeepThinkingConfig {
     }
 }
 
+/// Deep Thinking aggregator for difficulty-based token allocation.
+///
+/// Estimates problem difficulty and scales token allocation accordingly,
+/// providing harder problems with more computation for better reasoning.
 pub struct DeepThinkingAggregator;
 
 impl DeepThinkingAggregator {
@@ -101,8 +114,13 @@ impl DeepThinkingAggregator {
     }
 }
 
+/// Metadata tracking Deep Thinking execution.
+///
+/// Records how many iterations were performed and resource usage.
 #[derive(Clone, Debug)]
 pub struct DeepThinkingMetadata {
+    /// Number of reasoning iterations that were executed.
     pub iterations_performed: usize,
+    /// Total tokens consumed across all iterations.
     pub total_tokens: usize,
 }

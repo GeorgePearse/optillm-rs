@@ -1,12 +1,20 @@
-/// Entropy Decoding: Entropy-based sampling for controlled diversity
+/// Entropy Decoding: Entropy-based sampling for controlled diversity.
+///
+/// Uses Shannon entropy to control response diversity, providing fine-grained
+/// control over the balance between novelty and quality.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
 use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
+/// Configuration for Entropy Decoding strategy.
+///
+/// Controls entropy targets and sample generation for diversity-based selection.
 #[derive(Clone, Debug)]
 pub struct EntropyDecodingConfig {
+    /// Target Shannon entropy level (0.0 = deterministic, 1.0 = maximum entropy).
     pub target_entropy: f32,
+    /// Number of diverse samples to generate and evaluate.
     pub num_samples: usize,
 }
 
@@ -19,6 +27,10 @@ impl Default for EntropyDecodingConfig {
     }
 }
 
+/// Entropy Decoding aggregator for controlled diversity.
+///
+/// Generates samples and selects based on entropy and quality metrics,
+/// providing fine-grained control over response novelty.
 pub struct EntropyDecodingAggregator;
 
 impl EntropyDecodingAggregator {
@@ -100,9 +112,15 @@ impl EntropyDecodingAggregator {
     }
 }
 
+/// Metadata tracking Entropy Decoding execution.
+///
+/// Records sampling statistics and entropy targets used during optimization.
 #[derive(Clone, Debug)]
 pub struct EntropyDecodingMetadata {
+    /// Number of candidate samples that were generated and evaluated.
     pub samples_generated: usize,
+    /// The target entropy level used for sample generation.
     pub target_entropy: f32,
+    /// Total tokens consumed across all samples.
     pub total_tokens: usize,
 }

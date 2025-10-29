@@ -1,13 +1,24 @@
-/// R* Algorithm: Enhanced Monte Carlo Tree Search with learned value estimates
+/// R* Algorithm: Enhanced Monte Carlo Tree Search with learned value estimates.
+///
+/// Improves upon MCTS by incorporating learned value estimates and sophisticated
+/// node selection, enabling more efficient exploration of solution space.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
 use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
+/// Configuration for R* Algorithm strategy.
+///
+/// Controls simulation count and exploration parameters.
 #[derive(Clone, Debug)]
 pub struct RStarConfig {
+    /// Number of Monte Carlo simulations to perform.
+    /// More simulations increase exploration at computational cost.
     pub num_simulations: usize,
+    /// Exploration constant for UCB formula (typically ~1.414 = sqrt(2)).
+    /// Controls balance between exploitation and exploration.
     pub exploration_constant: f32,
+    /// Number of candidate nodes to explore per simulation.
     pub num_candidates: usize,
 }
 
@@ -21,6 +32,10 @@ impl Default for RStarConfig {
     }
 }
 
+/// R* aggregator for enhanced tree search optimization.
+///
+/// Implements Monte Carlo Tree Search with learned value estimates
+/// for intelligent exploration of solution space.
 pub struct RStarAggregator;
 
 impl RStarAggregator {
@@ -102,9 +117,15 @@ impl RStarAggregator {
     }
 }
 
+/// Metadata tracking R* Algorithm execution.
+///
+/// Records search statistics and computational resources used.
 #[derive(Clone, Debug)]
 pub struct RStarMetadata {
+    /// Number of Monte Carlo simulations that were executed.
     pub simulations_run: usize,
+    /// Number of candidate solutions explored during search.
     pub candidates_explored: usize,
+    /// Total tokens consumed across all simulations.
     pub total_tokens: usize,
 }

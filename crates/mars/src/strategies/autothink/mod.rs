@@ -8,18 +8,26 @@ use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
 use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
-/// Configuration for AutoThink strategy
+/// Configuration for AutoThink strategy.
+///
+/// AutoThink adapts its behavior based on query complexity.
+/// This configuration defines the thresholds and parameters for complexity classification.
 #[derive(Clone, Debug)]
 pub struct AutoThinkConfig {
-    /// Simple query token threshold
+    /// Token count threshold below which queries are considered simple.
+    /// Queries with fewer tokens tend to be straightforward factual questions.
     pub simple_token_threshold: usize,
-    /// Complex query token threshold
+    /// Token count threshold above which queries are considered complex.
+    /// Queries with more tokens typically require deeper reasoning.
     pub complex_token_threshold: usize,
-    /// Temperature for simple queries
+    /// Temperature setting for simple queries (typically 0.0-0.5).
+    /// Lower temperatures promote deterministic, focused responses.
     pub simple_temperature: f32,
-    /// Temperature for medium complexity
+    /// Temperature setting for medium complexity queries (typically 0.4-0.7).
+    /// Medium temperatures balance consistency with some creative exploration.
     pub medium_temperature: f32,
-    /// Temperature for complex queries
+    /// Temperature setting for complex queries (typically 0.7-1.0).
+    /// Higher temperatures encourage diverse exploration for complex reasoning.
     pub complex_temperature: f32,
 }
 
@@ -35,11 +43,17 @@ impl Default for AutoThinkConfig {
     }
 }
 
-/// Complexity level classification
+/// Complexity level classification for queries.
+///
+/// Queries are classified into three levels based on their characteristics,
+/// such as token count, keyword presence, and structural complexity.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ComplexityLevel {
+    /// Simple queries requiring minimal reasoning (factual, straightforward).
     Simple,
+    /// Medium complexity queries requiring moderate reasoning effort.
     Medium,
+    /// Complex queries requiring extensive reasoning and analysis.
     Complex,
 }
 
@@ -109,7 +123,10 @@ impl AutoThinkOptimizer {
     }
 }
 
-/// AutoThink aggregator
+/// AutoThink aggregator for adaptive complexity-based reasoning.
+///
+/// Uses complexity classification to select optimal model parameters
+/// and reasoning strategies for improved answer quality.
 pub struct AutoThinkAggregator;
 
 impl AutoThinkAggregator {
@@ -209,16 +226,22 @@ impl AutoThinkAggregator {
     }
 }
 
-/// Metadata for AutoThink execution
+/// Metadata tracking AutoThink execution details.
+///
+/// Contains information about the complexity analysis and selected parameters
+/// that were used during the optimization process.
 #[derive(Clone, Debug)]
 pub struct AutoThinkMetadata {
-    /// Classified complexity level
+    /// Human-readable classification of query complexity level.
+    /// Values: "Simple", "Medium", or "Complex".
     pub complexity_level: String,
-    /// Numerical complexity score
+    /// Numerical complexity score (0.0-1.0) calculated from query analysis.
+    /// Higher scores indicate more complex queries.
     pub complexity_score: f32,
-    /// Selected temperature for generation
+    /// The temperature value selected based on complexity analysis.
+    /// Used to control the randomness/diversity of the model response.
     pub selected_temperature: f32,
-    /// Total tokens used
+    /// Total tokens consumed during generation.
     pub total_tokens: usize,
 }
 

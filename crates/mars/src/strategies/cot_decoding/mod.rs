@@ -1,12 +1,20 @@
-/// CoT Decoding: Structured chain-of-thought decoding guidance
+/// CoT Decoding: Structured chain-of-thought decoding guidance.
+///
+/// Guides model to follow structured reasoning patterns, improving quality
+/// through step-by-step problem decomposition and analysis.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
 use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
+/// Configuration for CoT Decoding strategy.
+///
+/// Controls reasoning structure and verification behavior.
 #[derive(Clone, Debug)]
 pub struct CotDecodingConfig {
+    /// Number of reasoning steps to explicitly include in the structure.
     pub num_steps: usize,
+    /// Whether to verify the quality of extracted reasoning steps.
     pub enable_verification: bool,
 }
 
@@ -19,6 +27,10 @@ impl Default for CotDecodingConfig {
     }
 }
 
+/// CoT Decoding aggregator for structured reasoning.
+///
+/// Provides structured templates for chain-of-thought reasoning,
+/// guiding the model to decompose problems systematically.
 pub struct CotDecodingAggregator;
 
 impl CotDecodingAggregator {
@@ -106,9 +118,15 @@ impl CotDecodingAggregator {
     }
 }
 
+/// Metadata tracking CoT Decoding execution.
+///
+/// Records the reasoning structure and verification results.
 #[derive(Clone, Debug)]
 pub struct CotDecodingMetadata {
+    /// Number of reasoning steps in the structured output.
     pub num_steps: usize,
+    /// Whether verification checks were enabled and performed.
     pub verification_enabled: bool,
+    /// Total tokens consumed during generation.
     pub total_tokens: usize,
 }

@@ -69,6 +69,8 @@ pub use strategies::{
     PVGAggregator, PVGConfig, PVGMetadata,
     // LEAP
     LEAPAggregator, LEAPConfig, LEAPMetadata,
+    // PlanSearch
+    PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata,
 };
 
 // Re-export provider types

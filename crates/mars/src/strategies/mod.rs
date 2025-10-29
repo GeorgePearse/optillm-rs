@@ -10,6 +10,7 @@
 //! - rto: Round Trip Optimization for quality improvement through round-trip generation
 //! - pvg: Prover-Verifier Game for adversarial solution generation and verification
 //! - leap: Learning from Errors for Adaptive Process using few-shot examples
+//! - plansearch: Observation-guided problem solving through planning and implementation
 
 pub mod best_of_n;
 pub mod self_consistency;
@@ -20,6 +21,7 @@ pub mod cot_reflection;
 pub mod rto;
 pub mod pvg;
 pub mod leap;
+pub mod plansearch;
 
 // Re-export commonly used types from each strategy
 pub use best_of_n::{BestOfNAggregator, BestOfNConfig, BestOfNMetadata, SelectionMethod, SelectionStatistics};
@@ -34,3 +36,4 @@ pub use cot_reflection::{CotReflectionAggregator, CotReflectionConfig, CotReflec
 pub use rto::{RTOAggregator, RTOConfig, RTOMetadata};
 pub use pvg::{PVGAggregator, PVGConfig, PVGMetadata};
 pub use leap::{LEAPAggregator, LEAPConfig, LEAPMetadata};
+pub use plansearch::{PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata};

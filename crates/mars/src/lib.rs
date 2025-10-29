@@ -71,6 +71,8 @@ pub use strategies::{
     LEAPAggregator, LEAPConfig, LEAPMetadata,
     // PlanSearch
     PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata,
+    // ReRead
+    ReReadAggregator, ReReadConfig, ReReadMetadata,
 };
 
 // Re-export provider types

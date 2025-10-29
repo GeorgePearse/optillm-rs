@@ -26,46 +26,58 @@ cargo build -p optillm-core
 optillm-rs/
 ├── .claude/
 │   ├── AGENTS.md
-│   ├── CLAUDE.md
 │   └── settings.local.json
 ├── .github/
+│   └── workflows/
 ├── .gitignore
-├── Cargo.lock
+├── .prek.yaml
 ├── Cargo.toml
 ├── README.md
 ├── crates/
 │   ├── core/
-│   │   ├── Cargo.toml
-│   │   ├── README.md
-│   │   └── src/
-│   │       ├── client.rs
-│   │       ├── error.rs
-│   │       ├── lib.rs
-│   │       ├── optimizer.rs
-│   │       └── solution.rs
-│   │
 │   └── mars/
-│       ├── Cargo.toml
-│       ├── README.md
-│       └── src/
-│           ├── config.rs
-│           ├── core/
-│           ├── core_compat.rs
-│           ├── error.rs
-│           ├── lib.rs
-│           ├── providers/
-│           ├── strategies/
-│           └── types.rs
 ├── docs/
+│   ├── api/
+│   ├── architecture/
+│   ├── core/
+│   ├── development/
+│   ├── faq.md
+│   ├── getting-started/
+│   ├── index.md
+│   ├── integration.md
+│   ├── mars/
+│   └── strategies/
 ├── examples/
 ├── mkdocs.yml
+├── modal_benchmark.py
+├── references/
+│   └── optillm/
+├── requirements-docs.txt
 ├── scratch_pads/
 │   ├── CODING_LLM_BENCHMARKS.md
 │   ├── COMPREHENSIVE_STRATEGY_BENCHMARK_RESULTS.md
 │   ├── MODAL_BENCHMARK_SETUP.md
 │   ├── TINYLLAMA_STRATEGY_TEST_RESULTS.md
-│   └── ULTRA_TINY_MODELS.md
-└── modal_benchmark.py
+│   ├── ULTRA_TINY_MODELS.md
+│   └── UNIMPLEMENTED_TECHNIQUES.md
+├── scripts/
+│   └── update_readme_structure.py
+└── site/
+    ├── 404.html
+    ├── api/
+    ├── architecture/
+    ├── assets/
+    ├── core/
+    ├── development/
+    ├── faq/
+    ├── getting-started/
+    ├── index.html
+    ├── integration/
+    ├── mars/
+    ├── search/
+    ├── sitemap.xml
+    ├── sitemap.xml.gz
+    └── strategies/
 ```
 
 ## Crates

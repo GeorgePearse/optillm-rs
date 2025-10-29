@@ -1,0 +1,70 @@
+---
+# Pre-commit hooks configuration
+# Install with: pre-commit install
+# Run all hooks: pre-commit run --all-files
+# Skip hooks: SKIP=hook-id git commit
+
+repos:
+  # File structure documentation updater
+  - repo: local
+    hooks:
+      - id: update-readme-structure
+        name: Update project structure in README
+        entry: python3 scripts/update_readme_structure.py
+        language: system
+        stages: [commit]
+        pass_filenames: false
+        always_run: true
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of file
+      - id: check-yaml
+        name: Check YAML
+      - id: check-toml
+        name: Check TOML
+      - id: check-json
+        name: Check JSON
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+      - id: detect-private-key
+        name: Detect private keys
+      - id: mixed-line-ending
+        name: Fix mixed line endings
+        args: [--fix=lf]
+
+  # Rust formatting with rustfmt
+  - repo: https://github.com/rust-lang/rust
+    rev: 1.75.0
+    hooks:
+      - id: rustfmt
+        name: Format Rust code
+        language: system
+        types: [rust]
+        entry: rustfmt --edition 2021
+        pass_filenames: true
+
+  # Rust linting with clippy
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        name: Rust fmt
+      - id: clippy
+        name: Rust clippy
+        args: [--all-targets, --all-features, --, -D, warnings]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.36.0
+    hooks:
+      - id: markdownlint
+        name: Lint markdown
+        args: [--fix]
+
+default_stages: [commit]

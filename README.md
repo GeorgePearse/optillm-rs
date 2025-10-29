@@ -24,44 +24,48 @@ cargo build -p optillm-core
 
 ```
 optillm-rs/
-├── Cargo.toml                 # Workspace root
-├── README.md                  # This file
+├── .claude/
+│   ├── AGENTS.md
+│   ├── CLAUDE.md
+│   └── settings.local.json
+├── .github/
 ├── .gitignore
-└── crates/
-    ├── core/                  # Shared traits, types, interfaces
-    │   ├── Cargo.toml
-    │   ├── src/
-    │   │   ├── lib.rs         # Core module exports
-    │   │   ├── client.rs      # ModelClient trait
-    │   │   ├── optimizer.rs   # Optimizer trait
-    │   │   ├── solution.rs    # Solution types
-    │   │   └── error.rs       # Shared error types
-    │   └── README.md
-    │
-    ├── mars/                  # MARS implementation
-    │   ├── Cargo.toml
-    │   ├── README.md          # MARS-specific docs
-    │   └── src/
-    │       ├── lib.rs         # Module exports
-    │       ├── coordinator.rs # 5-phase orchestrator
-    │       ├── agent.rs       # Multi-agent system
-    │       ├── verifier.rs    # Solution verification
-    │       ├── aggregator.rs  # Solution aggregation
-    │       ├── strategy.rs    # Strategy network
-    │       ├── workspace.rs   # Solution storage
-    │       ├── types.rs       # MARS-specific types
-    │       ├── config.rs      # Configuration
-    │       ├── prompts.rs     # Prompt templates
-    │       ├── error.rs       # MARS errors
-    │       └── core_compat.rs # Backward compat
-    │
-    ├── [future implementations]
-    │   ├── beam-search/
-    │   ├── monte-carlo-tree-search/
-    │   ├── best-of-n/
-    │   └── dspy/
-    │
-    └── README.md (this file)
+├── Cargo.lock
+├── Cargo.toml
+├── README.md
+├── crates/
+│   ├── core/
+│   │   ├── Cargo.toml
+│   │   ├── README.md
+│   │   └── src/
+│   │       ├── client.rs
+│   │       ├── error.rs
+│   │       ├── lib.rs
+│   │       ├── optimizer.rs
+│   │       └── solution.rs
+│   │
+│   └── mars/
+│       ├── Cargo.toml
+│       ├── README.md
+│       └── src/
+│           ├── config.rs
+│           ├── core/
+│           ├── core_compat.rs
+│           ├── error.rs
+│           ├── lib.rs
+│           ├── providers/
+│           ├── strategies/
+│           └── types.rs
+├── docs/
+├── examples/
+├── mkdocs.yml
+├── scratch_pads/
+│   ├── CODING_LLM_BENCHMARKS.md
+│   ├── COMPREHENSIVE_STRATEGY_BENCHMARK_RESULTS.md
+│   ├── MODAL_BENCHMARK_SETUP.md
+│   ├── TINYLLAMA_STRATEGY_TEST_RESULTS.md
+│   └── ULTRA_TINY_MODELS.md
+└── modal_benchmark.py
 ```
 
 ## Crates

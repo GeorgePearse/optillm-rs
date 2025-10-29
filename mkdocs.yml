@@ -88,6 +88,11 @@ nav:
     - RSA (Reinforced Self-Aggregation): strategies/rsa.md
     - Monte Carlo Tree Search: strategies/mcts.md
     - Provider Routing: strategies/provider-routing.md
+    - AutoThink: strategies/autothink.md
+    - Deep Thinking: strategies/deep_thinking.md
+    - Entropy Decoding: strategies/entropy_decoding.md
+    - CoT Decoding: strategies/cot_decoding.md
+    - R* Algorithm: strategies/r_star.md
   - Development:
     - Contributing: development/contributing.md
     - Building: development/building.md

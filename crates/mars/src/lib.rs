@@ -38,7 +38,7 @@ pub mod core_compat;
 pub use error::{MarsError, Result};
 pub use config::MarsConfig;
 
-// These will be implemented next
+// Core modules
 pub mod coordinator;
 pub mod agent;
 pub mod workspace;
@@ -47,12 +47,23 @@ pub mod aggregator;
 pub mod strategy;
 pub mod prompts;
 
+// New strategy implementations
+pub mod mcts;
+pub mod moa;
+pub mod model_router;
+pub mod provider_config;
+
 pub use coordinator::MarsCoordinator;
 pub use agent::Agent;
 pub use workspace::Workspace;
 pub use verifier::Verifier;
 pub use aggregator::Aggregator;
 pub use strategy::StrategyNetwork;
+
+// Strategy implementations
+pub use moa::MoaAggregator;
+pub use model_router::{LLMProvider, ModelClientRouter, ModelStream};
+pub use provider_config::{ProviderRoutingConfig, ProviderSpec, RoutingStrategy};
 
 /// MARS module version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

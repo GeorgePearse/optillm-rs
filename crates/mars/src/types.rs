@@ -152,6 +152,10 @@ pub enum AggregationMethod {
     BestOfN,
     /// Mixture of experts
     MixtureOfExperts,
+    /// Mixture of Agents (MOA) - generates diverse completions and synthesizes
+    MixtureOfAgents,
+    /// Monte Carlo Tree Search - explores reasoning tree with UCB selection
+    MonteCarloTreeSearch,
 }
 
 /// Strategy extracted from a solution

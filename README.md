@@ -284,26 +284,29 @@ let result = coordinator.optimize(query, &router).await?;
 
 The following strategies are available for integration into code:
 
-| Strategy | Description |
-|----------|-------------|
-| **MARS** (Multi-Agent Reasoning System) | Multi-agent exploration with cross-verification, aggregation, and iterative improvement for maximum quality. |
-| **MOA** (Mixture of Agents) | Three-phase approach: generate diverse completions, critique each, then synthesize optimal answer. |
-| **Self-Consistency** | Generate multiple diverse reasoning paths and use majority voting to reach consensus answers. |
-| **Best-of-N** | Generate N solutions with different parameters and select the highest quality based on scoring criteria. |
-| **RSA** (Reinforced Self-Aggregation) | Iteratively refine solutions by selecting diverse candidates and synthesizing improvements over multiple rounds. |
-| **MCTS** (Monte Carlo Tree Search) | Explore solution space systematically using UCB-based node selection and random simulation rollouts. |
-| **CoT Reflection** | Generate reasoning with chain-of-thought prompts and refine through self-reflection and error analysis. |
-| **RTO** (Round-Trip Optimization) | Improve answers through round-trip generation: forward pass then backward verification and refinement. |
-| **PVG** (Prover-Verifier Game) | Generate both helpful and adversarial solutions, then verify to identify robust answers. |
-| **LEAP** (Learning from Errors) | Use few-shot examples of corrected errors to adaptively improve solution quality over iterations. |
-| **PlanSearch** | Observation-guided problem solving combining planning phase with implementation and verification. |
-| **ReRead** | Simple but effective strategy of re-reading and refining answers for improved clarity and accuracy. |
-| **Diverse Sampling** | Explore solution space using temperature-varied sampling to balance exploration and exploitation. |
-| **AutoThink** | Query complexity classification with adaptive reasoning depth and temperature adjustment for optimal strategy selection. |
-| **Deep Thinking** | Inference-time scaling that allocates more computation and tokens to harder problems based on difficulty estimation. |
-| **Entropy Decoding** | Entropy-based sampling for controlled diversity, providing fine-grained control over answer quality versus novelty. |
-| **CoT Decoding** | Structured chain-of-thought decoding that guides models to follow step-by-step reasoning patterns for better quality. |
-| **R* Algorithm** | Enhanced Monte Carlo Tree Search with learned value estimates and sophisticated node selection for solution exploration. |
+| Strategy | Description | Status |
+|----------|-------------|--------|
+| **MARS** (Multi-Agent Reasoning System) | Multi-agent exploration with cross-verification, aggregation, and iterative improvement for maximum quality. | ✅ Implemented |
+| **MOA** (Mixture of Agents) | Three-phase approach: generate diverse completions, critique each, then synthesize optimal answer. | ✅ Implemented |
+| **Self-Consistency** | Generate multiple diverse reasoning paths and use majority voting to reach consensus answers. | ✅ Implemented |
+| **Best-of-N** | Generate N solutions with different parameters and select the highest quality based on scoring criteria. | ✅ Implemented |
+| **RSA** (Reinforced Self-Aggregation) | Iteratively refine solutions by selecting diverse candidates and synthesizing improvements over multiple rounds. | ✅ Implemented |
+| **MCTS** (Monte Carlo Tree Search) | Explore solution space systematically using UCB-based node selection and random simulation rollouts. | ✅ Implemented |
+| **CoT Reflection** | Generate reasoning with chain-of-thought prompts and refine through self-reflection and error analysis. | ✅ Implemented |
+| **RTO** (Round-Trip Optimization) | Improve answers through round-trip generation: forward pass then backward verification and refinement. | ✅ Implemented |
+| **PVG** (Prover-Verifier Game) | Generate both helpful and adversarial solutions, then verify to identify robust answers. | ✅ Implemented |
+| **LEAP** (Learning from Errors) | Use few-shot examples of corrected errors to adaptively improve solution quality over iterations. | ✅ Implemented |
+| **PlanSearch** | Observation-guided problem solving combining planning phase with implementation and verification. | ✅ Implemented |
+| **ReRead** | Simple but effective strategy of re-reading and refining answers for improved clarity and accuracy. | ✅ Implemented |
+| **Diverse Sampling** | Explore solution space using temperature-varied sampling to balance exploration and exploitation. | ✅ Implemented |
+| **AutoThink** | Query complexity classification with adaptive reasoning depth and temperature adjustment for optimal strategy selection. | ✅ Implemented |
+| **Deep Thinking** | Inference-time scaling that allocates more computation and tokens to harder problems based on difficulty estimation. | ✅ Implemented |
+| **Entropy Decoding** | Entropy-based sampling for controlled diversity, providing fine-grained control over answer quality versus novelty. | ✅ Implemented |
+| **CoT Decoding** | Structured chain-of-thought decoding that guides models to follow step-by-step reasoning patterns for better quality. | ✅ Implemented |
+| **R* Algorithm** | Enhanced Monte Carlo Tree Search with learned value estimates and sophisticated node selection for solution exploration. | ✅ Implemented |
+| **CePO** (Cerebras Planning & Optimization) | Problem decomposition with state tracking and backtracking for systematic exploration of solution space. | ⏳ Planned |
+| **Z3 Solver Integration** | Integration of Z3 SMT solver for constraint satisfaction and logical reasoning problems. | ⏳ Planned |
+| **LongCePO** | Extended CePO with context windowing and recursive decomposition for handling problems with infinite context. | ⏳ Planned |
 
 ### Custom Strategies
 

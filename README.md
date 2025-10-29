@@ -2,6 +2,8 @@
 
 A Rust monorepo for implementations of optillm optimization techniques for LLMs. Provides multiple optimization strategies with a clear architecture for adding new implementations.
 
+> **Note**: This is a port of the Python [OptimLLM](https://github.com/coohom/optillm) library designed to seamlessly integrate advanced LLM optimization strategies into the [code](https://github.com/coohom/code) project (Codex fork). This Rust implementation enables high-performance deployment of OptimLLM techniques within Rust-based systems while maintaining API compatibility with the original research implementations.
+
 ## Quick Start
 
 ```bash
@@ -181,6 +183,125 @@ cargo build --all-features
 4. **Type Safety**: Strong typing throughout
 5. **Extensibility**: Easy to add new optimization techniques
 
+## Integration with Code (Codex Fork)
+
+optillm-rs is specifically designed to integrate with the [code](https://github.com/coohom/code) project, enabling it to leverage advanced OptimLLM reasoning strategies. This integration provides:
+
+- **Drop-in Optimization**: Use any MARS agent or strategy directly in code's LLM pipeline
+- **Transparent API Management**: All LLM calls route through a unified abstraction
+- **Multi-Provider Support**: Easily switch between different LLM providers
+- **Performance**: Rust's performance benefits available in code's optimization layer
+
+### Integration Pattern
+
+```rust
+// In code's coordinator or agent system
+use optillm_mars::MarsCoordinator;
+
+let coordinator = MarsCoordinator::new(config);
+let result = coordinator.optimize(query, &code_model_client).await?;
+// Result integrates seamlessly with code's reasoning pipeline
+```
+
+## LiteLLM-rs Integration
+
+optillm-rs integrates **litellm-rs** for unified LLM API management, providing:
+
+### Multi-Provider Support
+- **OpenAI** (GPT-4, GPT-4o, etc.)
+- **Anthropic** (Claude 3, Claude 3.5, etc.)
+- **Google** (Gemini models)
+- **Groq** (Fast inference)
+- **Local Models** (Ollama, vLLM, etc.)
+- **Custom Endpoints**
+
+### Benefits
+- **Unified API**: Single interface for all providers
+- **Automatic Routing**: Route requests based on cost, latency, or availability
+- **Fallback Support**: Automatic failover to alternative providers
+- **Cost Optimization**: Track and optimize token usage across providers
+- **Zero Configuration**: Sensible defaults with easy customization
+
+### Provider Configuration
+
+```rust
+use optillm_mars::provider_config::{ProviderSpec, ProviderRoutingConfig, RoutingStrategy};
+
+// Configure multiple providers
+let openai = ProviderSpec::new("openai", "gpt-4o")
+    .with_api_key(env::var("OPENAI_API_KEY")?)
+    .with_priority(1);
+
+let anthropic = ProviderSpec::new("anthropic", "claude-3-5-sonnet")
+    .with_api_key(env::var("ANTHROPIC_API_KEY")?)
+    .with_priority(2);
+
+let config = ProviderRoutingConfig::multi(openai, vec![anthropic])
+    .with_strategy(RoutingStrategy::RoundRobin)
+    .with_fallback(true)
+    .with_max_retries(2);
+```
+
+### API Call Management Features
+
+- **Automatic Retries**: Configurable retry logic with exponential backoff
+- **Token Counting**: Accurate token usage tracking for cost management
+- **Rate Limiting**: Respect provider-specific rate limits
+- **Streaming Support**: Efficient streaming responses
+- **Error Handling**: Comprehensive error handling for all providers
+
+### Using with Code Integration
+
+```rust
+// In code's model initialization
+use optillm_mars::model_router::ModelClientRouter;
+
+// Wrap code's existing ModelClient with routing capabilities
+let router = ModelClientRouter::new();
+let coordinator = MarsCoordinator::new(config);
+
+// Now MARS can route through multiple providers
+let result = coordinator.optimize(query, &router).await?;
+```
+
+## Strategy Implementation for Code
+
+The following strategies are available for integration into code:
+
+### MARS (Multi-Agent Reasoning System)
+- Full 5-phase optimization pipeline
+- Multi-agent exploration with diverse temperatures
+- Cross-agent verification and consensus scoring
+- RSA-inspired solution aggregation
+- Iterative improvement with feedback loops
+
+### MOA (Mixture of Agents)
+- Phase 1: Generate diverse completions
+- Phase 2: Critique each completion
+- Phase 3: Synthesize optimal answer
+- Useful for creative and complex reasoning tasks
+
+### MCTS (Monte Carlo Tree Search)
+- UCB-based node selection
+- Dialogue state exploration
+- Tree-based reasoning discovery
+- Low-cost reasoning exploration
+
+### Custom Strategies
+Add new strategies by implementing the `Optimizer` trait—perfect for domain-specific optimizations for code's specialized tasks.
+
+## Usage in Code Projects
+
+To use optillm-rs strategies in a code-based system:
+
+1. **Add Dependency**: Include optillm-mars in your Cargo.toml
+2. **Configure Providers**: Set up litellm-rs for your LLM endpoints
+3. **Instantiate Coordinator**: Create a MARS or custom coordinator
+4. **Optimize Queries**: Pass queries through the optimization pipeline
+5. **Integrate Results**: Use optimized answers in code's reasoning flow
+
+See [Integration Guide](docs/integration.md) for detailed instructions.
+
 ## License
 
 MIT
@@ -204,6 +325,19 @@ View online: [Documentation](docs/index.md)
 
 ## References
 
-- **OptimLLM**: https://github.com/coohom/optillm
-- **MARS Paper**: MARS implementation details in crates/mars/README.md
-- **Benchmarks**: AIME 2025, IMO 2025, LiveCodeBench
+### Core Projects
+- **OptimLLM** (Python): https://github.com/coohom/optillm - Original research implementation
+- **Code (Codex Fork)**: https://github.com/coohom/code - Integration target
+- **LiteLLM**: https://litellm.ai/ - Multi-provider LLM API management
+- **LiteLLM-rs**: Rust bindings for unified LLM provider support
+
+### Research & Benchmarks
+- **MARS Paper**: Multi-Agent Reasoning System implementation and evaluation
+- **AIME 2025**: 43.3% → 73.3% (+69% relative improvement)
+- **IMO 2025**: 16.7% → 33.3% (+100% relative improvement)
+- **LiveCodeBench**: 39.05% → 50.48% (+29% relative improvement)
+
+### Documentation
+- Full MARS implementation details: [crates/mars/README.md](crates/mars/README.md)
+- Integration guide: [docs/integration.md](docs/integration.md)
+- Strategy implementations: [docs/strategies/](docs/strategies/)

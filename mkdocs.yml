@@ -61,6 +61,8 @@ nav:
     - Installation: getting-started/installation.md
     - Quick Start: getting-started/quick-start.md
     - Examples: getting-started/examples.md
+  - Code Integration:
+    - Integration Guide: integration.md
   - Architecture:
     - Overview: architecture/overview.md
     - Design Patterns: architecture/design-patterns.md

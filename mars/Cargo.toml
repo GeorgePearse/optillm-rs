@@ -1,0 +1,26 @@
+[package]
+name = "optillm-mars"
+version.workspace = true
+edition.workspace = true
+description = "MARS (Multi-Agent Reasoning System) - Production-ready Rust implementation of optillm optimization"
+license = "MIT"
+
+[dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time"] }
+reqwest = { workspace = true, features = ["json", "stream"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+futures = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"] }
+chrono = { workspace = true, features = ["serde"] }
+rand = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+tokio-test = "0.4"
+wiremock = "0.6"
+insta = "1.38"

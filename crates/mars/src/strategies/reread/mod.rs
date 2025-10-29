@@ -119,7 +119,7 @@ impl ReReadAggregator {
     async fn generate_response(
         prompt_text: &str,
         system_prompt: &str,
-        config: &ReReadConfig,
+        _config: &ReReadConfig,
         client: &dyn ModelClient,
     ) -> Result<(String, usize)> {
         let system_msg = ResponseItem::Message {

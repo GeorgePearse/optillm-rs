@@ -227,8 +227,8 @@ impl RTOAggregator {
     async fn generate_solution(
         query: &str,
         system_prompt: &str,
-        temperature: f32,
-        max_tokens: usize,
+        _temperature: f32,
+        _max_tokens: usize,
         tag: &str,
         client: &dyn ModelClient,
     ) -> Result<(String, usize)> {

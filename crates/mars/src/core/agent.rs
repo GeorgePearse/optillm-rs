@@ -76,7 +76,6 @@ impl Agent {
                     }
                     break;
                 }
-                _ => {}
             }
         }
 
@@ -130,7 +129,6 @@ impl Agent {
                 ResponseEvent::Completed { .. } => {
                     break;
                 }
-                _ => {}
             }
         }
 
@@ -188,7 +186,6 @@ impl Agent {
                 ResponseEvent::Completed { .. } => {
                     break;
                 }
-                _ => {}
             }
         }
 
@@ -244,7 +241,6 @@ impl Agent {
                 ResponseEvent::Completed { .. } => {
                     break;
                 }
-                _ => {}
             }
         }
 

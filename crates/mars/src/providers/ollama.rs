@@ -13,11 +13,10 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use futures::stream::{self, Stream, StreamExt};
+use futures::stream::{Stream, StreamExt};
 use std::pin::Pin;
 
 use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem, OptillmError};
-use crate::error::MarsError;
 
 /// Configuration for Ollama client
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -138,6 +137,7 @@ struct OllamaMessage {
 
 /// Response from Ollama API
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct OllamaResponse {
     model: String,
     created_at: String,

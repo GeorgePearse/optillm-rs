@@ -14,17 +14,29 @@
 //! - reread: Simple re-reading strategy for improved answer quality
 //! - diverse_sampling: Temperature-varied sampling for exploring response space
 
+/// Best-of-N sampling strategy
 pub mod best_of_n;
+/// Self-consistency strategy with majority voting
 pub mod self_consistency;
+/// Reinforced self-aggregation strategy
 pub mod rsa;
+/// Monte Carlo Tree Search strategy
 pub mod mcts;
+/// Mixture of Agents strategy
 pub mod moa;
+/// Chain-of-thought with reflection strategy
 pub mod cot_reflection;
+/// Round-trip optimization strategy
 pub mod rto;
+/// Prover-verifier game strategy
 pub mod pvg;
+/// Learning from errors adaptive process strategy
 pub mod leap;
+/// Plan-guided search strategy
 pub mod plansearch;
+/// Re-reading strategy
 pub mod reread;
+/// Diverse sampling with temperature variation
 pub mod diverse_sampling;
 
 // Re-export commonly used types from each strategy

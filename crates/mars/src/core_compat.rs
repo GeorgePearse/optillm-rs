@@ -7,7 +7,8 @@ pub use crate::{
     Prompt, ResponseEvent, ResponseItem, ContentItem, TokenUsage, ModelClient,
 };
 
-// Re-export as code_core for code that uses that module name
+/// Re-export as code_core for code that uses that module name
 pub mod code_core {
+    /// Re-exported core types for compatibility
     pub use super::{Prompt, ResponseEvent, ResponseItem, ContentItem, TokenUsage, ModelClient};
 }

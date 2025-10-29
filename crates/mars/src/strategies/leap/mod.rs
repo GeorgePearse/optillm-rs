@@ -305,7 +305,7 @@ impl LEAPAggregator {
     async fn generate_response(
         prompt_text: &str,
         system_prompt: &str,
-        max_tokens: usize,
+        _max_tokens: usize,
         client: &dyn ModelClient,
     ) -> Result<(String, usize)> {
         let system_msg = ResponseItem::Message {

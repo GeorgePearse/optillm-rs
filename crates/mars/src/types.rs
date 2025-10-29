@@ -214,36 +214,70 @@ pub enum SelectionMethod {
 /// Event emitted during MARS execution for progress tracking
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum MarsEvent {
-    /// Initial exploration phase started
-    ExplorationStarted { num_agents: usize },
+    /// Initial exploration phase started with given number of agents
+    ExplorationStarted {
+        /// Number of agents participating in exploration
+        num_agents: usize
+    },
     /// Agent generated a solution
-    SolutionGenerated { solution_id: String, agent_id: String },
+    SolutionGenerated {
+        /// Unique identifier for the generated solution
+        solution_id: String,
+        /// Identifier of the agent that generated the solution
+        agent_id: String
+    },
     /// Verification phase started
     VerificationStarted,
-    /// Solution was verified
+    /// Solution was verified with results
     SolutionVerified {
+        /// Unique identifier for the solution
         solution_id: String,
+        /// Whether the solution passed verification
         is_correct: bool,
+        /// Verification score (0.0 to 1.0)
         score: f32,
     },
     /// Aggregation phase started
     AggregationStarted,
-    /// Solutions were aggregated
-    SolutionsAggregated { result_solution_id: String },
-    /// Improvement phase started
-    ImprovementStarted { iteration: usize },
+    /// Solutions were aggregated into a result
+    SolutionsAggregated {
+        /// Identifier of the aggregated solution
+        result_solution_id: String
+    },
+    /// Improvement phase started at specified iteration
+    ImprovementStarted {
+        /// Current improvement iteration number
+        iteration: usize
+    },
     /// Solution was improved
-    SolutionImproved { solution_id: String },
+    SolutionImproved {
+        /// Identifier of the improved solution
+        solution_id: String
+    },
     /// Strategy network phase started
     StrategyNetworkStarted,
-    /// Strategy was extracted
-    StrategyExtracted { strategy_id: String },
+    /// Strategy was extracted from solutions
+    StrategyExtracted {
+        /// Identifier of the extracted strategy
+        strategy_id: String
+    },
     /// Synthesis phase started
     SynthesisStarted,
-    /// Final answer synthesized
-    AnswerSynthesized { answer: String },
-    /// MARS execution completed
-    Completed { final_answer: String, method: String },
-    /// Error occurred
-    Error { message: String },
+    /// Final answer synthesized from verified solutions
+    AnswerSynthesized {
+        /// The synthesized answer string
+        answer: String
+    },
+    /// MARS execution completed successfully
+    Completed {
+        /// Final answer produced by MARS
+        final_answer: String,
+        /// Method used to generate the final answer
+        method: String
+    },
+    /// Error occurred during execution
+    Error {
+        /// Error message describing what went wrong
+        message: String
+    },
 }

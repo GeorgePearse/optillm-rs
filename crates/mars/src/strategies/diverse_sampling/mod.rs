@@ -201,8 +201,8 @@ impl DiverseSamplingAggregator {
     async fn generate_response(
         prompt_text: &str,
         system_prompt: &str,
-        temperature: f32,
-        config: &DiverseSamplingConfig,
+        _temperature: f32,
+        _config: &DiverseSamplingConfig,
         client: &dyn ModelClient,
     ) -> Result<(String, usize)> {
         let system_msg = ResponseItem::Message {

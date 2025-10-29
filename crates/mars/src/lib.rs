@@ -29,18 +29,24 @@ pub use optillm_core::{
     Optimizer, OptimizerConfig, OptillmError,
 };
 
+/// Configuration types for MARS system
 pub mod config;
+/// Error types and error handling
 pub mod error;
+/// Core type definitions for MARS
 pub mod types;
+/// Compatibility layer for core integration
 pub mod core_compat;
 
 // Re-export MARS-specific types
 pub use error::{MarsError, Result};
 pub use config::MarsConfig;
 
-// Organized module structure
+/// Core MARS system components including agents, coordinators, and verifiers
 pub mod core;
+/// Optimization strategies for solution generation and refinement
 pub mod strategies;
+/// LLM provider integrations
 pub mod providers;
 
 // Re-export core components

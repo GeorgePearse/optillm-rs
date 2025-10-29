@@ -210,7 +210,7 @@ impl PVGAggregator {
 
             // Refine query for next round if not the last round
             if round < config.num_rounds - 1 {
-                let refined_query = Self::refine_query(
+                let _refined_query = Self::refine_query(
                     query,
                     &best_solution,
                     system_prompt,
@@ -259,8 +259,8 @@ impl PVGAggregator {
         system_prompt: &str,
         num_solutions: usize,
         is_sneaky: bool,
-        temperature: f32,
-        max_tokens: usize,
+        _temperature: f32,
+        _max_tokens: usize,
         tag: &str,
         client: &dyn ModelClient,
     ) -> Result<Vec<String>> {
@@ -330,8 +330,8 @@ impl PVGAggregator {
         solutions: &[String],
         query: &str,
         system_prompt: &str,
-        temperature: f32,
-        max_tokens: usize,
+        _temperature: f32,
+        _max_tokens: usize,
         client: &dyn ModelClient,
     ) -> Result<Vec<f32>> {
         let mut scores = Vec::new();
@@ -415,8 +415,8 @@ impl PVGAggregator {
         original_query: &str,
         best_solution: &str,
         system_prompt: &str,
-        temperature: f32,
-        max_tokens: usize,
+        _temperature: f32,
+        _max_tokens: usize,
         client: &dyn ModelClient,
     ) -> Result<String> {
         let refine_prompt = format!(

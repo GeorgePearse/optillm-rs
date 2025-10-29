@@ -83,7 +83,6 @@ impl MoaAggregator {
                         fallback_used = true;
                         break;
                     }
-                    _ => {}
                 }
             }
             if !response.is_empty() {
@@ -157,7 +156,6 @@ impl MoaAggregator {
                         e
                     )))
                 }
-                _ => {}
             }
         }
 
@@ -222,7 +220,6 @@ impl MoaAggregator {
                         e
                     )))
                 }
-                _ => {}
             }
         }
 

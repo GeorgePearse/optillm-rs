@@ -13,6 +13,7 @@ impl Aggregator {
     /// Select diverse solutions from the population
     ///
     /// This promotes diversity to explore different reasoning paths
+    #[allow(dead_code)]
     fn select_diverse_solutions(
         solutions: &[Solution],
         num_to_select: usize,
@@ -32,6 +33,7 @@ impl Aggregator {
     }
 
     /// Synthesize a new solution from multiple selected solutions
+    #[allow(dead_code)]
     fn synthesize_solution(solutions: &[Solution], iteration: usize) -> Result<Solution> {
         if solutions.is_empty() {
             return Err(crate::MarsError::AggregationError(
@@ -62,6 +64,7 @@ impl Aggregator {
     }
 
     /// Combine reasoning from multiple solutions
+    #[allow(dead_code)]
     fn combine_reasoning(solutions: &[Solution]) -> String {
         let mut combined = String::from("Combined reasoning from multiple approaches:\n\n");
 
@@ -75,6 +78,7 @@ impl Aggregator {
     /// Select the best answer from solutions
     ///
     /// Prefers answers that appear in multiple solutions (consensus)
+    #[allow(dead_code)]
     fn select_best_answer(solutions: &[Solution]) -> String {
         // Count answer frequency
         let mut answer_count: std::collections::HashMap<String, usize> = Default::default();

@@ -39,6 +39,19 @@ impl Default for RStarConfig {
 pub struct RStarAggregator;
 
 impl RStarAggregator {
+    /// Run R* Algorithm strategy for enhanced solution space exploration.
+    ///
+    /// Enhances Monte Carlo Tree Search with learned value estimates,
+    /// balancing exploration and exploitation using the UCB formula.
+    ///
+    /// # Arguments
+    /// * `query` - The problem or question to solve
+    /// * `system_prompt` - System instructions for the model
+    /// * `config` - R* configuration parameters
+    /// * `client` - ModelClient implementation for LLM access
+    ///
+    /// # Returns
+    /// A tuple of (Solution, RStarMetadata) with the generated solution and metadata
     pub async fn run_r_star(
         query: &str,
         system_prompt: &str,

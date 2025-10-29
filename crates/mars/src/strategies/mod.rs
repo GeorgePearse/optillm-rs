@@ -70,7 +70,7 @@ pub use leap::{LEAPAggregator, LEAPConfig, LEAPMetadata};
 pub use plansearch::{PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata};
 pub use reread::{ReReadAggregator, ReReadConfig, ReReadMetadata};
 pub use diverse_sampling::{DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata};
-pub use autothink::{AutoThinkAggregator, AutoThinkConfig, ComplexityLevel, AutoThinkMetadata};
+pub use autothink::{AutoThinkAggregator, AutoThinkConfig, ComplexityLevel, AutoThinkMetadata, AutoThinkOptimizer};
 pub use deep_thinking::{DeepThinkingAggregator, DeepThinkingConfig, DeepThinkingMetadata};
 pub use entropy_decoding::{EntropyDecodingAggregator, EntropyDecodingConfig, EntropyDecodingMetadata};
 pub use cot_decoding::{CotDecodingAggregator, CotDecodingConfig, CotDecodingMetadata};

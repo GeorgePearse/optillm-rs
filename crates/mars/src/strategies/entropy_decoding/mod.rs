@@ -34,6 +34,19 @@ impl Default for EntropyDecodingConfig {
 pub struct EntropyDecodingAggregator;
 
 impl EntropyDecodingAggregator {
+    /// Run Entropy Decoding strategy for controlled diversity.
+    ///
+    /// Generates multiple samples and selects based on entropy metrics,
+    /// providing fine-grained control over the balance between quality and novelty.
+    ///
+    /// # Arguments
+    /// * `query` - The problem or question to solve
+    /// * `system_prompt` - System instructions for the model
+    /// * `config` - Entropy Decoding configuration parameters
+    /// * `client` - ModelClient implementation for LLM access
+    ///
+    /// # Returns
+    /// A tuple of (Solution, EntropyDecodingMetadata) with the generated solution and metadata
     pub async fn run_entropy_decoding(
         query: &str,
         system_prompt: &str,

@@ -73,8 +73,8 @@ impl AutoThinkOptimizer {
         let score = self.calculate_complexity_score(query);
 
         match score {
-            s if s < 0.33 => ComplexityLevel::Simple,
-            s if s < 0.67 => ComplexityLevel::Medium,
+            s if s < 0.25 => ComplexityLevel::Simple,
+            s if s < 0.40 => ComplexityLevel::Medium,
             _ => ComplexityLevel::Complex,
         }
     }
@@ -86,7 +86,6 @@ impl AutoThinkOptimizer {
         let query_lower = query.to_lowercase();
         let words: Vec<&str> = query_lower.split_whitespace().collect();
 
-        let mut score = 0.0;
         let mut factor_weights = Vec::new();
 
         // 1. LENGTH ANALYSIS (20% weight)
@@ -109,7 +108,7 @@ impl AutoThinkOptimizer {
         let structure_score = self.analyze_structure(query, &words);
         factor_weights.push(structure_score * 0.15);
 
-        score = factor_weights.iter().sum::<f32>();
+        let score = factor_weights.iter().sum::<f32>();
         score.min(1.0)
     }
 
@@ -192,6 +191,8 @@ impl AutoThinkOptimizer {
             ("formula", 0.7_f32),
             ("theory", 0.8_f32),
             ("abstract", 0.9_f32),
+            ("contradiction", 0.9_f32),
+            ("infinite", 0.9_f32),
         ];
 
         let mut max_score: f32 = 0.0;
@@ -206,7 +207,7 @@ impl AutoThinkOptimizer {
 
         // Combine max weight with match count
         let weight_score = max_score;
-        let count_bonus = ((match_count as f32 / 22.0) * 0.3).min(0.3);
+        let count_bonus = ((match_count as f32 / 24.0) * 0.3).min(0.3);
         (weight_score * 0.7 + count_bonus).min(1.0)
     }
 

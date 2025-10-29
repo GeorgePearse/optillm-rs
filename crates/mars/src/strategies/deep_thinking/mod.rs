@@ -37,6 +37,19 @@ impl Default for DeepThinkingConfig {
 pub struct DeepThinkingAggregator;
 
 impl DeepThinkingAggregator {
+    /// Run Deep Thinking strategy with difficulty-based token allocation.
+    ///
+    /// Estimates the difficulty of the query and allocates a proportional token budget
+    /// for generation. Harder problems receive more computation to enable deeper reasoning.
+    ///
+    /// # Arguments
+    /// * `query` - The problem or question to solve
+    /// * `system_prompt` - System instructions for the model
+    /// * `config` - Deep Thinking configuration parameters
+    /// * `client` - ModelClient implementation for LLM access
+    ///
+    /// # Returns
+    /// A tuple of (Solution, DeepThinkingMetadata) with the generated solution and metadata
     pub async fn run_deep_thinking(
         query: &str,
         system_prompt: &str,

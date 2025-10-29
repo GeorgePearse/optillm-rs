@@ -34,6 +34,19 @@ impl Default for CotDecodingConfig {
 pub struct CotDecodingAggregator;
 
 impl CotDecodingAggregator {
+    /// Run CoT Decoding strategy for structured reasoning.
+    ///
+    /// Guides the model to follow structured chain-of-thought patterns,
+    /// decomposing problems into clear reasoning steps.
+    ///
+    /// # Arguments
+    /// * `query` - The problem or question to solve
+    /// * `system_prompt` - System instructions for the model
+    /// * `config` - CoT Decoding configuration parameters
+    /// * `client` - ModelClient implementation for LLM access
+    ///
+    /// # Returns
+    /// A tuple of (Solution, CotDecodingMetadata) with the generated solution and metadata
     pub async fn run_cot_decoding(
         query: &str,
         system_prompt: &str,

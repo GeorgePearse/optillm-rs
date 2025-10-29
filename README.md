@@ -2,7 +2,7 @@
 
 A Rust monorepo for implementations of optillm optimization techniques for LLMs. Provides multiple optimization strategies with a clear architecture for adding new implementations.
 
-> **Note**: This is a port of the Python [OptimLLM](https://github.com/coohom/optillm) library designed to seamlessly integrate advanced LLM optimization strategies into the [code](https://github.com/coohom/code) project (Codex fork). This Rust implementation enables high-performance deployment of OptimLLM techniques within Rust-based systems while maintaining API compatibility with the original research implementations.
+> **Note**: This is a port of the Python [OptimLLM](https://github.com/codelion/optillm) library designed to seamlessly integrate advanced LLM optimization strategies into the [code](https://github.com/codelion/code) project (Codex fork). This Rust implementation enables high-performance deployment of OptimLLM techniques within Rust-based systems while maintaining API compatibility with the original research implementations.
 
 ## Quick Start
 
@@ -189,7 +189,7 @@ cargo build --all-features
 
 ## Integration with Code (Codex Fork)
 
-optillm-rs is specifically designed to integrate with the [code](https://github.com/coohom/code) project, enabling it to leverage advanced OptimLLM reasoning strategies. This integration provides:
+optillm-rs is specifically designed to integrate with the [code](https://github.com/codelion/code) project, enabling it to leverage advanced OptimLLM reasoning strategies. This integration provides:
 
 - **Drop-in Optimization**: Use any MARS agent or strategy directly in code's LLM pipeline
 - **Transparent API Management**: All LLM calls route through a unified abstraction
@@ -330,8 +330,8 @@ View online: [Documentation](docs/index.md)
 ## References
 
 ### Core Projects
-- **OptimLLM** (Python): https://github.com/coohom/optillm - Original research implementation
-- **Code (Codex Fork)**: https://github.com/coohom/code - Integration target
+- **OptimLLM** (Python): https://github.com/codelion/optillm - Original research implementation
+- **Code (Codex Fork)**: https://github.com/codelion/code - Integration target
 - **LiteLLM**: https://litellm.ai/ - Multi-provider LLM API management
 - **LiteLLM-rs**: Rust bindings for unified LLM provider support
 

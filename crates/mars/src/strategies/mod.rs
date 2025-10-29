@@ -8,6 +8,7 @@
 //! - moa: Mixture of Agents leveraging multiple models
 //! - cot_reflection: Chain-of-thought with self-reflection and refinement
 //! - rto: Round Trip Optimization for quality improvement through round-trip generation
+//! - pvg: Prover-Verifier Game for adversarial solution generation and verification
 
 pub mod best_of_n;
 pub mod self_consistency;
@@ -16,6 +17,7 @@ pub mod mcts;
 pub mod moa;
 pub mod cot_reflection;
 pub mod rto;
+pub mod pvg;
 
 // Re-export commonly used types from each strategy
 pub use best_of_n::{BestOfNAggregator, BestOfNConfig, BestOfNMetadata, SelectionMethod, SelectionStatistics};
@@ -28,3 +30,4 @@ pub use mcts::{MCTS, MCTSConfig, MCTSNode, DialogueState, Message};
 pub use moa::{MoaAggregator, MoaMetadata};
 pub use cot_reflection::{CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata};
 pub use rto::{RTOAggregator, RTOConfig, RTOMetadata};
+pub use pvg::{PVGAggregator, PVGConfig, PVGMetadata};

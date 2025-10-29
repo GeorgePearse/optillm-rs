@@ -65,6 +65,8 @@ pub use strategies::{
     CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata,
     // RTO
     RTOAggregator, RTOConfig, RTOMetadata,
+    // PVG
+    PVGAggregator, PVGConfig, PVGMetadata,
 };
 
 // Re-export provider types

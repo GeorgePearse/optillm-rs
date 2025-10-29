@@ -272,26 +272,24 @@ let result = coordinator.optimize(query, &router).await?;
 
 The following strategies are available for integration into code:
 
-### MARS (Multi-Agent Reasoning System)
-- Full 5-phase optimization pipeline
-- Multi-agent exploration with diverse temperatures
-- Cross-agent verification and consensus scoring
-- RSA-inspired solution aggregation
-- Iterative improvement with feedback loops
-
-### MOA (Mixture of Agents)
-- Phase 1: Generate diverse completions
-- Phase 2: Critique each completion
-- Phase 3: Synthesize optimal answer
-- Useful for creative and complex reasoning tasks
-
-### MCTS (Monte Carlo Tree Search)
-- UCB-based node selection
-- Dialogue state exploration
-- Tree-based reasoning discovery
-- Low-cost reasoning exploration
+| Strategy | Description |
+|----------|-------------|
+| **MARS** (Multi-Agent Reasoning System) | Multi-agent exploration with cross-verification, aggregation, and iterative improvement for maximum quality. |
+| **MOA** (Mixture of Agents) | Three-phase approach: generate diverse completions, critique each, then synthesize optimal answer. |
+| **Self-Consistency** | Generate multiple diverse reasoning paths and use majority voting to reach consensus answers. |
+| **Best-of-N** | Generate N solutions with different parameters and select the highest quality based on scoring criteria. |
+| **RSA** (Reinforced Self-Aggregation) | Iteratively refine solutions by selecting diverse candidates and synthesizing improvements over multiple rounds. |
+| **MCTS** (Monte Carlo Tree Search) | Explore solution space systematically using UCB-based node selection and random simulation rollouts. |
+| **CoT Reflection** | Generate reasoning with chain-of-thought prompts and refine through self-reflection and error analysis. |
+| **RTO** (Round-Trip Optimization) | Improve answers through round-trip generation: forward pass then backward verification and refinement. |
+| **PVG** (Prover-Verifier Game) | Generate both helpful and adversarial solutions, then verify to identify robust answers. |
+| **LEAP** (Learning from Errors) | Use few-shot examples of corrected errors to adaptively improve solution quality over iterations. |
+| **PlanSearch** | Observation-guided problem solving combining planning phase with implementation and verification. |
+| **ReRead** | Simple but effective strategy of re-reading and refining answers for improved clarity and accuracy. |
+| **Diverse Sampling** | Explore solution space using temperature-varied sampling to balance exploration and exploitation. |
 
 ### Custom Strategies
+
 Add new strategies by implementing the `Optimizer` trait—perfect for domain-specific optimizations for code's specialized tasks.
 
 ## Usage in Code Projects

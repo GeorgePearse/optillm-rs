@@ -162,6 +162,30 @@ impl Aggregator {
         Ok(vec![solution])
     }
 
+    /// Run Self-Consistency using any LLM provider
+    ///
+    /// This process:
+    /// 1. Generates K diverse reasoning paths
+    /// 2. Extracts the final answer from each path
+    /// 3. Uses consensus voting to select the best answer
+    /// 4. Effective for tasks with multiple valid reasoning paths converging on correct answer
+    pub async fn aggregate_self_consistency(
+        query: &str,
+        system_prompt: &str,
+        config: crate::self_consistency::SelfConsistencyConfig,
+        client: &dyn crate::ModelClient,
+    ) -> Result<Vec<Solution>> {
+        let (solution, _metadata) = crate::self_consistency::SelfConsistencyAggregator::run_self_consistency(
+            query,
+            system_prompt,
+            config,
+            client,
+        )
+        .await?;
+
+        Ok(vec![solution])
+    }
+
     /// Check if aggregation would benefit from more iterations
     pub fn should_continue_aggregation(
         solutions: &[Solution],

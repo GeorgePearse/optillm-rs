@@ -131,6 +131,44 @@ while let Some(event) = rx.recv().await {
 }
 ```
 
+## Strategies
+
+Each optimization strategy is implemented in its own directory with comprehensive documentation. To learn about a specific strategy:
+
+1. **Best-of-N** - `crates/mars/src/strategies/best_of_n/README.md`
+   - Generates N diverse solutions and selects the best one
+   - Best for: Quick iterations, simple tasks
+
+2. **Self-Consistency** - `crates/mars/src/strategies/self_consistency/README.md`
+   - Consensus voting across diverse reasoning paths
+   - Best for: Complex reasoning requiring multiple perspectives
+   - Paper: [Self-Consistency Improves Chain of Thought Reasoning](https://arxiv.org/abs/2203.11171)
+
+3. **RSA** - `crates/mars/src/strategies/rsa/README.md`
+   - Reinforced self-aggregation with iterative refinement
+   - Best for: Incremental improvement of solutions
+
+4. **MCTS** - `crates/mars/src/strategies/mcts/README.md`
+   - Monte Carlo tree search for reasoning exploration
+   - Best for: Complex decision trees and planning
+   - Paper: [Monte Carlo Tree Search Boosts Reasoning](https://arxiv.org/abs/2405.00451)
+
+5. **MOA** - `crates/mars/src/strategies/moa/README.md`
+   - Mixture of agents with diverse specialized models
+   - Best for: Tasks needing multiple perspectives
+   - Paper: [Mixture-of-Agents Enhances LLM Capabilities](https://arxiv.org/abs/2406.04692)
+
+6. **CoT Reflection** - `crates/mars/src/strategies/cot_reflection/README.md`
+   - Chain-of-thought with self-reflection
+   - Best for: Tasks requiring transparent reasoning and error checking
+
+Each strategy README includes:
+- Algorithm overview and theory
+- Configuration options
+- Usage examples
+- Performance characteristics
+- Academic paper references
+
 ## Configuration
 
 ### MarsConfig Options
@@ -164,17 +202,49 @@ MARS_DEBUG=1
 
 ## Modules
 
+The crate is organized into three main categories:
+
+### Core System (`core/` - 7 modules)
+
+| Module | Purpose | LOC |
+|--------|---------|-----|
+| `coordinator.rs` | Main 5-phase orchestrator | ~420 |
+| `agent.rs` | Individual agent with temperature-based exploration | ~340 |
+| `workspace.rs` | Shared solution storage (Arc<RwLock>) | ~165 |
+| `verifier.rs` | Cross-verification system | ~200 |
+| `aggregator.rs` | RSA-inspired solution refinement | ~225 |
+| `strategy.rs` | Cross-agent strategy network | ~270 |
+| `prompts.rs` | Prompt templates for all reasoning phases | ~185 |
+
+### Optimization Strategies (`strategies/` - 6 strategies)
+
+Each strategy is in its own directory with `mod.rs`, `tests.rs`, and `README.md`:
+
+| Strategy | Description | Paper |
+|----------|-------------|-------|
+| `best_of_n/` | Generate N solutions, select best | Standard technique |
+| `self_consistency/` | Consensus voting across paths | Wei et al., 2022 |
+| `rsa/` | Reinforced self-aggregation | Custom approach |
+| `mcts/` | Monte Carlo tree search | Hao et al., 2024 |
+| `moa/` | Mixture of agents | Wang et al., 2024 |
+| `cot_reflection/` | Chain-of-thought with reflection | Self-Refine inspired |
+
+Each strategy has its own **README.md** with algorithm details, configuration, examples, and academic references.
+
+### Provider Management (`providers/` - 2 modules)
+
 | Module | Purpose |
 |--------|---------|
-| `coordinator.rs` | Main 5-phase orchestrator (~420 LOC) |
-| `agent.rs` | Individual agent with temperature-based exploration (~340 LOC) |
-| `workspace.rs` | Shared solution storage (Arc<RwLock>) (~165 LOC) |
-| `verifier.rs` | Cross-verification system (~200 LOC) |
-| `aggregator.rs` | RSA-inspired solution refinement (~225 LOC) |
-| `strategy.rs` | Cross-agent strategy network (~270 LOC) |
-| `types.rs` | Core types: Solution, VerificationResult, MarsEvent (~220 LOC) |
-| `config.rs` | Flexible configuration system (~150 LOC) |
-| `prompts.rs` | Prompt templates for all reasoning phases (~185 LOC) |
+| `router.rs` | LLM provider routing and abstraction |
+| `config.rs` | Multi-provider configuration |
+
+### Shared Types
+
+| Module | Purpose | LOC |
+|--------|---------|-----|
+| `types.rs` | Core types: Solution, VerificationResult, MarsEvent | ~220 |
+| `config.rs` | Flexible MARS configuration system | ~150 |
+| `error.rs` | Error types | ~50 |
 
 ## Type System
 

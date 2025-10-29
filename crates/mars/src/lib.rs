@@ -38,40 +38,38 @@ pub mod core_compat;
 pub use error::{MarsError, Result};
 pub use config::MarsConfig;
 
-// Core modules
-pub mod coordinator;
-pub mod agent;
-pub mod workspace;
-pub mod verifier;
-pub mod aggregator;
-pub mod strategy;
-pub mod prompts;
+// Organized module structure
+pub mod core;
+pub mod strategies;
+pub mod providers;
 
-// New strategy implementations
-pub mod mcts;
-pub mod moa;
-pub mod best_of_n;
-pub mod self_consistency;
-pub mod rsa;
-pub mod cot_reflection;
-pub mod model_router;
-pub mod provider_config;
+// Re-export core components
+pub use core::{
+    MarsCoordinator, Agent, Workspace, Verifier, Aggregator, StrategyNetwork,
+};
 
-pub use coordinator::MarsCoordinator;
-pub use agent::Agent;
-pub use workspace::Workspace;
-pub use verifier::Verifier;
-pub use aggregator::Aggregator;
-pub use strategy::StrategyNetwork;
+// Re-export strategy implementations
+pub use strategies::{
+    // Best-of-N
+    BestOfNAggregator, BestOfNConfig, BestOfNMetadata, SelectionMethod, SelectionStatistics,
+    // Self-Consistency
+    SelfConsistencyAggregator, SelfConsistencyConfig, SelfConsistencyMetadata,
+    AnswerExtractionStrategy, VotingStrategy, ReasoningPath, VotingStatistics,
+    // RSA
+    RSAAggregator, RSAConfig, RSAMetadata, SelectionCriterion, RefinementStrategy,
+    // MCTS
+    MCTS, MCTSConfig, MCTSNode, DialogueState, Message,
+    // MOA
+    MoaAggregator, MoaMetadata,
+    // CoT Reflection
+    CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata,
+};
 
-// Strategy implementations
-pub use moa::MoaAggregator;
-pub use best_of_n::{BestOfNAggregator, BestOfNConfig, SelectionMethod};
-pub use self_consistency::{SelfConsistencyAggregator, SelfConsistencyConfig, AnswerExtractionStrategy, VotingStrategy};
-pub use rsa::{RSAAggregator, RSAConfig, SelectionCriterion, RefinementStrategy};
-pub use cot_reflection::{CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata};
-pub use model_router::{LLMProvider, ModelClientRouter, ModelStream};
-pub use provider_config::{ProviderRoutingConfig, ProviderSpec, RoutingStrategy};
+// Re-export provider types
+pub use providers::{
+    LLMProvider, ModelClientRouter, ModelStream,
+    ProviderRoutingConfig, ProviderSpec, RoutingStrategy,
+};
 
 /// MARS module version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -1,7 +1,7 @@
 /// Individual agents that explore solution paths with different temperatures.
 
 use crate::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
-use crate::prompts;
+use crate::core::prompts;
 use crate::types::Solution;
 use crate::Result;
 use futures::StreamExt;

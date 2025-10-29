@@ -106,10 +106,10 @@ impl Aggregator {
     pub async fn aggregate_best_of_n(
         query: &str,
         system_prompt: &str,
-        config: crate::best_of_n::BestOfNConfig,
+        config: crate::strategies::best_of_n::BestOfNConfig,
         client: &dyn crate::ModelClient,
     ) -> Result<Vec<Solution>> {
-        let (solution, _metadata) = crate::best_of_n::BestOfNAggregator::run_best_of_n(
+        let (solution, _metadata) = crate::strategies::best_of_n::BestOfNAggregator::run_best_of_n(
             query,
             system_prompt,
             config,
@@ -130,10 +130,10 @@ impl Aggregator {
     pub async fn aggregate_self_consistency(
         query: &str,
         system_prompt: &str,
-        config: crate::self_consistency::SelfConsistencyConfig,
+        config: crate::strategies::self_consistency::SelfConsistencyConfig,
         client: &dyn crate::ModelClient,
     ) -> Result<Vec<Solution>> {
-        let (solution, _metadata) = crate::self_consistency::SelfConsistencyAggregator::run_self_consistency(
+        let (solution, _metadata) = crate::strategies::self_consistency::SelfConsistencyAggregator::run_self_consistency(
             query,
             system_prompt,
             config,
@@ -154,9 +154,9 @@ impl Aggregator {
     /// 5. Returns the best solution from final population
     pub fn aggregate_rsa(
         solutions: &[Solution],
-        config: crate::rsa::RSAConfig,
+        config: crate::strategies::rsa::RSAConfig,
     ) -> Result<Vec<Solution>> {
-        let (solution, _metadata) = crate::rsa::RSAAggregator::run_rsa(solutions, config)?;
+        let (solution, _metadata) = crate::strategies::rsa::RSAAggregator::run_rsa(solutions, config)?;
         Ok(vec![solution])
     }
 

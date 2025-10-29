@@ -8,13 +8,13 @@
 /// 4. Iterative Improvement
 /// 5. Final Synthesis
 
-use crate::aggregator::Aggregator;
-use crate::agent::Agent;
+use crate::core::aggregator::Aggregator;
+use crate::core::agent::Agent;
 use crate::config::MarsConfig;
-use crate::strategy::StrategyNetwork;
+use crate::core::strategy::StrategyNetwork;
 use crate::types::{MarsEvent, MarsOutput, SelectionMethod};
-use crate::verifier::Verifier;
-use crate::workspace::Workspace;
+use crate::core::verifier::Verifier;
+use crate::core::workspace::Workspace;
 use crate::Result;
 use chrono::Utc;
 use tokio::sync::mpsc;

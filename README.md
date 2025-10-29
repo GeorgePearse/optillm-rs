@@ -185,6 +185,23 @@ cargo build --all-features
 
 MIT
 
+## 📚 Documentation
+
+Complete documentation is available via MkDocs. Build and serve locally:
+
+```bash
+# Install dependencies
+pip install -r requirements-docs.txt
+
+# Serve documentation locally
+mkdocs serve
+
+# Build static site
+mkdocs build
+```
+
+View online: [Documentation](docs/index.md)
+
 ## References
 
 - **OptimLLM**: https://github.com/coohom/optillm

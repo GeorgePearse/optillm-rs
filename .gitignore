@@ -16,3 +16,16 @@ Cargo.lock
 .DS_Store
 .env
 .env.local
+
+# Documentation
+site/
+.mkdocs.yml.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv
+.env.docs

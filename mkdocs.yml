@@ -1,0 +1,94 @@
+site_name: optillm-rs
+site_description: Rust implementations of OptimLLM optimization techniques for LLMs
+repo_url: https://github.com/coohom/optillm
+repo_name: optillm-rs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - toc.integrate
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      use_pygments: true
+      auto_title: true
+  - pymdownx.inlinehilite
+  - admonition
+  - attr_list
+  - def_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Examples: getting-started/examples.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Design Patterns: architecture/design-patterns.md
+    - Core Traits: architecture/core-traits.md
+  - Core Library:
+    - Introduction: core/introduction.md
+    - ModelClient: core/model-client.md
+    - Optimizer Trait: core/optimizer-trait.md
+    - Types: core/types.md
+    - Error Handling: core/error-handling.md
+  - MARS Implementation:
+    - Overview: mars/overview.md
+    - Configuration: mars/configuration.md
+    - Agent System: mars/agent-system.md
+    - Verification: mars/verification.md
+    - Aggregation: mars/aggregation.md
+    - Strategy Network: mars/strategy-network.md
+    - Benchmarks: mars/benchmarks.md
+  - Strategy Implementations:
+    - Mixture of Agents (MOA): strategies/moa.md
+    - Monte Carlo Tree Search: strategies/mcts.md
+    - Provider Routing: strategies/provider-routing.md
+  - Development:
+    - Contributing: development/contributing.md
+    - Building: development/building.md
+    - Testing: development/testing.md
+    - Creating New Optimizers: development/creating-optimizers.md
+  - API Reference:
+    - optillm-core: api/core.md
+    - optillm-mars: api/mars.md
+  - FAQ: faq.md

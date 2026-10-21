@@ -1,7 +1,7 @@
 //! Model client interfaces for LLM communication.
 
-use serde::{Deserialize, Serialize};
 use futures::stream::Stream;
+use serde::{Deserialize, Serialize};
 
 /// Represents a prompt for the model client
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -36,12 +36,12 @@ pub enum ContentItem {
     /// Plain text input
     InputText {
         /// The text content
-        text: String
+        text: String,
     },
     /// Plain text output
     Text {
         /// The text content
-        text: String
+        text: String,
     },
 }
 
@@ -51,12 +51,12 @@ pub enum ResponseEvent {
     /// Text delta in streaming response
     OutputTextDelta {
         /// The text delta
-        delta: String
+        delta: String,
     },
     /// Completion event with token usage
     Completed {
         /// Token usage information
-        token_usage: Option<TokenUsage>
+        token_usage: Option<TokenUsage>,
     },
 }
 

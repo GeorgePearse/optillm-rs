@@ -1,8 +1,8 @@
 //! Core optimizer trait and configuration.
 
+use crate::{ModelClient, Result, Solution};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use crate::{Result, Solution, ModelClient};
 
 /// Base configuration trait for all optimizers
 pub trait OptimizerConfig: Clone + Send + Sync {
@@ -14,11 +14,7 @@ pub trait OptimizerConfig: Clone + Send + Sync {
 #[async_trait]
 pub trait Optimizer: Send + Sync {
     /// Run the optimizer on a query and return the best solution
-    async fn optimize(
-        &self,
-        query: &str,
-        client: &dyn ModelClient,
-    ) -> Result<Solution>;
+    async fn optimize(&self, query: &str, client: &dyn ModelClient) -> Result<Solution>;
 
     /// Get the name of this optimizer implementation
     fn name(&self) -> &str;

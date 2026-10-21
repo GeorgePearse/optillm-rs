@@ -5,7 +5,7 @@ use crate::error::CliResult;
 /// Run Deep Thinking strategy
 pub async fn run(
     query: String,
-    system: String,
+    _system: String,
     min_tokens: usize,
     max_tokens: usize,
     iterations: usize,

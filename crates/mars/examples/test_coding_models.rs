@@ -17,14 +17,16 @@
 //! 3. Run: cargo run --example test_coding_models --features test
 //!
 //! The test will benchmark each model on coding tasks using different optimization strategies.
+#![allow(dead_code, unused, clippy::all)]
 
-use std::time::Instant;
-use optillm_mars::providers::ollama::{OllamaClient, OllamaConfig};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
 use futures::StreamExt;
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
+use optillm_mars::providers::ollama::{OllamaClient, OllamaConfig};
+use std::time::Instant;
 
 /// A simple coding task for testing
-const CODING_TASK: &str = "Write a Rust function that checks if a number is prime. Include error handling.";
+const CODING_TASK: &str =
+    "Write a Rust function that checks if a number is prime. Include error handling.";
 
 const SYSTEM_PROMPT: &str = "You are an expert Rust programmer. Write clean, idiomatic code with proper error handling and documentation.";
 
@@ -43,7 +45,7 @@ impl ModelConfig {
             "http://localhost:11434".to_string(),
             self.model_id.to_string(),
         )
-        .with_temperature(0.3)  // Low temperature for coding
+        .with_temperature(0.3) // Low temperature for coding
         .with_num_predict(1024)
         .with_top_p(0.9)
         .with_top_k(40)
@@ -109,8 +111,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("  Generated: {} tokens", tokens);
                 println!("  Time: {:.2}s", duration_secs);
                 println!("  Throughput: {:.1} tokens/sec", throughput);
-                println!("  Efficiency: {:.1}% of expected speed",
-                    (throughput / model.tokens_per_sec) * 100.0);
+                println!(
+                    "  Efficiency: {:.1}% of expected speed",
+                    (throughput / model.tokens_per_sec) * 100.0
+                );
             }
             Err(e) => {
                 println!("\n✗ FAILED: {}", e);
@@ -185,8 +189,8 @@ async fn test_model(model: &ModelConfig) -> Result<(usize, f32), String> {
         return Err(format!("Invalid config: {}", e));
     }
 
-    let client = OllamaClient::new(config)
-        .map_err(|e| format!("Failed to create client: {}", e))?;
+    let client =
+        OllamaClient::new(config).map_err(|e| format!("Failed to create client: {}", e))?;
 
     println!("\n  Testing inference...");
 

@@ -33,7 +33,7 @@ prek run --skip update-readme-structure,rustfmt git commit -m "emergency"
 - **check-toml** - Validates TOML syntax
 - **check-json** - Validates JSON syntax
 - **detect-private-key** - Prevents committing secrets
-- **markdown-lint** - Lints and fixes markdown files
+- **parity-generated** - Regenerates parity fixtures and the README/STATUS parity table
 
 ### How It Works
 
@@ -49,7 +49,7 @@ When you commit with prek:
 
 ### Configuration
 
-Prek configuration is in `.prek.yaml`. Edit this file to:
+Prek configuration is in `.pre-commit-config.yaml` (prek reads the pre-commit format). Edit this file to:
 - Add or remove hooks
 - Modify hook behavior
 - Configure parallel execution

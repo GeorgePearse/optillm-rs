@@ -63,9 +63,7 @@ mod tests {
 
     #[test]
     fn test_reread_metadata_single_token() {
-        let metadata = ReReadMetadata {
-            total_tokens: 1,
-        };
+        let metadata = ReReadMetadata { total_tokens: 1 };
 
         assert_eq!(metadata.total_tokens, 1);
     }
@@ -125,18 +123,14 @@ mod tests {
 
     #[test]
     fn test_reread_metadata_zero_tokens() {
-        let metadata = ReReadMetadata {
-            total_tokens: 0,
-        };
+        let metadata = ReReadMetadata { total_tokens: 0 };
 
         assert_eq!(metadata.total_tokens, 0);
     }
 
     #[test]
     fn test_reread_metadata_display_format() {
-        let metadata = ReReadMetadata {
-            total_tokens: 5500,
-        };
+        let metadata = ReReadMetadata { total_tokens: 5500 };
 
         let display_str = format!("{}", metadata);
         assert!(display_str.contains("5500"));

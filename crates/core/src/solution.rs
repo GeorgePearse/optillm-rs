@@ -1,9 +1,9 @@
 //! Solution representation for optimization results.
 
+use crate::optimizer::OptimizerMetadata;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::optimizer::OptimizerMetadata;
 
 /// A solution produced by an optimizer
 #[derive(Debug, Clone, Serialize, Deserialize)]

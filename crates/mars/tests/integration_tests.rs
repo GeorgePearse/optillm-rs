@@ -2,9 +2,9 @@
 //!
 //! Tests each strategy with a mock ModelClient to ensure proper functionality
 
+use futures::stream::Stream;
 use optillm_core::{ModelClient, Prompt, ResponseEvent};
 use std::pin::Pin;
-use futures::stream::Stream;
 
 /// Mock ModelClient for testing
 struct MockModelClient {
@@ -39,12 +39,16 @@ impl ModelClient for MockModelClient {
         _prompt: &Prompt,
     ) -> Pin<Box<dyn Stream<Item = optillm_core::Result<ResponseEvent>> + Send>> {
         let idx = self.response_idx.load(std::sync::atomic::Ordering::SeqCst);
-        let response = self.responses
+        let response = self
+            .responses
             .get(idx % self.responses.len())
             .cloned()
             .unwrap_or_else(Self::simple_response);
 
-        self.response_idx.store((idx + 1) % self.responses.len(), std::sync::atomic::Ordering::SeqCst);
+        self.response_idx.store(
+            (idx + 1) % self.responses.len(),
+            std::sync::atomic::Ordering::SeqCst,
+        );
 
         Box::pin(async_stream::stream! {
             yield Ok(ResponseEvent::OutputTextDelta {
@@ -75,7 +79,8 @@ async fn test_autothink_with_mock_client() {
         "You are a helpful assistant.",
         config,
         &mock,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let (_solution, metadata) = result.unwrap();
@@ -102,7 +107,8 @@ async fn test_deep_thinking_with_mock_client() {
         "You are a helpful assistant.",
         config,
         &mock,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let (_solution, metadata) = result.unwrap();
@@ -130,7 +136,8 @@ async fn test_entropy_decoding_with_mock_client() {
         "You are a helpful assistant.",
         config,
         &mock,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let (_solution, metadata) = result.unwrap();
@@ -142,9 +149,7 @@ async fn test_entropy_decoding_with_mock_client() {
 async fn test_cot_decoding_with_mock_client() {
     use optillm_mars::strategies::{CotDecodingAggregator, CotDecodingConfig};
 
-    let mock = MockModelClient::new(vec![
-        MockModelClient::complex_response(),
-    ]);
+    let mock = MockModelClient::new(vec![MockModelClient::complex_response()]);
 
     let config = CotDecodingConfig {
         num_steps: 4,
@@ -156,7 +161,8 @@ async fn test_cot_decoding_with_mock_client() {
         "Follow structured reasoning.",
         config,
         &mock,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let (_solution, metadata) = result.unwrap();
@@ -184,7 +190,8 @@ async fn test_r_star_with_mock_client() {
         "You are a helpful assistant.",
         config,
         &mock,
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let (_solution, metadata) = result.unwrap();
@@ -199,12 +206,8 @@ async fn test_all_strategies_handle_empty_response() {
     let mock = MockModelClient::new(vec!["".to_string()]);
 
     // All strategies should handle empty responses gracefully
-    let at_result = AutoThinkAggregator::run_autothink(
-        "test",
-        "test",
-        AutoThinkConfig::default(),
-        &mock,
-    ).await;
+    let at_result =
+        AutoThinkAggregator::run_autothink("test", "test", AutoThinkConfig::default(), &mock).await;
     assert!(at_result.is_ok());
 
     let dt_result = DeepThinkingAggregator::run_deep_thinking(
@@ -212,13 +215,14 @@ async fn test_all_strategies_handle_empty_response() {
         "test",
         DeepThinkingConfig::default(),
         &mock,
-    ).await;
+    )
+    .await;
     assert!(dt_result.is_ok());
 }
 
 #[test]
 fn test_autothink_complexity_classification() {
-    use optillm_mars::strategies::{AutoThinkOptimizer, AutoThinkConfig, ComplexityLevel};
+    use optillm_mars::strategies::{AutoThinkConfig, AutoThinkOptimizer, ComplexityLevel};
 
     let optimizer = AutoThinkOptimizer::new(AutoThinkConfig::default());
 
@@ -228,7 +232,7 @@ fn test_autothink_complexity_classification() {
 
     // Test medium complexity query
     let medium = optimizer.classify_complexity(
-        "Prove that the set of all prime numbers is infinite using contradiction"
+        "Prove that the set of all prime numbers is infinite using contradiction",
     );
     assert_eq!(medium, ComplexityLevel::Medium);
 
@@ -241,7 +245,7 @@ fn test_autothink_complexity_classification() {
 
 #[test]
 fn test_temperature_selection() {
-    use optillm_mars::strategies::{AutoThinkOptimizer, AutoThinkConfig, ComplexityLevel};
+    use optillm_mars::strategies::{AutoThinkConfig, AutoThinkOptimizer, ComplexityLevel};
 
     let config = AutoThinkConfig {
         simple_temperature: 0.3,

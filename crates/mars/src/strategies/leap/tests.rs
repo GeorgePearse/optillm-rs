@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::strategies::leap::{LEAPConfig, LEAPAggregator, LEAPMetadata, Example, Mistake};
+    use crate::strategies::leap::{Example, LEAPAggregator, LEAPConfig, LEAPMetadata, Mistake};
 
     #[test]
     fn test_leap_config_defaults() {
@@ -231,13 +231,22 @@ mod tests {
         let default_config = LEAPConfig::default();
         let new_config = LEAPConfig::new();
 
-        assert_eq!(default_config.extraction_temperature, new_config.extraction_temperature);
-        assert_eq!(default_config.mistake_temperature, new_config.mistake_temperature);
+        assert_eq!(
+            default_config.extraction_temperature,
+            new_config.extraction_temperature
+        );
+        assert_eq!(
+            default_config.mistake_temperature,
+            new_config.mistake_temperature
+        );
         assert_eq!(
             default_config.principle_temperature,
             new_config.principle_temperature
         );
-        assert_eq!(default_config.final_temperature, new_config.final_temperature);
+        assert_eq!(
+            default_config.final_temperature,
+            new_config.final_temperature
+        );
         assert_eq!(
             default_config.max_tokens_extraction,
             new_config.max_tokens_extraction

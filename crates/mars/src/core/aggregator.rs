@@ -1,4 +1,4 @@
-/// RSA-inspired aggregation for refining solutions.
+//! RSA-inspired aggregation for refining solutions.
 
 use crate::types::{GenerationPhase, Solution};
 use crate::Result;
@@ -9,7 +9,6 @@ use std::collections::HashSet;
 pub struct Aggregator;
 
 impl Aggregator {
-
     /// Select diverse solutions from the population
     ///
     /// This promotes diversity to explore different reasoning paths
@@ -69,7 +68,11 @@ impl Aggregator {
         let mut combined = String::from("Combined reasoning from multiple approaches:\n\n");
 
         for (idx, solution) in solutions.iter().enumerate() {
-            combined.push_str(&format!("Approach {}:\n{}\n\n", idx + 1, solution.reasoning));
+            combined.push_str(&format!(
+                "Approach {}:\n{}\n\n",
+                idx + 1,
+                solution.reasoning
+            ));
         }
 
         combined
@@ -137,13 +140,14 @@ impl Aggregator {
         config: crate::strategies::self_consistency::SelfConsistencyConfig,
         client: &dyn crate::ModelClient,
     ) -> Result<Vec<Solution>> {
-        let (solution, _metadata) = crate::strategies::self_consistency::SelfConsistencyAggregator::run_self_consistency(
-            query,
-            system_prompt,
-            config,
-            client,
-        )
-        .await?;
+        let (solution, _metadata) =
+            crate::strategies::self_consistency::SelfConsistencyAggregator::run_self_consistency(
+                query,
+                system_prompt,
+                config,
+                client,
+            )
+            .await?;
 
         Ok(vec![solution])
     }
@@ -160,7 +164,8 @@ impl Aggregator {
         solutions: &[Solution],
         config: crate::strategies::rsa::RSAConfig,
     ) -> Result<Vec<Solution>> {
-        let (solution, _metadata) = crate::strategies::rsa::RSAAggregator::run_rsa(solutions, config)?;
+        let (solution, _metadata) =
+            crate::strategies::rsa::RSAAggregator::run_rsa(solutions, config)?;
         Ok(vec![solution])
     }
 
@@ -192,8 +197,7 @@ impl Aggregator {
         };
 
         // Count unique answers
-        let unique_answers: HashSet<_> =
-            solutions.iter().map(|s| s.answer.clone()).collect();
+        let unique_answers: HashSet<_> = solutions.iter().map(|s| s.answer.clone()).collect();
 
         AggregationStatistics {
             total_solutions,

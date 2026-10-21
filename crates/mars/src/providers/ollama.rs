@@ -12,11 +12,11 @@
 //! let client = OllamaClient::new(config)?;
 //! ```
 
-use serde::{Deserialize, Serialize};
 use futures::stream::{Stream, StreamExt};
+use serde::{Deserialize, Serialize};
 use std::pin::Pin;
 
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem, OptillmError};
+use optillm_core::{ContentItem, ModelClient, OptillmError, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for Ollama client
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -361,10 +361,7 @@ mod tests {
 
     #[test]
     fn test_ollama_config_new() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        );
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string());
         assert_eq!(config.base_url, "http://localhost:11434");
         assert_eq!(config.model, "llama2");
         assert_eq!(config.temperature, 0.7);
@@ -380,14 +377,11 @@ mod tests {
 
     #[test]
     fn test_ollama_config_builder() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "mistral".to_string(),
-        )
-        .with_temperature(0.5)
-        .with_num_predict(2048)
-        .with_top_p(0.8)
-        .with_top_k(30);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "mistral".to_string())
+            .with_temperature(0.5)
+            .with_num_predict(2048)
+            .with_top_p(0.8)
+            .with_top_k(30);
 
         assert_eq!(config.temperature, 0.5);
         assert_eq!(config.num_predict, 2048);
@@ -415,91 +409,64 @@ mod tests {
 
     #[test]
     fn test_ollama_config_validation_temperature_too_low() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_temperature(-0.1);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_temperature(-0.1);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_ollama_config_validation_temperature_too_high() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_temperature(2.1);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_temperature(2.1);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_ollama_config_validation_zero_tokens() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_num_predict(0);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_num_predict(0);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_ollama_config_validation_invalid_top_p_too_high() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_top_p(1.1);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_top_p(1.1);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_ollama_config_validation_invalid_top_p_negative() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_top_p(-0.1);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_top_p(-0.1);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_ollama_config_validation_temperature_boundary_low() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_temperature(0.0);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_temperature(0.0);
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_ollama_config_validation_temperature_boundary_high() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_temperature(2.0);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_temperature(2.0);
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_ollama_config_validation_top_p_boundary_zero() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_top_p(0.0);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_top_p(0.0);
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_ollama_config_validation_top_p_boundary_one() {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "llama2".to_string(),
-        )
-        .with_top_p(1.0);
+        let config = OllamaConfig::new("http://localhost:11434".to_string(), "llama2".to_string())
+            .with_top_p(1.0);
         assert!(config.validate().is_ok());
     }
 
@@ -530,10 +497,8 @@ mod tests {
     #[test]
     fn test_ollama_config_inequality() {
         let config1 = OllamaConfig::default();
-        let config2 = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            "mistral".to_string(),
-        );
+        let config2 =
+            OllamaConfig::new("http://localhost:11434".to_string(), "mistral".to_string());
         assert_ne!(config1, config2);
     }
 

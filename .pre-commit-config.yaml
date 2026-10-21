@@ -1,0 +1,70 @@
+# Prek / pre-commit hooks.
+# Install: pip install prek && prek install
+# Run all hooks: prek run --all-files
+repos:
+  - repo: local
+    hooks:
+      # File structure documentation updater
+      - id: update-readme-structure
+        name: Update project structure in README
+        entry: python3 scripts/update_readme_structure.py
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false
+
+      # Code quality and formatting
+      - id: rustfmt
+        name: Format Rust code
+        entry: rustfmt --edition 2021
+        language: system
+        types: [rust]
+
+      - id: clippy
+        name: Lint Rust code with clippy
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+        always_run: true
+
+      # File validation
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        entry: sed -i 's/[[:space:]]*$//'
+        language: system
+        types: [text]
+        exclude: '^references/'
+
+      - id: check-yaml
+        name: Check YAML syntax
+        entry: python3 scripts/check_syntax.py yaml
+        language: system
+        types: [yaml]
+
+      - id: check-toml
+        name: Check TOML syntax
+        entry: python3 scripts/check_syntax.py toml
+        language: system
+        types: [toml]
+
+      - id: check-json
+        name: Check JSON syntax
+        entry: python3 -c "import sys, json; [json.load(open(f)) for f in sys.argv[1:]]"
+        language: system
+        types: [json]
+
+      - id: detect-private-key
+        name: Detect private keys
+        entry: python3 scripts/detect_secrets.py
+        language: system
+        types: [text]
+        exclude: '^references/'
+
+      # Parity fixtures and table are generated; keep them in sync.
+      - id: parity-generated
+        name: Parity fixtures / table up to date
+        entry: bash -c 'python3 parity/gen_fixtures.py >/dev/null && python3 parity/parity_table.py'
+        language: system
+        pass_filenames: false
+        files: '^(parity/|README.md|STATUS.md)'

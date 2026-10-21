@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::strategies::rto::{RTOConfig, RTOAggregator};
+    use crate::strategies::rto::{RTOAggregator, RTOConfig};
 
     #[test]
     fn test_rto_config_defaults() {

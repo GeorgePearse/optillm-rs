@@ -3,13 +3,13 @@
 //! LEAP extracts few-shot examples from queries, learns from intentional mistakes,
 //! and applies derived principles to improve answer quality.
 
+use futures::StreamExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use futures::StreamExt;
 
 use crate::{MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for LEAP strategy
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -166,7 +166,10 @@ impl fmt::Display for LEAPMetadata {
         write!(
             f,
             "LEAPMetadata {{ tokens: {}, examples: {}, mistakes: {}, principles: {} }}",
-            self.total_tokens, self.examples_extracted, self.mistakes_generated, self.principles_learned
+            self.total_tokens,
+            self.examples_extracted,
+            self.mistakes_generated,
+            self.principles_learned
         )
     }
 }
@@ -209,27 +212,16 @@ impl LEAPAggregator {
         let mut total_tokens = 0;
 
         // Step 1: Extract examples from query
-        let (examples, tokens) = Self::extract_examples_from_query(
-            query,
-            system_prompt,
-            &config,
-            client,
-        )
-        .await?;
+        let (examples, tokens) =
+            Self::extract_examples_from_query(query, system_prompt, &config, client).await?;
         total_tokens += tokens;
 
         let examples_extracted = examples.len();
 
         // If no examples found, just apply final generation
         if examples.is_empty() {
-            let (answer, tokens) = Self::generate_final_answer(
-                query,
-                system_prompt,
-                &[],
-                &config,
-                client,
-            )
-            .await?;
+            let (answer, tokens) =
+                Self::generate_final_answer(query, system_prompt, &[], &config, client).await?;
             total_tokens += tokens;
 
             return Ok(LEAPResult {
@@ -245,25 +237,15 @@ impl LEAPAggregator {
         }
 
         // Step 2: Generate mistakes for examples
-        let (mistakes, tokens) = Self::generate_mistakes(
-            &examples,
-            system_prompt,
-            &config,
-            client,
-        )
-        .await?;
+        let (mistakes, tokens) =
+            Self::generate_mistakes(&examples, system_prompt, &config, client).await?;
         total_tokens += tokens;
 
         let mistakes_generated = mistakes.len();
 
         // Step 3: Generate low-level principles from mistakes
-        let (low_level_principles, tokens) = Self::generate_low_level_principles(
-            &mistakes,
-            system_prompt,
-            &config,
-            client,
-        )
-        .await?;
+        let (low_level_principles, tokens) =
+            Self::generate_low_level_principles(&mistakes, system_prompt, &config, client).await?;
         total_tokens += tokens;
 
         // Step 4: Generate high-level principles
@@ -369,9 +351,13 @@ impl LEAPAggregator {
             query
         );
 
-        let (response, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, config.max_tokens_extraction, client)
-                .await?;
+        let (response, tokens) = Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_extraction,
+            client,
+        )
+        .await?;
 
         let extracted = Self::extract_output(&response);
         let mut examples = Vec::new();
@@ -415,9 +401,13 @@ impl LEAPAggregator {
                 example.question
             );
 
-            let (response, tokens) =
-                Self::generate_response(&prompt_text, system_prompt, config.max_tokens_mistakes, client)
-                    .await?;
+            let (response, tokens) = Self::generate_response(
+                &prompt_text,
+                system_prompt,
+                config.max_tokens_mistakes,
+                client,
+            )
+            .await?;
             total_tokens += tokens;
 
             let generated_answer = Self::extract_output(&response);
@@ -459,9 +449,13 @@ impl LEAPAggregator {
                 mistake.question, mistake.reasoning, mistake.generated_answer, mistake.correct_answer
             );
 
-            let (response, tokens) =
-                Self::generate_response(&prompt_text, system_prompt, config.max_tokens_principles, client)
-                    .await?;
+            let (response, tokens) = Self::generate_response(
+                &prompt_text,
+                system_prompt,
+                config.max_tokens_principles,
+                client,
+            )
+            .await?;
             total_tokens += tokens;
 
             let principle = Self::extract_output(&response);
@@ -497,9 +491,13 @@ impl LEAPAggregator {
             principles_text, config.max_principles
         );
 
-        let (response, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, config.max_tokens_principles, client)
-                .await?;
+        let (response, tokens) = Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_principles,
+            client,
+        )
+        .await?;
 
         let principles_str = Self::extract_output(&response);
 
@@ -521,7 +519,10 @@ impl LEAPAggregator {
         client: &dyn ModelClient,
     ) -> Result<(String, usize)> {
         let principles_text = if !principles.is_empty() {
-            format!("Keep in mind these principles:\n{}\n\n", principles.join("\n"))
+            format!(
+                "Keep in mind these principles:\n{}\n\n",
+                principles.join("\n")
+            )
         } else {
             String::new()
         };

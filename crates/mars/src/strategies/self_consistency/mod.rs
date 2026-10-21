@@ -1,12 +1,12 @@
-/// Self-Consistency sampling strategy for improved solution quality.
-///
-/// Generates K diverse solutions and selects the best one based on consensus voting.
-/// When multiple diverse reasoning paths converge on the same answer, it's highly likely correct.
-/// Based on "Self-Consistency Improves Chain of Thought Reasoning" (Wei et al., 2022).
+//! Self-Consistency sampling strategy for improved solution quality.
+//!
+//! Generates K diverse solutions and selects the best one based on consensus voting.
+//! When multiple diverse reasoning paths converge on the same answer, it's highly likely correct.
+//! Based on "Self-Consistency Improves Chain of Thought Reasoning" (Wei et al., 2022).
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 use std::collections::HashMap;
 
 /// Configuration for Self-Consistency strategy
@@ -239,14 +239,13 @@ impl SelfConsistencyAggregator {
     /// Extract answer from reasoning text
     fn extract_answer(text: &str, strategy: &AnswerExtractionStrategy) -> String {
         match strategy {
-            AnswerExtractionStrategy::LastLine => {
-                text.lines()
-                    .rev()
-                    .find(|line| !line.trim().is_empty())
-                    .unwrap_or("")
-                    .trim()
-                    .to_string()
-            }
+            AnswerExtractionStrategy::LastLine => text
+                .lines()
+                .rev()
+                .find(|line| !line.trim().is_empty())
+                .unwrap_or("")
+                .trim()
+                .to_string(),
             AnswerExtractionStrategy::AfterMarker => {
                 // Look for common markers
                 let markers = ["Answer:", "Final Answer:", "Conclusion:", "Result:"];
@@ -316,9 +315,7 @@ impl SelfConsistencyAggregator {
         let winner = match config.voting_strategy {
             VotingStrategy::MajorityVote => Self::majority_vote(&vote_counts),
             VotingStrategy::QualityWeighted => Self::quality_weighted_vote(paths, &vote_counts),
-            VotingStrategy::HighestConfidence => {
-                Self::highest_confidence_vote(paths, &vote_counts)
-            }
+            VotingStrategy::HighestConfidence => Self::highest_confidence_vote(paths, &vote_counts),
             VotingStrategy::RankedChoice => Self::ranked_choice_vote(paths, &vote_counts),
         };
 
@@ -356,19 +353,22 @@ impl SelfConsistencyAggregator {
     }
 
     /// Select answer with highest confidence (combination of votes and quality)
-    fn highest_confidence_vote(
-        paths: &[ReasoningPath],
-        votes: &HashMap<String, usize>,
-    ) -> String {
+    fn highest_confidence_vote(paths: &[ReasoningPath], votes: &HashMap<String, usize>) -> String {
         let mut confidence_scores: HashMap<String, f32> = HashMap::new();
 
         for (answer, &vote_count) in votes.iter() {
             let vote_ratio = vote_count as f32 / paths.len() as f32;
 
             // Find average quality of this answer's paths
-            let answer_paths: Vec<_> = paths.iter().filter(|p| p.extracted_answer == *answer).collect();
+            let answer_paths: Vec<_> = paths
+                .iter()
+                .filter(|p| p.extracted_answer == *answer)
+                .collect();
             let avg_quality = if !answer_paths.is_empty() {
-                answer_paths.iter().map(|p| p.reasoning_length).sum::<usize>() as f32
+                answer_paths
+                    .iter()
+                    .map(|p| p.reasoning_length)
+                    .sum::<usize>() as f32
                     / answer_paths.len() as f32
                     / 1000.0
             } else {
@@ -387,31 +387,31 @@ impl SelfConsistencyAggregator {
     }
 
     /// Ranked choice voting (instant runoff)
-    fn ranked_choice_vote(
-        paths: &[ReasoningPath],
-        _votes: &HashMap<String, usize>,
-    ) -> String {
+    fn ranked_choice_vote(paths: &[ReasoningPath], _votes: &HashMap<String, usize>) -> String {
         // For simplicity, use the answer that appears earliest and most frequently
         let mut first_appearance: HashMap<String, usize> = HashMap::new();
         let mut final_counts: HashMap<String, usize> = HashMap::new();
 
         for (idx, path) in paths.iter().enumerate() {
-            first_appearance.entry(path.extracted_answer.clone()).or_insert(idx);
-            *final_counts.entry(path.extracted_answer.clone()).or_insert(0) += 1;
+            first_appearance
+                .entry(path.extracted_answer.clone())
+                .or_insert(idx);
+            *final_counts
+                .entry(path.extracted_answer.clone())
+                .or_insert(0) += 1;
         }
 
         // Sort by count first, then by first appearance
         let mut sorted: Vec<_> = final_counts.into_iter().collect();
         sorted.sort_by(|a, b| {
             b.1.cmp(&a.1)
-                .then_with(|| {
-                    first_appearance
-                        .get(&a.0)
-                        .cmp(&first_appearance.get(&b.0))
-                })
+                .then_with(|| first_appearance.get(&a.0).cmp(&first_appearance.get(&b.0)))
         });
 
-        sorted.first().map(|(answer, _)| answer.clone()).unwrap_or_default()
+        sorted
+            .first()
+            .map(|(answer, _)| answer.clone())
+            .unwrap_or_default()
     }
 
     /// Calculate consensus score (how well paths agreed)
@@ -537,7 +537,6 @@ pub struct VotingStatistics {
     /// Total tokens used
     pub total_tokens: usize,
 }
-
 
 #[cfg(test)]
 mod tests;

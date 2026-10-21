@@ -18,11 +18,12 @@
 //!    ollama pull tinyllama
 //!    ollama pull gpt2
 //! 3. Run: cargo run --example test_ultra_tiny
+#![allow(dead_code, unused, clippy::all)]
 
-use std::time::Instant;
-use optillm_mars::providers::ollama::{OllamaClient, OllamaConfig};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
 use futures::StreamExt;
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
+use optillm_mars::providers::ollama::{OllamaClient, OllamaConfig};
+use std::time::Instant;
 
 const SIMPLE_TASK: &str = "Write a simple function in Rust. Keep it under 10 lines.";
 
@@ -77,7 +78,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Model: {}", model.name);
         println!("  Model ID: {}", model.model_id);
         println!("  Min VRAM: ~{}MB", model.min_vram_mb);
-        println!("  Expected Speed: ~{:.0} tokens/sec", model.expected_tokens_per_sec);
+        println!(
+            "  Expected Speed: ~{:.0} tokens/sec",
+            model.expected_tokens_per_sec
+        );
         println!("{}", "=".repeat(70));
 
         match test_model(model).await {
@@ -85,7 +89,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("\n✓ SUCCESS");
                 println!("  Generated: {} tokens", result.tokens);
                 println!("  Time: {:.2}s", result.elapsed);
-                println!("  Speed: {:.1} tokens/sec", result.tokens as f32 / result.elapsed);
+                println!(
+                    "  Speed: {:.1} tokens/sec",
+                    result.tokens as f32 / result.elapsed
+                );
                 println!("\nGenerated code:");
                 println!("{}", "-".repeat(70));
                 println!("{}", result.output);
@@ -169,7 +176,7 @@ async fn test_model(model: &UltraTinyModel) -> Result<TestResult, Box<dyn std::e
         model.model_id.to_string(),
     )
     .with_temperature(0.5)
-    .with_num_predict(256);  // Keep small to test on constrained systems
+    .with_num_predict(256); // Keep small to test on constrained systems
 
     config.validate()?;
 

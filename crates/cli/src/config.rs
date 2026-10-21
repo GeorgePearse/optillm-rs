@@ -7,6 +7,7 @@ use std::path::Path;
 use crate::error::{CliError, CliResult};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Config {
     /// API key for the LLM provider
     pub api_key: Option<String>,
@@ -36,6 +37,7 @@ impl Default for Config {
     }
 }
 
+#[allow(dead_code)]
 impl Config {
     /// Load configuration from a JSON file
     pub fn from_file<P: AsRef<Path>>(path: P) -> CliResult<Self> {

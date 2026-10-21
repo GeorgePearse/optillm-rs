@@ -1,7 +1,7 @@
-/// Model router for unified access to multiple LLM providers.
-///
-/// Provides abstraction layer supporting both optillm_core::ModelClient
-/// and alternative providers for flexible provider selection.
+//! Model router for unified access to multiple LLM providers.
+//!
+//! Provides abstraction layer supporting both optillm_core::ModelClient
+//! and alternative providers for flexible provider selection.
 
 use crate::Result;
 

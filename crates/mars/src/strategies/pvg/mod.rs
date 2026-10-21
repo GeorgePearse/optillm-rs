@@ -8,12 +8,12 @@
 //! 4. Select the solution with the highest verification score
 //! 5. Optionally iterate with refined queries for improvement
 
+use futures::StreamExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use futures::StreamExt;
 
 use crate::{types::Solution, MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for PVG (Prover-Verifier Game) strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,8 +95,10 @@ impl PVGConfig {
             }
         }
 
-        if self.max_tokens_generation == 0 || self.max_tokens_verification == 0 ||
-           self.max_tokens_refinement == 0 {
+        if self.max_tokens_generation == 0
+            || self.max_tokens_verification == 0
+            || self.max_tokens_refinement == 0
+        {
             return Err(MarsError::InvalidConfiguration(
                 "All max_tokens values must be greater than 0".to_string(),
             ));
@@ -148,7 +150,8 @@ impl PVGAggregator {
         let mut all_scores = Vec::new();
 
         for round in 0..config.num_rounds {
-            let temperature = (config.initial_temperature * 10.0 - (round as f32 * 10.0)).max(0.1) / 10.0;
+            let temperature =
+                (config.initial_temperature * 10.0 - (round as f32 * 10.0)).max(0.1) / 10.0;
 
             // Generate helpful solutions
             let helpful_solutions = Self::generate_solutions(
@@ -456,7 +459,10 @@ impl PVGAggregator {
                 }
                 Ok(ResponseEvent::Completed { .. }) => {}
                 Err(e) => {
-                    return Err(MarsError::CoreError(format!("Query refinement failed: {}", e)));
+                    return Err(MarsError::CoreError(format!(
+                        "Query refinement failed: {}",
+                        e
+                    )));
                 }
             }
         }

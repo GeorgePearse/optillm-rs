@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::strategies::pvg::{PVGConfig, PVGAggregator, PVGMetadata};
+    use crate::strategies::pvg::{PVGAggregator, PVGConfig, PVGMetadata};
 
     #[test]
     fn test_pvg_config_defaults() {
@@ -161,6 +161,9 @@ mod tests {
         assert_eq!(default.num_solutions, new.num_solutions);
         assert_eq!(default.num_rounds, new.num_rounds);
         assert_eq!(default.initial_temperature, new.initial_temperature);
-        assert_eq!(default.verification_temperature, new.verification_temperature);
+        assert_eq!(
+            default.verification_temperature,
+            new.verification_temperature
+        );
     }
 }

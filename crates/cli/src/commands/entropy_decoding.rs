@@ -5,7 +5,7 @@ use crate::error::CliResult;
 /// Run Entropy Decoding strategy
 pub async fn run(
     query: String,
-    system: String,
+    _system: String,
     target_entropy: f32,
     num_samples: usize,
 ) -> CliResult<()> {

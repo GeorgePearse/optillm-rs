@@ -1,7 +1,7 @@
-/// Entropy Decoding: Entropy-based sampling for controlled diversity.
-///
-/// Uses Shannon entropy to control response diversity, providing fine-grained
-/// control over the balance between novelty and quality.
+//! Entropy Decoding: Entropy-based sampling for controlled diversity.
+//!
+//! Uses Shannon entropy to control response diversity, providing fine-grained
+//! control over the balance between novelty and quality.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
@@ -117,10 +117,16 @@ impl EntropyDecodingAggregator {
 
     fn parse_response(response: &str) -> (String, String) {
         if let Some(idx) = response.rfind("Final Answer") {
-            (response[..idx].trim().to_string(), response[idx..].trim().to_string())
+            (
+                response[..idx].trim().to_string(),
+                response[idx..].trim().to_string(),
+            )
         } else {
             let mid = response.len() / 2;
-            (response[..mid].trim().to_string(), response[mid..].trim().to_string())
+            (
+                response[..mid].trim().to_string(),
+                response[mid..].trim().to_string(),
+            )
         }
     }
 }

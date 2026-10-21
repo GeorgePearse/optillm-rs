@@ -1,7 +1,7 @@
-/// R* Algorithm: Enhanced Monte Carlo Tree Search with learned value estimates.
-///
-/// Improves upon MCTS by incorporating learned value estimates and sophisticated
-/// node selection, enabling more efficient exploration of solution space.
+//! R* Algorithm: Enhanced Monte Carlo Tree Search with learned value estimates.
+//!
+//! Improves upon MCTS by incorporating learned value estimates and sophisticated
+//! node selection, enabling more efficient exploration of solution space.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
@@ -103,13 +103,7 @@ impl RStarAggregator {
 
         let (reasoning, answer) = Self::parse_response(&response_text);
 
-        let solution = Solution::new(
-            "r_star".to_string(),
-            reasoning,
-            answer,
-            0.7,
-            total_tokens,
-        );
+        let solution = Solution::new("r_star".to_string(), reasoning, answer, 0.7, total_tokens);
 
         let metadata = RStarMetadata {
             simulations_run: config.num_simulations,
@@ -122,10 +116,16 @@ impl RStarAggregator {
 
     fn parse_response(response: &str) -> (String, String) {
         if let Some(idx) = response.rfind("Final Answer") {
-            (response[..idx].trim().to_string(), response[idx..].trim().to_string())
+            (
+                response[..idx].trim().to_string(),
+                response[idx..].trim().to_string(),
+            )
         } else {
             let mid = response.len() / 2;
-            (response[..mid].trim().to_string(), response[mid..].trim().to_string())
+            (
+                response[..mid].trim().to_string(),
+                response[mid..].trim().to_string(),
+            )
         }
     }
 }

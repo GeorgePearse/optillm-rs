@@ -1,4 +1,4 @@
-/// Shared workspace for storing and managing solutions across agents.
+//! Shared workspace for storing and managing solutions across agents.
 
 use crate::types::Solution;
 use std::sync::Arc;
@@ -43,9 +43,10 @@ impl Workspace {
             solutions[pos] = updated_solution;
             Ok(())
         } else {
-            Err(crate::MarsError::CoordinatorError(
-                format!("Solution {} not found", updated_solution.id),
-            ))
+            Err(crate::MarsError::CoordinatorError(format!(
+                "Solution {} not found",
+                updated_solution.id
+            )))
         }
     }
 
@@ -120,7 +121,6 @@ impl Default for Workspace {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
 
     #[tokio::test]
     async fn test_add_and_get_solution() {
@@ -173,12 +173,27 @@ mod tests {
     async fn test_solutions_by_agent() {
         let workspace = Workspace::new();
 
-        let sol1 =
-            Solution::new("agent1".to_string(), "r1".to_string(), "a1".to_string(), 0.5, 100);
-        let sol2 =
-            Solution::new("agent1".to_string(), "r2".to_string(), "a2".to_string(), 0.5, 100);
-        let sol3 =
-            Solution::new("agent2".to_string(), "r3".to_string(), "a3".to_string(), 0.5, 100);
+        let sol1 = Solution::new(
+            "agent1".to_string(),
+            "r1".to_string(),
+            "a1".to_string(),
+            0.5,
+            100,
+        );
+        let sol2 = Solution::new(
+            "agent1".to_string(),
+            "r2".to_string(),
+            "a2".to_string(),
+            0.5,
+            100,
+        );
+        let sol3 = Solution::new(
+            "agent2".to_string(),
+            "r3".to_string(),
+            "a3".to_string(),
+            0.5,
+            100,
+        );
 
         workspace.add_solution(sol1).await;
         workspace.add_solution(sol2).await;

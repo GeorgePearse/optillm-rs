@@ -3,12 +3,12 @@
 //! Diverse Sampling generates multiple answers with different temperature levels
 //! to explore the response space with varying creativity levels, then selects the best.
 
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use futures::StreamExt;
 
 use crate::{MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for Diverse Sampling strategy
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -163,13 +163,11 @@ impl DiverseSamplingAggregator {
                 config.min_temperature
             } else {
                 let ratio = i as f32 / (config.num_samples - 1) as f32;
-                config.min_temperature
-                    + (config.max_temperature - config.min_temperature) * ratio
+                config.min_temperature + (config.max_temperature - config.min_temperature) * ratio
             };
 
             let (answer, tokens) =
-                Self::generate_response(query, system_prompt, temperature, &config, client)
-                    .await?;
+                Self::generate_response(query, system_prompt, temperature, &config, client).await?;
             total_tokens += tokens;
 
             samples.push(Sample {
@@ -180,9 +178,9 @@ impl DiverseSamplingAggregator {
         }
 
         // Select best answer (first one by default, could be improved with scoring)
-        let best_sample = samples.iter().next().ok_or_else(|| {
-            MarsError::CoreError("No samples generated".to_string())
-        })?;
+        let best_sample = samples
+            .first()
+            .ok_or_else(|| MarsError::CoreError("No samples generated".to_string()))?;
 
         let unique_answers = Self::count_unique_answers(&samples);
 

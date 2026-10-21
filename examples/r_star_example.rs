@@ -36,13 +36,19 @@ fn main() {
 
     println!("BALANCED (Recommended)");
     println!("  Simulations: {}", balanced.num_simulations);
-    println!("  Exploration Constant: {:.3}", balanced.exploration_constant);
+    println!(
+        "  Exploration Constant: {:.3}",
+        balanced.exploration_constant
+    );
     println!("  Candidates: {}", balanced.num_candidates);
     println!("  Use Case: General problem-solving\n");
 
     println!("QUALITY-OPTIMIZED");
     println!("  Simulations: {}", thorough.num_simulations);
-    println!("  Exploration Constant: {:.3}", thorough.exploration_constant);
+    println!(
+        "  Exploration Constant: {:.3}",
+        thorough.exploration_constant
+    );
     println!("  Candidates: {}", thorough.num_candidates);
     println!("  Use Case: Maximum quality, time available\n");
 

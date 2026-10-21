@@ -1,0 +1,33 @@
+[package]
+name = "optillm-proxy"
+version.workspace = true
+edition.workspace = true
+description = "OpenAI-compatible optimizing inference proxy with behavioural parity to codelion/optillm v0.4.0"
+license = "Apache-2.0"
+
+[lib]
+name = "optillm_proxy"
+path = "src/lib.rs"
+
+[[bin]]
+name = "optillm-proxy"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order", "float_roundtrip"] }
+futures = { workspace = true }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+axum = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+clap = { version = "4.4", features = ["derive", "env", "string"] }
+regex = "1.10"
+fancy-regex = "0.14"
+indexmap = "2"
+async-stream = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }

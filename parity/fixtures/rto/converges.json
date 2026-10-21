@@ -1,0 +1,47 @@
+{
+ "description": "identical round-trip code returns C1",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "rto-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Write f doubling x"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Write f doubling x"
+    },
+    "response": {
+     "content": "```python\ndef f(x):\n    return x * 2\n```"
+    }
+   },
+   {
+    "match": {
+     "contains": "Summarize or describe"
+    },
+    "response": {
+     "content": "Write a function f that doubles x."
+    }
+   },
+   {
+    "match": {
+     "last_contains": "Write a function f"
+    },
+    "response": {
+     "content": "```python\ndef f(x):\n    return x * 2\n```"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

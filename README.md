@@ -4,6 +4,114 @@ A Rust monorepo for implementations of optillm optimization techniques for LLMs.
 
 > **Note**: This is a port of the Python [OptimLLM](https://github.com/codelion/optillm) library designed to seamlessly integrate advanced LLM optimization strategies into the [code](https://github.com/just-every/code) project (Codex fork). This Rust implementation enables high-performance deployment of OptimLLM techniques within Rust-based systems while maintaining API compatibility with the original research implementations.
 
+## Parity with upstream optillm
+
+`crates/proxy` (`optillm-proxy`, also available as `optillm serve`) is a drop-in
+Rust replacement for the upstream optillm server. The parity target is
+**optillm v0.4.0, commit `e4ad19906578c9c472a3f8fd04d218db89a31c8c`**
+(PyPI `optillm==0.4.0`).
+
+```bash
+cargo build --release -p optillm-proxy
+OPENAI_API_KEY=sk-... ./target/release/optillm-proxy --approach moa --port 8000
+# or: optillm serve --approach moa --port 8000
+```
+
+### What "perfectly match" means
+
+1. **Proxy surface.** An OpenAI-compatible server (`/v1/chat/completions`, with
+   streaming, plus `/v1/models` and `/health`) that selects approaches the way
+   upstream does: a model-name slug prefix (`moa-gpt-4o`), `optillm_approach`
+   in the request body / `extra_body`, an `<optillm_approach>` tag in the prompt,
+   and the combinators `&` (pipeline) and `|` (parallel). It takes the same CLI
+   flags and environment variables as upstream `server.py` (`--approach`, `--n`,
+   `--base-url`, `--port`, `OPTILLM_API_KEY`, ...). Responses have the same
+   shape, including `usage.completion_tokens` accounting, byte for byte after
+   wall-clock ids and timestamps are normalised.
+2. **Behavioural parity per approach and plugin.** A deterministic mock
+   OpenAI backend (`parity/mock_backend.py`) records every request and returns
+   scripted responses. Upstream optillm (`pip install optillm==0.4.0` in its own
+   venv) and the Rust server run against the same mock with the same inputs. The
+   harness (`parity/run_parity.py`) asserts that both make the same sequence of
+   LLM calls (messages, system prompts, `n`, `temperature`, `max_tokens` and
+   every other body field) and return the same final answer. It runs in CI
+   (`.github/workflows/parity.yml`), with one fixture set per approach and plugin
+   in `parity/fixtures/`.
+3. **Local-inference approaches** (cot_decoding, entropy_decoding, thinkdeeper,
+   deepconf, autothink) match upstream's local-inference behaviour where that is
+   feasible. Otherwise they implement the same algorithm against a backend that
+   exposes logprobs, and the gap is stated in the table below. Parity is never
+   claimed for something the harness does not check.
+4. **Plugins with external side effects** (web_search, readurls, executecode,
+   mcp, deep_research) match the call structure, with network access and code
+   execution gated behind the same flags upstream uses.
+
+Prompts are copied verbatim from upstream (Apache-2.0, see `NOTICE`); multi-line
+prompts are converted with `parity/tools/py2rs_prompt.py` so whitespace survives.
+Stochastic approaches are compared under a fixed seed: the harness reseeds
+upstream's `random` per request (`parity/upstream_hooks/sitecustomize.py`), and
+the Rust server uses a bit-exact port of CPython's MT19937 (`OPTILLM_RANDOM_SEED`).
+
+```bash
+# run the harness locally
+uv venv -p 3.12 ~/optillm-upstream/venv
+VIRTUAL_ENV=~/optillm-upstream/venv uv pip install -r parity/requirements-upstream.txt
+cargo build -p optillm-proxy
+python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python \
+    --rust-bin target/debug/optillm-proxy
+```
+
+### Parity table
+
+<!-- parity-table:start -->
+| Kind | Name | Status | Fixtures | Known deviations / notes |
+|---|---|---|---|---|
+| Server | `proxy surface` | ✅ parity | 11 | /v1/chat/completions, /v1/models, /health, bearer-key check, Flask jsonify byte format, werkzeug 404/415 pages |
+| Server | `approach selection` | ✅ parity | 15 | slug prefix, optillm_approach in body, <optillm_approach> tags, & pipeline, \| parallel, n repeats, untagging of User:/Assistant: output |
+| Server | `none (passthrough)` | ✅ parity | 17 | openai-python model_dump shape, create() kwarg TypeError, 2 retries on 5xx/429, SSE re-chunking incl. tool calls and usage |
+| Server | `batching` | ✅ parity | 5 | --batch-mode/--batch-size/--batch-wait-ms; per model:approach queues, sequential processing, wrapped error messages |
+| Server | `conversation logging` | 🟡 implemented, not yet harness-verified | 0 | --log-conversations JSONL ported; not compared by the harness (timestamps, uuids) |
+| Server | `provider selection` | 🟠 partial | 0 | OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. Gaps: OPTILLM_API_KEY local PyTorch inference engine and the LiteLLM fallback are not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported |
+| Approach | `bon` | ✅ parity | 7 | — |
+| Approach | `moa` | ✅ parity | 5 | — |
+| Approach | `rto` | ✅ parity | 4 | — |
+| Approach | `self_consistency` | ✅ parity | 4 | difflib.SequenceMatcher ported incl. autojunk |
+| Approach | `cot_reflection` | ✅ parity | 4 | — |
+| Approach | `re2` | ✅ parity | 4 | — |
+| Approach | `mcts` | ⬜ not started | 0 | — |
+| Approach | `pvg` | ⬜ not started | 0 | — |
+| Approach | `rstar` | ⬜ not started | 0 | — |
+| Approach | `plansearch` | ⬜ not started | 0 | — |
+| Approach | `leap` | ⬜ not started | 0 | — |
+| Approach | `mars` | ⬜ not started | 0 | crates/mars is an independent native design, not a port |
+| Approach | `cepo` | ⬜ not started | 0 | — |
+| Approach | `z3` | ⬜ not started | 0 | — |
+| Local-inference approach | `cot_decoding` | ⬜ not started | 0 | upstream: local inference only |
+| Local-inference approach | `entropy_decoding` | ⬜ not started | 0 | upstream: local inference only |
+| Local-inference approach | `thinkdeeper` | ⬜ not started | 0 | upstream: local inference only |
+| Local-inference approach | `deepconf` | ⬜ not started | 0 | upstream: local inference only |
+| Local-inference approach | `autothink` | ⬜ not started | 0 | upstream: local inference only |
+| Plugin | `coc` | ⬜ not started | 0 | — |
+| Plugin | `compact` | ⬜ not started | 0 | — |
+| Plugin | `deep_research` | ⬜ not started | 0 | — |
+| Plugin | `deepthink` | ⬜ not started | 0 | — |
+| Plugin | `executecode` | ⬜ not started | 0 | — |
+| Plugin | `genselect` | ⬜ not started | 0 | — |
+| Plugin | `json` | ⬜ not started | 0 | — |
+| Plugin | `longcepo` | ⬜ not started | 0 | — |
+| Plugin | `majority_voting` | ⬜ not started | 0 | — |
+| Plugin | `mcp` | ⬜ not started | 0 | — |
+| Plugin | `memory` | ⬜ not started | 0 | — |
+| Plugin | `privacy` | ⬜ not started | 0 | — |
+| Plugin | `proxy` | ⬜ not started | 0 | — |
+| Plugin | `readurls` | ⬜ not started | 0 | — |
+| Plugin | `router` | ⬜ not started | 0 | — |
+| Plugin | `spl` | ⬜ not started | 0 | — |
+| Plugin | `web_search` | ⬜ not started | 0 | — |
+
+10/42 rows at harness-verified parity, 76 fixtures in total.
+<!-- parity-table:end -->
+
 ## Quick Start
 
 ```bash
@@ -25,17 +133,28 @@ cargo build -p optillm-core
 ```
 optillm-rs/
 ├── .claude/
-│   ├── AGENTS.md
-│   └── settings.local.json
+│   └── AGENTS.md
 ├── .github/
 │   └── workflows/
 ├── .gitignore
-├── .prek.yaml
+├── .memetics/
+│   ├── adaptive-decoding-approximations.md
+│   ├── mars-multi-agent-reasoning.md
+│   ├── prompt-pipeline-strategies.md
+│   ├── sampling-ensembles-moa-bon-self-consistency.md
+│   └── tree-search-mcts-rstar.md
+├── .optillm-parity-prompt.md
+├── .pre-commit-config.yaml
 ├── Cargo.toml
+├── INTEGRATION_GUIDE.md
+├── NOTICE
 ├── README.md
+├── STATUS.md
 ├── crates/
+│   ├── cli/
 │   ├── core/
-│   └── mars/
+│   ├── mars/
+│   └── proxy/
 ├── docs/
 │   ├── api/
 │   ├── architecture/
@@ -48,8 +167,22 @@ optillm-rs/
 │   ├── mars/
 │   └── strategies/
 ├── examples/
+│   ├── autothink_example.rs
+│   ├── cot_decoding_example.rs
+│   ├── deep_thinking_example.rs
+│   ├── entropy_decoding_example.rs
+│   └── r_star_example.rs
 ├── mkdocs.yml
 ├── modal_benchmark.py
+├── parity/
+│   ├── gen_fixtures.py
+│   ├── mock_backend.py
+│   ├── parity_table.py
+│   ├── requirements-upstream.txt
+│   ├── run_parity.py
+│   ├── status.json
+│   ├── tools/
+│   └── upstream_hooks/
 ├── references/
 │   └── optillm/
 ├── requirements-docs.txt
@@ -60,24 +193,10 @@ optillm-rs/
 │   ├── TINYLLAMA_STRATEGY_TEST_RESULTS.md
 │   ├── ULTRA_TINY_MODELS.md
 │   └── UNIMPLEMENTED_TECHNIQUES.md
-├── scripts/
-│   └── update_readme_structure.py
-└── site/
-    ├── 404.html
-    ├── api/
-    ├── architecture/
-    ├── assets/
-    ├── core/
-    ├── development/
-    ├── faq/
-    ├── getting-started/
-    ├── index.html
-    ├── integration/
-    ├── mars/
-    ├── search/
-    ├── sitemap.xml
-    ├── sitemap.xml.gz
-    └── strategies/
+└── scripts/
+    ├── check_syntax.py
+    ├── detect_secrets.py
+    └── update_readme_structure.py
 ```
 
 ## Crates

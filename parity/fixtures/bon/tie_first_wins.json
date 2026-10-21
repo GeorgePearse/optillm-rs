@@ -1,0 +1,56 @@
+{
+ "description": "ties keep the first maximum",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "bon-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3,
+     "temperature": 1
+    },
+    "response": {
+     "contents": [
+      "390",
+      "391",
+      "392"
+     ]
+    }
+   },
+   {
+    "match": {
+     "contains": "Rate the above response"
+    },
+    "responses": [
+     {
+      "content": "8"
+     },
+     {
+      "content": " 8 "
+     },
+     {
+      "content": "2"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

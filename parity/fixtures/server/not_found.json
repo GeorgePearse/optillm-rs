@@ -1,0 +1,13 @@
+{
+ "description": "unknown route",
+ "requests": [
+  {
+   "method": "GET",
+   "path": "/nope"
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

@@ -3,8 +3,6 @@
 //! Provides a unified CLI for integrating OptimLLM strategies into any LLM workflow.
 
 use clap::{Parser, Subcommand};
-use std::env;
-use tracing_subscriber;
 
 mod commands;
 mod config;
@@ -158,6 +156,14 @@ enum Commands {
 
     /// List all available strategies
     Strategies,
+
+    /// Run the OpenAI-compatible optillm proxy server (same flags as upstream `optillm`)
+    #[command(disable_help_flag = true)]
+    Serve {
+        /// Arguments forwarded to the proxy, e.g. `--approach moa --port 8000`
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }
 
 #[tokio::main]
@@ -228,6 +234,17 @@ async fn main() -> CliResult<()> {
 
         Commands::Strategies => {
             commands::list_strategies::run();
+        }
+
+        Commands::Serve { args } => {
+            let argv = std::iter::once("optillm".to_string()).chain(args);
+            let config = match optillm_proxy::ServerConfig::try_from_iter(argv) {
+                Ok(c) => c,
+                Err(e) => e.exit(),
+            };
+            optillm_proxy::serve(config)
+                .await
+                .map_err(|e| error::CliError::Strategy(e.to_string()))?;
         }
     }
 

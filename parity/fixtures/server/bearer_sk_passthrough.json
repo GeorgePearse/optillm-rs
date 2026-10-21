@@ -1,0 +1,29 @@
+{
+ "description": "a client bearer token starting with sk- replaces the server key",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   },
+   "headers": {
+    "Authorization": "Bearer sk-client-key"
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

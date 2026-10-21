@@ -1,0 +1,67 @@
+{
+ "description": "when n>1 fails the provider is called n times",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "bon-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "n is not supported"
+      }
+     }
+    }
+   },
+   {
+    "match": {
+     "contains": "Rate the above response"
+    },
+    "response": {
+     "content": "6"
+    }
+   },
+   {
+    "match": {
+     "lacks": [
+      "n"
+     ]
+    },
+    "responses": [
+     {
+      "content": "390"
+     },
+     {
+      "content": "391",
+      "finish_reason": "length"
+     },
+     {
+      "content": "392"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

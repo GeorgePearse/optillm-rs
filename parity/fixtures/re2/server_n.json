@@ -1,0 +1,44 @@
+{
+ "description": "--n sets the provider n and returns a list",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "re2-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "contents": [
+      "391",
+      "cut"
+     ],
+     "finish_reason": [
+      "stop",
+      "length"
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "server_args": [
+  "--n",
+  "2"
+ ]
+}

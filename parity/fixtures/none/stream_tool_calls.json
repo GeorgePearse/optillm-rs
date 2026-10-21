@@ -1,0 +1,56 @@
+{
+ "description": "tool calls survive streaming",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "stream": true,
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "mul",
+       "parameters": {
+        "type": "object"
+       }
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": null,
+     "finish_reason": "tool_calls",
+     "tool_calls": [
+      {
+       "id": "call_1",
+       "type": "function",
+       "function": {
+        "name": "mul",
+        "arguments": "{\"a\": 17, \"b\": 23}"
+       }
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -1,0 +1,29 @@
+{
+ "description": "non-ASCII content is escaped exactly like Flask's jsonify",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Grüße 👋 — 日本語"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "Hallo 👋 — こんにちは"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

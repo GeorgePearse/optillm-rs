@@ -1,0 +1,47 @@
+{
+ "description": "5 samples clustered by difflib ratio; largest cluster wins",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "self_consistency-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "responses": [
+     {
+      "content": "The answer is 391."
+     },
+     {
+      "content": "I believe it's 400"
+     },
+     {
+      "content": "The answer is 391!"
+     },
+     {
+      "content": "The answer is 391"
+     },
+     {
+      "content": "I believe it's 400."
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

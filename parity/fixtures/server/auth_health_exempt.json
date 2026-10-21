@@ -1,0 +1,17 @@
+{
+ "description": "/health skips the key check",
+ "requests": [
+  {
+   "method": "GET",
+   "path": "/health"
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact",
+ "server_args": [
+  "--optillm-api-key",
+  "secret"
+ ]
+}

@@ -1,0 +1,70 @@
+{
+ "description": "fallback generates candidates one by one",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "moa-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "n unsupported"
+      }
+     }
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide your critique"
+    },
+    "response": {
+     "content": "critique"
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide a final"
+    },
+    "response": {
+     "content": "final"
+    }
+   },
+   {
+    "match": {},
+    "responses": [
+     {
+      "content": "c1"
+     },
+     {
+      "content": null
+     },
+     {
+      "content": "c3"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

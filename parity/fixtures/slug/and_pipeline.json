@@ -1,0 +1,41 @@
+{
+ "description": "a&b runs approaches in sequence, feeding output forward",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "re2&cot_reflection-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "Chain of Thought"
+    },
+    "response": {
+     "content": "<thinking>17*23</thinking><output>391</output>"
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "I think 391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

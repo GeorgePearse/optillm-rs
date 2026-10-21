@@ -107,8 +107,8 @@ Monitor spending across providers:
 
 ```rust
 let usage = router.get_usage_stats();
-println!("OpenAI: {} tokens, ${}", 
-    usage.openai_tokens, 
+println!("OpenAI: {} tokens, ${}",
+    usage.openai_tokens,
     usage.openai_cost);
 ```
 

@@ -1,0 +1,30 @@
+{
+ "description": "a prompt tag wins over optillm_approach in the body",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "<optillm_approach>re2</optillm_approach>What is 17 * 23? Answer with the number."
+     }
+    ],
+    "optillm_approach": "moa"
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

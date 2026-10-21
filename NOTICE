@@ -1,0 +1,23 @@
+optillm-rs
+Copyright the optillm-rs contributors.
+
+This product includes material derived from optillm
+(https://github.com/codelion/optillm), Copyright codelion and the optillm
+contributors, licensed under the Apache License, Version 2.0. The parity
+target is optillm v0.4.0, commit e4ad19906578c9c472a3f8fd04d218db89a31c8c.
+
+Derived material:
+  * All prompt text in crates/proxy/src/approaches and crates/proxy/src/plugins
+    is copied verbatim from the corresponding optillm/*.py and
+    optillm/plugins/*.py modules.
+  * The approach, plugin and server logic in crates/proxy is a port of
+    optillm/server.py, optillm/batching.py, optillm/conversation_logger.py and
+    the approach / plugin modules.
+
+A copy of the Apache License, Version 2.0 is in crates/proxy/UPSTREAM_LICENSE.
+crates/proxy is distributed under the same license.
+
+The CPython-compatible helpers in crates/proxy/src/py reproduce the
+behaviour of CPython's `random` (Mersenne Twister), `difflib` and `json`
+modules (Python Software Foundation License) so that results match the
+upstream Python implementation.

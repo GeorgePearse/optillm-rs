@@ -1,0 +1,13 @@
+{
+ "description": "GET /health",
+ "requests": [
+  {
+   "method": "GET",
+   "path": "/health"
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

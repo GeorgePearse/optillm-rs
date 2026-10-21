@@ -5,11 +5,14 @@ use serde_json::Value;
 
 use crate::approaches::{ApproachResult, Ctx};
 
+pub mod coc;
 pub mod compact;
 pub mod deepthink;
+pub mod executecode;
 pub mod genselect;
 pub mod majority_voting;
 pub mod memory;
+pub mod pyhelper;
 pub mod spl;
 
 /// Run the plugin registered under `slug` (upstream `plugin_approaches[slug]`).
@@ -26,6 +29,8 @@ pub async fn run(
         "deepthink" => deepthink::run(system_prompt, initial_query, ctx).await,
         "memory" => memory::run(system_prompt, initial_query, ctx).await,
         "spl" => spl::run(system_prompt, initial_query, ctx).await,
+        "coc" => coc::run(system_prompt, initial_query, ctx).await,
+        "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",
             other

@@ -81,11 +81,11 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Local-inference approach | `thinkdeeper` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: same control loop, chunked with stop=[end_think_token]; max_thoughts checked between chunks |
 | Local-inference approach | `deepconf` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: warmup/threshold/consensus/weighted vote over top-k logprobs; early termination applied post hoc |
 | Local-inference approach | `autothink` | 🟠 partial | 2 | Remote: parity. Local mode: NOT available (needs in-process complexity classifier + steering vectors on hidden states) |
-| Plugin | `coc` | ⬜ not started | 0 | — |
+| Plugin | `coc` | ✅ parity | 4 | code runs in a Jupyter kernel through upstream's own execute_code (py_helper.py via $OPTILLM_PYTHON with nbconvert + ipykernel); literal_eval via the same helper |
 | Plugin | `compact` | ✅ parity | 4 | tiktoken cl100k_base via tiktoken-rs; models.retrieve() context-length probe reproduced |
 | Plugin | `deep_research` | ⬜ not started | 0 | — |
 | Plugin | `deepthink` | ✅ parity | 4 | SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum) |
-| Plugin | `executecode` | ⬜ not started | 0 | — |
+| Plugin | `executecode` | ✅ parity | 4 | same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced |
 | Plugin | `genselect` | ✅ parity | 4 | — |
 | Plugin | `json` | ⬜ not started | 0 | — |
 | Plugin | `longcepo` | ⬜ not started | 0 | — |
@@ -99,5 +99,5 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-24/42 rows at harness-verified parity, 152 fixtures in total.
+26/42 rows at harness-verified parity, 160 fixtures in total.
 <!-- parity-table:end -->

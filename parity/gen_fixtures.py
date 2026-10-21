@@ -552,6 +552,26 @@ fx("spl/learning", "learning mode creates, evaluates and reuses strategies acros
 fx("spl/kwarg_fallback", "an unknown body key breaks the main call; the plain fallback answers", chat(model="spl-gpt-4o-mini", foo="bar"),
    [SPL_CLASSIFY, rule({"content": "391"})])
 
+CODE_OK = "Here:\n```python\nanswer = 17 * 23\nprint(answer)\n```"
+CODE_BAD = "```python\nanswer = 17 * undefined_value\n```"
+fx("executecode/generated_code", "the model's code block runs in a Jupyter kernel and the output is fed back", chat(model="executecode-gpt-4o-mini"),
+   [rule({"content": "```python\nx = 17 * 23\nprint(x)\nx + 1\n```"}, system_contains="Put the code in a ```python block"),
+    rule({"content": "The answer is 391."}, contains="Based on the code execution output")])
+fx("executecode/no_code", "no code block: the first answer is returned", chat(model="executecode-gpt-4o-mini"), [rule({"content": "391"})])
+fx("executecode/request_code_unpacks", "a python block in the request hits upstream's tuple-unpacking bug",
+   chat(model="executecode-gpt-4o-mini", messages=[{"role": "user", "content": "Run this:\n```python\nprint(1)\n```"}]))
+fx("executecode/runtime_error", "a failing cell raises (CellExecutionError) like upstream", chat(model="executecode-gpt-4o-mini"),
+   [rule({"content": "```python\nraise ValueError('boom')\n```"})])
+fx("coc/executes", "chain of code: generated code runs and `answer` is returned", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_OK})])
+fx("coc/fix_then_run", "an execution error is sent back for a fix", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_BAD}, system_contains="Write Python code to solve this problem"),
+    rule({"content": "```python\nanswer = [17 * 23, 'ok']\n```"}, system_contains="failed to execute")])
+fx("coc/simulate", "three failed executions fall back to LLM simulation (literal_eval'd)", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_BAD}, system_contains="Write Python code"), rule({"content": CODE_BAD}, system_contains="failed to execute"),
+    rule({"content": " {'a': 3.0, 'b': (1, 2)} "}, system_contains="could not be executed directly")])
+fx("coc/no_code", "no code block returns the model text", chat(model="coc-gpt-4o-mini"), [rule({"content": "just 391"})])
+
 
 def main():
     if ROOT.exists():

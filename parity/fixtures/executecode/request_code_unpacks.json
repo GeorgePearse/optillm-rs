@@ -1,0 +1,22 @@
+{
+ "description": "a python block in the request hits upstream's tuple-unpacking bug",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "executecode-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Run this:\n```python\nprint(1)\n```"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

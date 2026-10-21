@@ -1,0 +1,33 @@
+{
+ "description": "chain of code: generated code runs and `answer` is returned",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "coc-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "Here:\n```python\nanswer = 17 * 23\nprint(answer)\n```"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

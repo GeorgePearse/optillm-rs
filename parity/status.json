@@ -228,8 +228,8 @@
    "fixtures": [
     "coc"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "code runs in a Jupyter kernel through upstream's own execute_code (py_helper.py via $OPTILLM_PYTHON with nbconvert + ipykernel); literal_eval via the same helper"
   },
   {
    "group": "plugin",
@@ -264,8 +264,8 @@
    "fixtures": [
     "executecode"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced"
   },
   {
    "group": "plugin",

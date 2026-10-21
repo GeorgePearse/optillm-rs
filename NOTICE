@@ -16,6 +16,8 @@ Derived material:
   * The approach, plugin and server logic in crates/proxy is a port of
     optillm/server.py, optillm/batching.py, optillm/conversation_logger.py and
     the approach / plugin modules.
+  * crates/proxy/src/plugins/py_helper.py carries the execute_code functions
+    of optillm/plugins/executecode_plugin.py and coc_plugin.py unchanged.
 
 A copy of the Apache License, Version 2.0 is in crates/proxy/UPSTREAM_LICENSE.
 crates/proxy is distributed under the same license.

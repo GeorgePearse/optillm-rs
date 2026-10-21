@@ -1,0 +1,43 @@
+{
+ "description": "the model's code block runs in a Jupyter kernel and the output is fed back",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "executecode-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "Put the code in a ```python block"
+    },
+    "response": {
+     "content": "```python\nx = 17 * 23\nprint(x)\nx + 1\n```"
+    }
+   },
+   {
+    "match": {
+     "contains": "Based on the code execution output"
+    },
+    "response": {
+     "content": "The answer is 391."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -34,7 +34,7 @@ def rule(response=None, responses=None, **match):
 
 
 def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
-       serialize_ms=None, pages=None):
+       serialize_ms=None, pages=None, files=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
@@ -44,6 +44,8 @@ def fx(name, description, requests, rules=(), order="exact", server_args=(), env
         data["mock"]["serialize_ms"] = serialize_ms
     if pages:
         data["mock"]["pages"] = pages
+    if files:
+        data["files"] = files
     if server_args:
         data["server_args"] = list(server_args)
     if env:
@@ -607,6 +609,40 @@ fx("privacy/anonymize_roundtrip", "PII is replaced with <TYPE_n> placeholders be
 
 fx("router/model_unavailable", "with the router model unavailable (offline hub) both fall back to one direct completion",
    chat(model="router-gpt-4o-mini", max_tokens=50), [rule({"content": "391"})])
+
+PROXY_CFG = """providers:
+  - name: primary
+    base_url: {MOCK}/v1
+    api_key: sk-primary-key
+  - name: secondary
+    base_url: {MOCK}/v1
+    api_key: sk-secondary-key
+    model_map:
+      gpt-4o-mini: mapped-model
+routing:
+  strategy: round_robin
+  health_check:
+    enabled: false
+"""
+PROXY_FILES = {"{HOME}/.optillm/proxy_config.yaml": PROXY_CFG}
+fx("proxy/no_config", "no providers configured: default config is written and the original client answers (full response dict)",
+   chat(model="proxy-gpt-4o-mini"), [rule({"content": "391"})])
+fx("proxy/round_robin", "round robin across providers with model_map; the system-message probe runs once per provider",
+   [chat(model="proxy-gpt-4o-mini"), chat(model="proxy-gpt-4o-mini"), chat(model="proxy-gpt-4o-mini", temperature=0.1)],
+   [rule({"content": "391"})], files={k: v + "# round robin\n" for k, v in PROXY_FILES.items()})
+fx("proxy/failover_on_500", "a 5xx marks the provider unhealthy and the next provider serves the request",
+   [chat(model="proxy-gpt-4o-mini", messages=[{"role": "user", "content": "q1"}]), chat(model="proxy-gpt-4o-mini", messages=[{"role": "user", "content": "q2"}])],
+   [rule({"status": 500, "body": {"error": {"message": "primary down"}}}, model="gpt-4o-mini"), rule({"content": "from secondary"})],
+   files=PROXY_FILES)
+fx("proxy/wrap_moa", "proxy_wrap runs an approach with the proxy client", chat(model="proxy-gpt-4o-mini", proxy_wrap="moa"),
+   MOA_RULES, files=PROXY_FILES)
+fx("proxy/wrap_rstar_typeerror", "wrapping rstar hits upstream's RStar(**request_config) TypeError and falls back",
+   chat(model="proxy-gpt-4o-mini", wrap="rstar"), [rule({"content": "391"})], files=PROXY_FILES)
+fx("proxy/system_merge", "providers rejecting system messages get them merged into the first user turn",
+   chat(model="proxy-gpt-4o-mini"), [rule({"status": 400, "body": {"error": {"message": "System message not supported for this model"}}}, max_tokens=1),
+                                      rule({"content": "merged ok"})], files={k: v + "# system merge\n" for k, v in PROXY_FILES.items()})
+fx("proxy/models", "/v1/models with --approach proxy lists provider models and model_map aliases", {"method": "GET", "path": "/v1/models"},
+   models=[{"id": "m1", "object": "model", "created": 1, "owned_by": "mock"}], files=PROXY_FILES, server_args=["--approach", "proxy"])
 
 
 def main():

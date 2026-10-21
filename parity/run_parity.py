@@ -84,7 +84,7 @@ def wait_for(url, proc, name, timeout=120):
 class Stack:
     """A mock backend plus one server under test."""
 
-    def __init__(self, name, server_cmd, env, workdir, logdir):
+    def __init__(self, name, server_cmd, env, workdir, logdir, files=None):
         self.name = name
         self.mock_port = free_port()
         self.port = free_port()
@@ -103,9 +103,23 @@ class Stack:
             "--base-url",
             f"http://127.0.0.1:{self.mock_port}/v1",
         ]
-        # Per-server scratch space for fixtures that persist state ({SERVER_TMP}).
+        # Per-server scratch space for fixtures that persist state ({SERVER_TMP}),
+        # also used as HOME so per-user config files (proxy plugin) stay apart.
         self.tmp = tempfile.mkdtemp(prefix=f"parity-{name}-")
-        env = {k: v.replace("{SERVER_TMP}", self.tmp) for k, v in env.items()}
+        home = os.path.join(self.tmp, "home")
+        os.makedirs(home)
+        mock_base = f"http://127.0.0.1:{self.mock_port}"
+
+        def expand(v):
+            return v.replace("{SERVER_TMP}", self.tmp).replace("{HOME}", home).replace("{MOCK}", mock_base)
+
+        for rel, content in (files or {}).items():
+            path = expand(rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as fh:
+                fh.write(expand(content))
+        env = {k: expand(v) for k, v in env.items()}
+        env["HOME"] = home
         self.server = subprocess.Popen(
             cmd, cwd=workdir, env=env, stdout=self.server_log, stderr=subprocess.STDOUT
         )
@@ -270,7 +284,7 @@ def load_fixtures(root, flt):
 
 
 def group_key(fx):
-    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed")], sort_keys=True)
+    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed"), fx.get("files", {})], sort_keys=True)
 
 
 UPSTREAM_PYTHON = None
@@ -330,7 +344,7 @@ def main():
 
     results = []
     for gi, (key, group) in enumerate(groups.items()):
-        server_args, extra_env, seed = json.loads(key)
+        server_args, extra_env, seed, files = json.loads(key)
         server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
         # Upstream's spl plugin persists strategies inside the installed package.
@@ -345,8 +359,9 @@ def main():
                 base_env(extra_env, seed, rust=False),
                 workdir,
                 logdir,
+                files,
             )
-            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir)
+            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir, files)
             for fx in group:
                 t0 = time.time()
                 try:

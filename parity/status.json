@@ -336,8 +336,8 @@
    "fixtures": [
     "proxy"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "~/.optillm/proxy_config.yaml (env interpolation, defaults, validation), round_robin / failover routing, model_map, system-message probe + merge, unhealthy marking, fallback client, wrapped approaches with upstream's handler quirks (rstar / cepo TypeErrors), /v1/models listing. Weighted routing draws from its own RNG rather than the request-seeded one"
   },
   {
    "group": "plugin",
@@ -354,8 +354,8 @@
    "fixtures": [
     "router"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "routing model (ModernBERT-large) runs through upstream's own code in py_helper.py (torch + transformers); routed approaches run natively with upstream's call defaults; fallback path harness-verified (model offline in CI)"
   },
   {
    "group": "plugin",

@@ -1,0 +1,58 @@
+{
+ "description": "a 5xx marks the provider unhealthy and the next provider serves the request",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "q1"
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "q2"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "model": "gpt-4o-mini"
+    },
+    "response": {
+     "status": 500,
+     "body": {
+      "error": {
+       "message": "primary down"
+      }
+     }
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "from secondary"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/proxy_config.yaml": "providers:\n  - name: primary\n    base_url: {MOCK}/v1\n    api_key: sk-primary-key\n  - name: secondary\n    base_url: {MOCK}/v1\n    api_key: sk-secondary-key\n    model_map:\n      gpt-4o-mini: mapped-model\nrouting:\n  strategy: round_robin\n  health_check:\n    enabled: false\n"
+ }
+}

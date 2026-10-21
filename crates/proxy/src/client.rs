@@ -111,6 +111,12 @@ impl OpenAiClient {
         }
     }
 
+    /// openai-python's `max_retries` client option.
+    pub fn with_max_retries(mut self, n: u32) -> Self {
+        self.max_retries = n;
+        self
+    }
+
     fn chat_url(&self, model: &str) -> String {
         match &self.flavor {
             Flavor::Azure { api_version } => format!(

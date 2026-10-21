@@ -1,0 +1,28 @@
+{
+ "description": "/v1/models with --approach proxy lists provider models and model_map aliases",
+ "requests": [
+  {
+   "method": "GET",
+   "path": "/v1/models"
+  }
+ ],
+ "mock": {
+  "rules": [],
+  "models": [
+   {
+    "id": "m1",
+    "object": "model",
+    "created": 1,
+    "owned_by": "mock"
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/proxy_config.yaml": "providers:\n  - name: primary\n    base_url: {MOCK}/v1\n    api_key: sk-primary-key\n  - name: secondary\n    base_url: {MOCK}/v1\n    api_key: sk-secondary-key\n    model_map:\n      gpt-4o-mini: mapped-model\nrouting:\n  strategy: round_robin\n  health_check:\n    enabled: false\n"
+ },
+ "server_args": [
+  "--approach",
+  "proxy"
+ ]
+}

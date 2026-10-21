@@ -14,6 +14,7 @@ pub mod json;
 pub mod majority_voting;
 pub mod memory;
 pub mod privacy;
+pub mod proxy;
 pub mod pyhelper;
 pub mod readurls;
 pub mod router;
@@ -40,6 +41,7 @@ pub async fn run(
         "json" => json::run(system_prompt, initial_query, ctx).await,
         "privacy" => privacy::run(system_prompt, initial_query, ctx).await,
         "router" => router::run(system_prompt, initial_query, ctx).await,
+        "proxy" => proxy::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",
@@ -48,7 +50,16 @@ pub async fn run(
     }
 }
 
-/// Model listing for `--approach proxy` (filled in with the proxy plugin).
+/// Model listing for `--approach proxy`: the providers' models (and
+/// model_map aliases) when the proxy config has providers.
 pub async fn proxy_models() -> Option<Value> {
-    None
+    let config = proxy::load_config();
+    if config["providers"]
+        .as_array()
+        .map(|a| a.is_empty())
+        .unwrap_or(true)
+    {
+        return None;
+    }
+    Some(serde_json::json!({"object": "list", "data": proxy::list_provider_models(&config).await}))
 }

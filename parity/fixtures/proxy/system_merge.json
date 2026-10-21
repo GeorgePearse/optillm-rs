@@ -1,0 +1,49 @@
+{
+ "description": "providers rejecting system messages get them merged into the first user turn",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "max_tokens": 1
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "System message not supported for this model"
+      }
+     }
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "merged ok"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/proxy_config.yaml": "providers:\n  - name: primary\n    base_url: {MOCK}/v1\n    api_key: sk-primary-key\n  - name: secondary\n    base_url: {MOCK}/v1\n    api_key: sk-secondary-key\n    model_map:\n      gpt-4o-mini: mapped-model\nrouting:\n  strategy: round_robin\n  health_check:\n    enabled: false\n# system merge\n"
+ }
+}

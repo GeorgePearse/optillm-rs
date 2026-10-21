@@ -1,0 +1,37 @@
+{
+ "description": "wrapping rstar hits upstream's RStar(**request_config) TypeError and falls back",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "wrap": "rstar"
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/proxy_config.yaml": "providers:\n  - name: primary\n    base_url: {MOCK}/v1\n    api_key: sk-primary-key\n  - name: secondary\n    base_url: {MOCK}/v1\n    api_key: sk-secondary-key\n    model_map:\n      gpt-4o-mini: mapped-model\nrouting:\n  strategy: round_robin\n  health_check:\n    enabled: false\n"
+ }
+}

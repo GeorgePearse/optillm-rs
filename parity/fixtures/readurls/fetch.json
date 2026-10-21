@@ -1,0 +1,34 @@
+{
+ "description": "URLs in the query are fetched and their text spliced in (no LLM call)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "readurls-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Summarise {MOCK}/__page/article and {MOCK}/__page/plain."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [],
+  "pages": {
+   "article": {
+    "html": "<html><head><style>p{}</style></head><body><nav><p>menu</p></nav><article><h2>Ada</h2><p>Ada Lovelace wrote the <em>first</em> algorithm.[3]</p><script>track()</script><table><tr><th>Year</th><th>Event</th></tr><tr><td>1843</td><td>Notes</td></tr></table></article></body></html>"
+   },
+   "plain": {
+    "html": "<html><body><h1>Plain page</h1><p>Line one.</p>\n<p>Line   two.</p></body></html>"
+   },
+   "missing": {
+    "status": 404,
+    "html": "nope"
+   }
+  }
+ },
+ "order": "exact"
+}

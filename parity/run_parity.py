@@ -84,7 +84,7 @@ def wait_for(url, proc, name, timeout=120):
 class Stack:
     """A mock backend plus one server under test."""
 
-    def __init__(self, name, server_cmd, env, workdir, logdir):
+    def __init__(self, name, server_cmd, env, workdir, logdir, files=None, services=None):
         self.name = name
         self.mock_port = free_port()
         self.port = free_port()
@@ -103,6 +103,45 @@ class Stack:
             "--base-url",
             f"http://127.0.0.1:{self.mock_port}/v1",
         ]
+        # Per-server scratch space for fixtures that persist state ({SERVER_TMP}),
+        # also used as HOME so per-user config files (proxy plugin) stay apart.
+        self.tmp = tempfile.mkdtemp(prefix=f"parity-{name}-")
+        home = os.path.join(self.tmp, "home")
+        os.makedirs(home)
+        mock_base = f"http://127.0.0.1:{self.mock_port}"
+        # One spare port per stack for fixture services (e.g. an HTTP MCP server).
+        svc_port = str(free_port())
+
+        def expand(v):
+            for k, val in (("{SERVER_TMP}", self.tmp), ("{HOME}", home), ("{MOCK}", mock_base),
+                           ("{PARITY_DIR}", str(HERE)), ("{PYTHON}", UPSTREAM_PYTHON or sys.executable),
+                           ("{SVCPORT}", svc_port)):
+                v = v.replace(k, val)
+            return v
+
+        self.services = []
+        for i, svc in enumerate(services or []):
+            log = open(logdir / f"{name}-svc{i}.log", "w")
+            self.services.append(subprocess.Popen([expand(a) for a in svc["cmd"]], stdout=log, stderr=subprocess.STDOUT))
+            deadline = time.time() + 60
+            while True:
+                if self.services[-1].poll() is not None:
+                    raise RuntimeError(f"{name} service {i} exited early")
+                try:
+                    socket.create_connection(("127.0.0.1", int(svc_port)), timeout=1).close()
+                    break
+                except OSError:
+                    if time.time() > deadline:
+                        raise RuntimeError(f"{name} service {i} did not listen on {svc_port}")
+                    time.sleep(0.2)
+
+        for rel, content in (files or {}).items():
+            path = expand(rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as fh:
+                fh.write(expand(content))
+        env = {k: expand(v) for k, v in env.items()}
+        env["HOME"] = home
         self.server = subprocess.Popen(
             cmd, cwd=workdir, env=env, stdout=self.server_log, stderr=subprocess.STDOUT
         )
@@ -117,13 +156,14 @@ class Stack:
 
     def request(self, r):
         headers = dict(r.get("headers", {}))
-        body = r.get("body")
+        # "{MOCK}" in a request expands to this stack's mock backend (e.g. pages for readurls).
+        body = json.loads(json.dumps(r.get("body")).replace("{MOCK}", f"http://127.0.0.1:{self.mock_port}"))
         if "raw_body" in r:
             body = r["raw_body"].encode()
         return http(r.get("method", "POST"), f"http://127.0.0.1:{self.port}{r.get('path', '/v1/chat/completions')}", body, headers)
 
     def close(self):
-        for p in (self.server, self.mock):
+        for p in (self.server, self.mock, *self.services):
             p.terminate()
             try:
                 p.wait(timeout=10)
@@ -131,9 +171,12 @@ class Stack:
                 p.kill()
         self.mock_log.close()
         self.server_log.close()
+        shutil.rmtree(self.tmp, ignore_errors=True)
 
 
 TS_ID = re.compile(r"chatcmpl-\d{12,}(-\d+)?")
+# deep_research stamps its report with the wall clock.
+REPORT_TS = re.compile(r"Report generated: \d{4}-\d\d-\d\d \d\d:\d\d:\d\d")
 
 
 def normalize_value(v):
@@ -149,7 +192,7 @@ def normalize_value(v):
     if isinstance(v, list):
         return [normalize_value(x) for x in v]
     if isinstance(v, str):
-        return TS_ID.sub("chatcmpl-<ts>", v)
+        return REPORT_TS.sub("Report generated: <ts>", TS_ID.sub("chatcmpl-<ts>", v))
     return v
 
 
@@ -157,6 +200,7 @@ TS_CREATED = re.compile(r'"created": ?1\d{9}\b')
 
 
 def normalize_text(text):
+    text = REPORT_TS.sub("Report generated: <ts>", text)
     return TS_CREATED.sub('"created": <created>', TS_ID.sub("chatcmpl-<ts>", text))
 
 
@@ -207,9 +251,12 @@ def run_fixture(fx, up, rs):
     for stack in (up, rs):
         stack.script(fx.get("mock", {"rules": []}))
     requests = fx.get("requests") or [fx["request"]]
+    def localize(stack, res):
+        return (res[0], res[1], res[2].replace(f"127.0.0.1:{stack.mock_port}", "MOCKHOST"))
+
     for i, r in enumerate(requests):
-        ures = up.request(r)
-        rres = rs.request(r)
+        ures = localize(up, up.request(r))
+        rres = localize(rs, rs.request(r))
         if SHOW:
             print(f"--- {fx['_name']} request {i}\n  upstream [{ures[0]}]: {ures[2][:600]}\n  rust     [{rres[0]}]: {rres[2][:600]}")
         ukind, ubody, uraw = normalize_body(ures[1], ures[2])
@@ -221,7 +268,10 @@ def run_fixture(fx, up, rs):
         elif uraw != rraw:
             # Same structure but different bytes (key order, escaping, separators).
             problems.append(f"request {i}: response bytes differ\n" + diff(uraw, rraw, "raw"))
-    ucalls, rcalls = up.calls(), rs.calls()
+    def localize_calls(stack):
+        return json.loads(json.dumps(stack.calls()).replace(f"127.0.0.1:{stack.mock_port}", "MOCKHOST"))
+
+    ucalls, rcalls = localize_calls(up), localize_calls(rs)
     if fx.get("order", "exact") == "any":
         ucalls = sorted(ucalls, key=canonical_call)
         rcalls = sorted(rcalls, key=canonical_call)
@@ -259,7 +309,8 @@ def load_fixtures(root, flt):
 
 
 def group_key(fx):
-    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed")], sort_keys=True)
+    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed"), fx.get("files", {}),
+                       fx.get("services", [])], sort_keys=True)
 
 
 UPSTREAM_PYTHON = None
@@ -278,6 +329,8 @@ def base_env(extra, seed, rust):
     if rust:
         # The z3 approach executes solver code with CPython + z3 + sympy.
         env["OPTILLM_PYTHON"] = UPSTREAM_PYTHON
+        # spl keeps a strategy database; upstream's lives in its package dir.
+        env["OPTILLM_SPL_DATA_DIR"] = "{SERVER_TMP}/spl"
     else:
         env["PYTHONPATH"] = str(HERE / "upstream_hooks")
         env["PYTHONUNBUFFERED"] = "1"
@@ -317,9 +370,13 @@ def main():
 
     results = []
     for gi, (key, group) in enumerate(groups.items()):
-        server_args, extra_env, seed = json.loads(key)
+        server_args, extra_env, seed, files, services = json.loads(key)
         server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
+        # Upstream's spl plugin persists strategies inside the installed package.
+        for data_dir in Path(os.path.abspath(args.upstream_python)).parent.parent.glob("lib/python*/site-packages/optillm/plugins/spl/data"):
+            for f in data_dir.glob("*.json"):
+                f.unlink()
         up = rs = None
         try:
             up = Stack(
@@ -328,8 +385,11 @@ def main():
                 base_env(extra_env, seed, rust=False),
                 workdir,
                 logdir,
+                files,
+                services,
             )
-            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir)
+            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir, files,
+                       services)
             for fx in group:
                 t0 = time.time()
                 try:

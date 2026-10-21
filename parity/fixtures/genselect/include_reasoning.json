@@ -1,0 +1,48 @@
+{
+ "description": "include_reasoning appends the reasoning; fallback selection pattern",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "genselect-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "num_candidates": 2,
+    "include_reasoning": true
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 2
+    },
+    "response": {
+     "contents": [
+      "a",
+      "b"
+     ]
+    }
+   },
+   {
+    "match": {
+     "system_contains": "expert evaluator"
+    },
+    "response": {
+     "content": "I would select Candidate 2 here."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

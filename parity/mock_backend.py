@@ -8,6 +8,9 @@ identical replies regardless of ordering or concurrency.
 Control endpoints (not part of the OpenAI surface):
     POST /__mock/script   {"rules": [...], "models": [...]}  -> resets calls
     GET  /__mock/calls    -> {"calls": [...]}
+    GET  /__page/<name>   -> an HTML page from "pages" (readurls fixtures)
+    GET  /search?q=..     -> SearXNG-style JSON from "search": [{"match": "substr", "results": [...]}]
+                             (first rule whose match is in q, "{MOCK}" in results -> this server)
 
 Rule shape:
     {
@@ -47,10 +50,11 @@ import hashlib
 import json
 import threading
 import time
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
-STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None}
+STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None, "pages": {}, "search": []}
 GATE = threading.Condition()
 PENDING = []  # [canonical_body, released_flag_list]
 LAST_EVENT = [0.0]
@@ -244,6 +248,33 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 return self._send(200, {"calls": list(STATE["calls"])})
         self._record(None)
+        path = self.path.split("?")[0]
+        if path.startswith("/__page/"):
+            page = STATE["pages"].get(path[len("/__page/"):])
+            if page is None:
+                return self._send(404, {"error": "no such page"})
+            data = page.get("html", "").encode()
+            self.send_response(page.get("status", 200))
+            self.send_header("Content-Type", page.get("content_type", "text/html; charset=utf-8"))
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path == "/search":
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("q", [""])[0]
+            for rule in STATE["search"]:
+                if rule.get("match", "") in q:
+                    if "status" in rule:
+                        return self._send(rule["status"], {"error": "search failed"})
+                    base = f"http://{self.headers.get('Host')}"
+                    return self._send(200, json.loads(json.dumps({"results": rule.get("results", [])}).replace("{MOCK}", base)))
+            return self._send(200, {"results": []})
+        if "/models/" in path:
+            model_id = path.split("/models/", 1)[1]
+            for m in STATE["models"] or []:
+                if m.get("id") == model_id:
+                    return self._send(200, m)
+            return self._send(404, {"error": {"message": f"The model '{model_id}' does not exist", "type": "invalid_request_error", "code": "model_not_found"}})
         if self.path.split("?")[0].endswith("/models"):
             models = STATE["models"]
             if models is None:
@@ -258,6 +289,8 @@ class Handler(BaseHTTPRequestHandler):
                 STATE["rules"] = body.get("rules", [])
                 STATE["models"] = body.get("models")
                 STATE["serialize_ms"] = body.get("serialize_ms")
+                STATE["pages"] = body.get("pages") or {}
+                STATE["search"] = body.get("search") or []
                 STATE["counters"] = {}
                 STATE["calls"] = []
             return self._send(200, {"ok": True})

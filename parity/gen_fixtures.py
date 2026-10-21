@@ -34,7 +34,7 @@ def rule(response=None, responses=None, **match):
 
 
 def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
-       serialize_ms=None):
+       serialize_ms=None, pages=None, files=None, services=None, search=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
@@ -42,6 +42,14 @@ def fx(name, description, requests, rules=(), order="exact", server_args=(), env
         data["mock"]["models"] = models
     if serialize_ms:
         data["mock"]["serialize_ms"] = serialize_ms
+    if pages:
+        data["mock"]["pages"] = pages
+    if search:
+        data["mock"]["search"] = search
+    if files:
+        data["files"] = files
+    if services:
+        data["services"] = services
     if server_args:
         data["server_args"] = list(server_args)
     if env:
@@ -463,6 +471,301 @@ for name in ["cot_decoding", "entropy_decoding", "thinkdeeper", "deepconf", "aut
        chat(decoding=name))
     fx(f"{name}/not_a_slug", f"'{name}-' is not an approach slug: the whole string is the model name",
        chat(model=f"{name}-gpt-4o-mini"), [rule({"content": "391"})])
+
+# --------------------------------------------------------------------------
+# plugins
+# --------------------------------------------------------------------------
+fx("majority_voting/basic", "k=8 samples, normalised extracted answers, most common wins", chat(model="majority_voting-gpt-4o-mini"),
+   [rule({"contents": ["The answer is 391.", "<think>hmm</think>Answer: 391", "Final answer: 390", "answer is 391!",
+                       "B", "I think it is 391", "### 391", "Answer: 390"]}, n=8)])
+fx("majority_voting/k_and_temperature", "k / temperature / max_tokens from the request", chat(model="majority_voting-gpt-4o-mini", k=3, temperature=0.2, max_tokens=99),
+   [rule({"contents": ["A", "C", "C"]}, n=3)])
+fx("majority_voting/sequential_fallback", "n unsupported -> k sequential calls", chat(model="majority_voting-gpt-4o-mini", k=3),
+   [rule({"status": 400, "body": {"error": {"message": "n not supported"}}}, n=3), rule(responses=[{"content": "x"}, {"content": "y"}, {"content": "y"}])])
+fx("majority_voting/nothing_extracted", "no extractable answers returns the first candidate", chat(model="majority_voting-gpt-4o-mini", k=2),
+   [rule({"contents": ["...", "<think>only thinking</think>"]}, n=2)])
+
+LONG_CONV = []
+for i in range(6):
+    LONG_CONV.append({"role": "user", "content": f"Turn {i}: please remember that file src/mod{i}.rs handles feature {i} and we decided to use option {i}."})
+    LONG_CONV.append({"role": "assistant", "content": f"Noted: src/mod{i}.rs handles feature {i}; option {i} it is."})
+LONG_CONV.append({"role": "user", "content": "Now summarise what we decided."})
+fx("compact/passthrough", "short conversations pass through untouched", chat(model="compact-gpt-4o-mini"))
+fx("compact/compress", "over budget: older turns summarised, 4 recent kept verbatim (context window from request config)",
+   chat(model="compact-gpt-4o-mini", messages=[{"role": "system", "content": SYS}] + LONG_CONV, compact_context_window=100),
+   [rule({"content": "<summary>\nConversation summary:\n- Scope: 9 earlier messages compacted.\n</summary>"}, system_contains="conversation summarizer")])
+fx("compact/model_context_length", "context window read from models.retrieve()", chat(model="compact-gpt-4o-mini", messages=LONG_CONV),
+   [rule({"content": "no tags here"}, system_contains="conversation summarizer")],
+   models=[{"id": "gpt-4o-mini", "object": "model", "created": 1, "owned_by": "x", "context_length": 120}])
+fx("compact/pipeline", "compact&re2: the compacted conversation feeds the next approach", chat(model="compact&re2-gpt-4o-mini",
+   messages=LONG_CONV, compact_context_window=100, compact_keep_recent=2),
+   [rule({"content": "<summary>short</summary>"}, system_contains="conversation summarizer"), rule({"content": "391"})])
+
+fx("genselect/basic", "4 candidates, LLM comparison picks BEST CANDIDATE", chat(model="genselect-gpt-4o-mini"),
+   [rule({"contents": ["390", "391 because 17*23", "392", None]}, n=4),
+    rule({"content": "COMPARISON:\nok\n\nBEST CANDIDATE: 2\n\nREASONING:\nIt multiplies correctly."}, system_contains="expert evaluator")])
+fx("genselect/include_reasoning", "include_reasoning appends the reasoning; fallback selection pattern", chat(model="genselect-gpt-4o-mini", num_candidates=2, include_reasoning=True),
+   [rule({"contents": ["a", "b"]}, n=2), rule({"content": "I would select Candidate 2 here."}, system_contains="expert evaluator")])
+fx("genselect/unparseable", "no selection found defaults to the first candidate", chat(model="genselect-gpt-4o-mini", num_candidates=1),
+   [rule({"contents": ["first", "second"]}, n=2), rule({"content": "both fine"}, system_contains="expert evaluator")])
+fx("genselect/sequential", "n unsupported -> sequential candidates", chat(model="genselect-gpt-4o-mini", num_candidates=2),
+   [rule({"status": 400, "body": {"error": {"message": "no n"}}}, n=2), rule(responses=[{"content": "c1"}, {"content": "c2"}], lacks=["n"]),
+    rule({"content": "BEST CANDIDATE: 9"}, system_contains="expert evaluator")])
+
+DT_RULES = [
+    rule({"content": "Selected: [9, 38, 39]"}, last_contains="Selected modules (JSON array only):"),
+    rule({"content": "1. Break the multiplication into parts.\n2. Think step by step about partial products.\nnot numbered\n3. Plan and verify."}, last_contains="Provide the adapted modules as a numbered list:"),
+    rule({"content": "Here you go:\n```json\n{\"decompose\": \"split 23 into 20 + 3\", \"multiply\": {\"a\": \"17*20\", \"b\": \"17*3\"}, \"answer\": \"sum\"}\n```"},
+         last_contains="Valid JSON reasoning structure:"),
+    rule({"content": "<think>17*20=340, 17*3=51</think>\nThe answer is 391"}, temperature=0.7),
+    rule({"content": "<think>340+51</think>\nThe final answer is 391."}, temperature=0.0),
+]
+fx("deepthink/basic", "SELF-DISCOVER (select/adapt/implement) then uncertainty-routed CoT", chat(model="deepthink-gpt-4o-mini"), DT_RULES)
+fx("deepthink/low_confidence", "inconsistent samples route to the greedy answer", chat(model="deepthink-gpt-4o-mini", deepthink_samples=3),
+   DT_RULES[:3] + [rule(responses=[{"content": "<think>a</think> answer is 1"}, {"content": "<think>zzzz</think> answer is 99999"}, {"content": "nothing"}], temperature=0.7), DT_RULES[4]])
+fx("deepthink/no_self_discover", "enable_self_discover=false skips structure discovery", chat(model="deepthink-gpt-4o-mini", enable_self_discover=False, deepthink_samples=2, temperature=1.5, top_p=0.5, max_tokens=300),
+   [rule({"content": "<think>x</think>Thus 391"}, temperature=1.5), DT_RULES[4]])
+fx("deepthink/bad_json_structure", "unparseable structures fall back to the default structure", chat(model="deepthink-gpt-4o-mini"),
+   DT_RULES[:2] + [rule({"content": "{'step': 'one', bad: two,}"}, last_contains="Valid JSON reasoning structure:")] + DT_RULES[3:])
+
+MEM_DOC = ("Ada Lovelace wrote the first published algorithm for Babbage's Analytical Engine. "
+           "She was born in 1815 in London. Charles Babbage designed the engine. Query: When was Ada Lovelace born?")
+fx("memory/basic", "context is mined for margin notes, then the query is answered from them", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": MEM_DOC}]),
+   [rule({"content": "YES#Ada Lovelace was born in 1815 in London."}, last_contains="Copy over all context relevant"), rule({"content": "1815"})])
+fx("memory/no_relevant", "NO# margins leave an empty note list", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": MEM_DOC}]), [rule({"content": "NO#No relevant context."}, last_contains="Copy over all context"), rule({"content": "?"})])
+fx("memory/sentence_split", "without 'Query:' the last sentence becomes the query", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": "Paris is in France. Berlin is in Germany! Which city is in France?"}]),
+   [rule({"content": "YES#Paris is in France."}, last_contains="Copy over all context"), rule({"content": "Paris"})])
+fx("memory/persisted_ranking", "OPTILLM_MEMORY_FILE persists notes; TF-IDF ranks them for later queries",
+   [chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Cats purr. Query: what do cats do?"}]),
+    chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Dogs bark loudly at night. Query: what do dogs do at night?"}]),
+    chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Birds sing. Query: what do dogs and birds do?"}])],
+   [rule({"content": "YES#Cats purr when happy."}, contains="Cats purr. "), rule({"content": "YES#Dogs bark loudly at night."}, contains="Dogs bark"),
+    rule({"content": "YES#Birds sing in the morning."}, contains="Birds sing. "), rule({"content": "ok"})],
+   env={"OPTILLM_MEMORY_FILE": "{SERVER_TMP}/memory.json"})
+
+SPL_CLASSIFY = rule({"content": "<think>numbers</think>arithmetic_calculation"}, system_contains="You are a problem classifier")
+fx("spl/inference_empty_db", "inference mode with no strategies: classify, then the base prompt", chat(model="spl-gpt-4o-mini"),
+   [SPL_CLASSIFY, rule({"content": "391"})])
+fx("spl/learning", "learning mode creates, evaluates and reuses strategies across requests",
+   [chat(model="spl-gpt-4o-mini", spl_learning=True),
+    chat(model="spl-gpt-4o-mini", spl_learning=True, messages=[{"role": "user", "content": "What is 12 * 13? Answer with the number."}]),
+    chat(model="spl-gpt-4o-mini", max_tokens=100)],
+   [SPL_CLASSIFY,
+    rule({"content": "<think>plan</think>1. Split numbers into tens and units.\n2. Multiply the parts.\n3. Add the partial products."}, system_contains="expert problem-solving strategist"),
+    rule({"content": "<think>no</think>YES"}, system_contains="evaluating the effectiveness"),
+    rule({"content": "<think>17*20+17*3</think>391"})])
+fx("spl/kwarg_fallback", "an unknown body key breaks the main call; the plain fallback answers", chat(model="spl-gpt-4o-mini", foo="bar"),
+   [SPL_CLASSIFY, rule({"content": "391"})])
+
+CODE_OK = "Here:\n```python\nanswer = 17 * 23\nprint(answer)\n```"
+CODE_BAD = "```python\nanswer = 17 * undefined_value\n```"
+fx("executecode/generated_code", "the model's code block runs in a Jupyter kernel and the output is fed back", chat(model="executecode-gpt-4o-mini"),
+   [rule({"content": "```python\nx = 17 * 23\nprint(x)\nx + 1\n```"}, system_contains="Put the code in a ```python block"),
+    rule({"content": "The answer is 391."}, contains="Based on the code execution output")])
+fx("executecode/no_code", "no code block: the first answer is returned", chat(model="executecode-gpt-4o-mini"), [rule({"content": "391"})])
+fx("executecode/request_code_unpacks", "a python block in the request hits upstream's tuple-unpacking bug",
+   chat(model="executecode-gpt-4o-mini", messages=[{"role": "user", "content": "Run this:\n```python\nprint(1)\n```"}]))
+fx("executecode/runtime_error", "a failing cell raises (CellExecutionError) like upstream", chat(model="executecode-gpt-4o-mini"),
+   [rule({"content": "```python\nraise ValueError('boom')\n```"})])
+fx("coc/executes", "chain of code: generated code runs and `answer` is returned", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_OK})])
+fx("coc/fix_then_run", "an execution error is sent back for a fix", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_BAD}, system_contains="Write Python code to solve this problem"),
+    rule({"content": "```python\nanswer = [17 * 23, 'ok']\n```"}, system_contains="failed to execute")])
+fx("coc/simulate", "three failed executions fall back to LLM simulation (literal_eval'd)", chat(model="coc-gpt-4o-mini"),
+   [rule({"content": CODE_BAD}, system_contains="Write Python code"), rule({"content": CODE_BAD}, system_contains="failed to execute"),
+    rule({"content": " {'a': 3.0, 'b': (1, 2)} "}, system_contains="could not be executed directly")])
+fx("coc/no_code", "no code block returns the model text", chat(model="coc-gpt-4o-mini"), [rule({"content": "just 391"})])
+
+PAGES = {
+    "article": {"html": "<html><head><style>p{}</style></head><body><nav><p>menu</p></nav><article><h2>Ada</h2>"
+                        "<p>Ada Lovelace wrote the <em>first</em> algorithm.[3]</p><script>track()</script>"
+                        "<table><tr><th>Year</th><th>Event</th></tr><tr><td>1843</td><td>Notes</td></tr></table></article></body></html>"},
+    "plain": {"html": "<html><body><h1>Plain page</h1><p>Line one.</p>\n<p>Line   two.</p></body></html>"},
+    "missing": {"status": 404, "html": "nope"},
+}
+fx("readurls/fetch", "URLs in the query are fetched and their text spliced in (no LLM call)",
+   chat(model="readurls-gpt-4o-mini", messages=[{"role": "user", "content": "Summarise {MOCK}/__page/article and {MOCK}/__page/plain."}]), pages=PAGES)
+fx("readurls/http_error", "HTTP errors are reported inline like requests.raise_for_status()",
+   chat(model="readurls-gpt-4o-mini", messages=[{"role": "user", "content": "Read '{MOCK}/__page/missing'"}]), pages=PAGES)
+fx("readurls/pipeline", "readurls&re2: fetched content feeds the next approach",
+   chat(model="readurls&re2-gpt-4o-mini", messages=[{"role": "user", "content": "Who is in {MOCK}/__page/article?"}]), [rule({"content": "Ada"})], pages=PAGES)
+
+fx("web_search/no_query", "a bare search command has nothing to search: the query passes through",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for"}]))
+fx("web_search/too_short", "queries shorter than 3 characters are not searched",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "hi"}]))
+
+fx("json/no_schema", "no response_format schema: plain completion", chat(model="json-gpt-4o-mini"), [rule({"content": "391"})])
+fx("json/non_schema_format", "response_format json_object is not a schema: plain completion", chat(model="json-gpt-4o-mini", response_format={"type": "json_object"}),
+   [rule({"content": "{\"a\": 1}"})])
+fx("json/schema", "with a schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines; offline here, so it falls back)",
+   chat(model="json-gpt-4o-mini", response_format={"type": "json_schema", "json_schema": {"name": "x", "schema": {"type": "object", "properties": {"answer": {"type": "integer"}}, "required": ["answer"]}}}),
+   [rule({"content": "{\"answer\": 391}"})],
+   xfail="upstream uses a local outlines model for schema-constrained output; optillm-rs asks the provider for structured output")
+
+fx("privacy/anonymize_roundtrip", "PII is replaced with <TYPE_n> placeholders before the LLM call and restored after",
+   chat(model="privacy-gpt-4o-mini", messages=[{"role": "user", "content": "Write a short note to John Smith at john.smith@example.com about the meeting in Paris."}]),
+   [rule({"content": "Dear <PERSON_0>, see you in <LOCATION_0>. Reply to <EMAIL_ADDRESS_0>. Unknown <PHONE_NUMBER_7>."})])
+
+fx("router/model_unavailable", "with the router model unavailable (offline hub) both fall back to one direct completion",
+   chat(model="router-gpt-4o-mini", max_tokens=50), [rule({"content": "391"})])
+
+PROXY_CFG = """providers:
+  - name: primary
+    base_url: {MOCK}/v1
+    api_key: sk-primary-key
+  - name: secondary
+    base_url: {MOCK}/v1
+    api_key: sk-secondary-key
+    model_map:
+      gpt-4o-mini: mapped-model
+routing:
+  strategy: round_robin
+  health_check:
+    enabled: false
+"""
+PROXY_FILES = {"{HOME}/.optillm/proxy_config.yaml": PROXY_CFG}
+fx("proxy/no_config", "no providers configured: default config is written and the original client answers (full response dict)",
+   chat(model="proxy-gpt-4o-mini"), [rule({"content": "391"})])
+fx("proxy/round_robin", "round robin across providers with model_map; the system-message probe runs once per provider",
+   [chat(model="proxy-gpt-4o-mini"), chat(model="proxy-gpt-4o-mini"), chat(model="proxy-gpt-4o-mini", temperature=0.1)],
+   [rule({"content": "391"})], files={k: v + "# round robin\n" for k, v in PROXY_FILES.items()})
+fx("proxy/failover_on_500", "a 5xx marks the provider unhealthy and the next provider serves the request",
+   [chat(model="proxy-gpt-4o-mini", messages=[{"role": "user", "content": "q1"}]), chat(model="proxy-gpt-4o-mini", messages=[{"role": "user", "content": "q2"}])],
+   [rule({"status": 500, "body": {"error": {"message": "primary down"}}}, model="gpt-4o-mini"), rule({"content": "from secondary"})],
+   files=PROXY_FILES)
+fx("proxy/wrap_moa", "proxy_wrap runs an approach with the proxy client", chat(model="proxy-gpt-4o-mini", proxy_wrap="moa"),
+   MOA_RULES, files=PROXY_FILES)
+fx("proxy/wrap_rstar_typeerror", "wrapping rstar hits upstream's RStar(**request_config) TypeError and falls back",
+   chat(model="proxy-gpt-4o-mini", wrap="rstar"), [rule({"content": "391"})], files=PROXY_FILES)
+fx("proxy/system_merge", "providers rejecting system messages get them merged into the first user turn",
+   chat(model="proxy-gpt-4o-mini"), [rule({"status": 400, "body": {"error": {"message": "System message not supported for this model"}}}, max_tokens=1),
+                                      rule({"content": "merged ok"})], files={k: v + "# system merge\n" for k, v in PROXY_FILES.items()})
+fx("proxy/models", "/v1/models with --approach proxy lists provider models and model_map aliases", {"method": "GET", "path": "/v1/models"},
+   models=[{"id": "m1", "object": "model", "created": 1, "owned_by": "mock"}], files=PROXY_FILES, server_args=["--approach", "proxy"])
+
+fx("longcepo/import_error", "upstream v0.4.0 cannot import longcepo/main.py (relative imports): every request errors",
+   chat(model="longcepo-gpt-4o-mini", messages=[{"role": "user", "content": "Some context.<CONTEXT_END>What is it?"}]))
+fx("longcepo/no_delimiter", "same import error before the <CONTEXT_END> split", chat(model="longcepo-gpt-4o-mini"))
+fx("longcepo/pipeline", "the import error inside a & pipeline", chat(model="re2&longcepo-gpt-4o-mini"), [rule({"content": "391"})])
+
+MCP_SERVER = ["{PYTHON}", "{PARITY_DIR}/fixture_data/mcp_server.py"]
+
+
+def mcp_files(servers):
+    return {"{HOME}/.optillm/mcp_config.json": json.dumps({"mcpServers": servers}, indent=2)}
+
+
+MCP_STDIO = mcp_files({"calc": {"command": "{PYTHON}", "args": ["{PARITY_DIR}/fixture_data/mcp_server.py"],
+                                "description": "Calculator"}})
+
+
+def tool_call(i, name, arguments):
+    return {"id": f"call_{i}", "type": "function", "function": {"name": name, "arguments": arguments}}
+
+
+MCP_FINAL = rule({"content": "The answer is 5."}, last_contains="is_error")
+MCP_ADD = rule({"content": None, "finish_reason": "tool_calls", "tool_calls": [tool_call(1, "calc.add", '{"a": 2, "b": 3}')]},
+               has="tools")
+fx("mcp/no_config", "no ~/.optillm/mcp_config.json: a default is written and the query passes through (temperature 0.7)",
+   chat(model="mcp-gpt-4o-mini"), [rule({"content": "391"})])
+fx("mcp/invalid_config", "unparsable config: load fails twice, plain completion", chat(model="mcp-gpt-4o-mini"),
+   [rule({"content": "391"})], files={"{HOME}/.optillm/mcp_config.json": "{not json"})
+fx("mcp/stdio_tool_call", "stdio server: tools offered as server.tool, call executed, follow-up completion",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=MCP_STDIO)
+fx("mcp/stdio_no_tool_call", "model answers without tools: its first reply is returned", chat(model="mcp-gpt-4o-mini"),
+   [rule({"content": "391 (no tools needed)"})], files=MCP_STDIO)
+fx("mcp/tool_errors", "tool errors, unknown tools, bad names, invalid JSON arguments and unknown servers",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "user", "content": "Do many things"}]),
+   [rule({"content": "done"}, last_contains="error"),
+    rule({"content": "Calling.", "finish_reason": "tool_calls", "tool_calls": [
+        tool_call(1, "calc.echo", '{"text": "h\u00e9 \u2603"}'), tool_call(2, "calc.boom", "{}"),
+        tool_call(3, "calc.nope", "{}"), tool_call(4, "add", "{}"), tool_call(5, "calc.add", "{a: 1"),
+        tool_call(6, "zzz.add", "{}"), tool_call(7, "calc.add", '{"a": "x"}'), tool_call(8, "calc.add", "")]}, has="tools")],
+   files=MCP_STDIO)
+fx("mcp/failed_servers", "unreachable servers are listed as failed next to a working one",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD],
+   files=mcp_files({"missing": {"command": "definitely-not-a-command-xyz"}, "ws": {"transport": "websocket", "url": "ws://x"},
+                    "odd": {"transport": "carrier-pigeon"}, "nourl": {"transport": "sse"},
+                    "calc": {"command": "{PYTHON}", "args": ["{PARITY_DIR}/fixture_data/mcp_server.py"]}}))
+fx("mcp/all_failed", "no server connects: plain completion", chat(model="mcp-gpt-4o-mini"), [rule({"content": "391"})],
+   files=mcp_files({"missing": {"command": "definitely-not-a-command-xyz"}, "ws": {"transport": "websocket", "url": "ws://x"}}))
+fx("mcp/backend_error", "a failing first completion takes the except-path fallback", chat(model="mcp-gpt-4o-mini"),
+   [rule({"status": 400, "body": {"error": {"message": "bad request"}}})], files=MCP_STDIO)
+fx("mcp/streamable_http", "Streamable HTTP server (mcp 2.x MCPServer)",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=mcp_files({"calc": {"transport": "streamable_http", "url": "http://127.0.0.1:{SVCPORT}/mcp"}}),
+   services=[{"cmd": MCP_SERVER + ["streamable-http", "{SVCPORT}"]}])
+fx("mcp/sse", "legacy SSE server",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=mcp_files({"calc": {"transport": "sse", "url": "http://127.0.0.1:{SVCPORT}/sse"}}),
+   services=[{"cmd": MCP_SERVER + ["sse", "{SVCPORT}"]}])
+
+SEARCH_ENV = {"OPTILLM_SEARCH_BACKEND": "searxng", "OPTILLM_SEARXNG_URL": "{MOCK}", "OPTILLM_SEARCH_DELAY_SCALE": "0"}
+SEARCH = [
+    {"match": "broken", "status": 500},
+    {"match": "history", "results": [{"title": "X History", "url": "{MOCK}/__page/hist", "content": "A timeline of X"}]},
+    {"match": "market", "results": [{"title": "X Market", "url": "{MOCK}/__page/market", "content": "Market size"},
+                                    {"title": "Gone", "url": "{MOCK}/__page/missing", "content": ""}]},
+    {"match": "nothing", "results": []},
+    {"match": "", "results": [{"title": "X overview", "url": "{MOCK}/__page/overview", "content": ""},
+                              {"title": "X wiki", "url": "{MOCK}/__page/hist", "content": "Encyclopedia entry"}]},
+]
+SEARCH_PAGES = {
+    "hist": {"html": "<html><body><h1>History</h1><p>X began in 1999.</p></body></html>"},
+    "market": {"html": "<html><body><p>The X market is worth 3 billion.</p></body></html>"},
+    "overview": {"html": "<html><body><div class='content'><p>X is a thing.</p></div></body></html>"},
+}
+fx("web_search/searxng", "search path over the shared HTTP backend: several queries, num_results, empty results",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for: X market\nlook up X history\nresearch nothing here"}],
+        num_results=1), env=SEARCH_ENV, search=SEARCH, seed=7)
+fx("web_search/search_failure", "a failing search backend gives the no-results note (no delay drawn)",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for broken things"}]), env=SEARCH_ENV,
+   search=SEARCH, seed=7)
+
+DR_Q = "Research the history and market of X"
+DR_DRAFT = "# X\n\n## Intro\nX began [NEEDS RESEARCH: history].\n\n## Market\nBig [SOURCE NEEDED]."
+DR_GAPS = ("GAP_ID: 1\nSECTION: Background\nGAP_TYPE: PLACEHOLDER_TAG\nSPECIFIC_NEED: history of X\nSEARCH_QUERY: X history timeline\n"
+           "PRIORITY: medium\n\nGAP_ID: 2\nSECTION: Market\nSPECIFIC_NEED: market data\nSEARCH_QUERY: X market size 2026\n"
+           "PRIORITY: HIGH\n\nGAP_ID: 3\nSECTION: Misc\nSEARCH_QUERY:\nPRIORITY: LOW")
+DR_FINAL = ("<think>plan</think># X Report\n\nX is great [1]. Market is big [2][99].\n\n## Research Questions for Investigation\n"
+            "- q1\n- q2\n- q3\n- q4\n\n## Details\n[NEEDS RESEARCH: more]\n\n## References\n[1] X History\n[2] Market\n\n"
+            "## Conclusion\nDone [3].")
+DR_RULES = [
+    rule({"content": DR_DRAFT}, last_contains="Generate a preliminary research report structure"),
+    rule({"content": "<think>hmm</think>1. [What is the history of X?]\n2) not numbered\n2. X market size\n3. []"},
+         last_contains="break it down into 3-5 focused sub-queries"),
+    rule(responses=[{"content": DR_GAPS}, {"content": "GAP_ID: 1\nSECTION: Intro\nSEARCH_QUERY: nothing more\nPRIORITY: HIGH"}],
+         system_contains="expert research analyst"),
+    rule(responses=[{"content": "Draft v2: X began in 1999 [1]. Market 3bn [2]."}, {"content": "Draft v3 [1][2][3]."}],
+         system_contains="performing draft denoising"),
+    rule(responses=[{"content": "COMPLETENESS: 0.6\nIMPROVEMENT: 0.2\nDEPTH: high\nnoise"}, {"content": "COMPLETENESS: 0.95"}],
+         system_contains="quality evaluator"),
+    rule({"content": DR_FINAL}, last_contains="Apply final polishing"),
+]
+fx("deep_research/full", "TTD-DR: draft, decomposition + search, gap-targeted search, readurls, denoising, scoring, finalisation",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": DR_Q}],
+        max_iterations=3, max_sources=6), DR_RULES, env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/no_gaps", "unparseable decomposition falls back to the query; an empty gap analysis ends the loop",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=2),
+   [rule({"content": "no numbers here"}, last_contains="break it down"), rule({"content": "All good."}, system_contains="expert research analyst"),
+    rule({"content": "Short final [1]."}, last_contains="Apply final polishing"), rule({"content": DR_DRAFT})],
+   env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/llm_errors", "every completion fails (max_retries=0): each step's fallback text, then 'Finalization failed'",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=2),
+   [rule({"status": 500, "body": {"error": {"message": "upstream down"}}})], env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/bad_iterations", "a non-integer max_iterations fails after the initial research",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=1.5),
+   [rule({"content": "1. history of X"}, last_contains="break it down"), rule({"content": DR_DRAFT})],
+   env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/empty_query", "a blank user turn still carries the User: prefix, so research proceeds",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": "   "}]), env=SEARCH_ENV, seed=11)
 
 
 def main():

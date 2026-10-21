@@ -1,0 +1,36 @@
+{
+ "description": "no server connects: plain completion",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mcp-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/mcp_config.json": "{\n  \"mcpServers\": {\n    \"missing\": {\n      \"command\": \"definitely-not-a-command-xyz\"\n    },\n    \"ws\": {\n      \"transport\": \"websocket\",\n      \"url\": \"ws://x\"\n    }\n  }\n}"
+ }
+}

@@ -1,0 +1,55 @@
+{
+ "description": "n unsupported -> k sequential calls",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "majority_voting-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "k": 3
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "n not supported"
+      }
+     }
+    }
+   },
+   {
+    "match": {},
+    "responses": [
+     {
+      "content": "x"
+     },
+     {
+      "content": "y"
+     },
+     {
+      "content": "y"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

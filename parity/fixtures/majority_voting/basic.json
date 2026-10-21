@@ -1,0 +1,44 @@
+{
+ "description": "k=8 samples, normalised extracted answers, most common wins",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "majority_voting-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 8
+    },
+    "response": {
+     "contents": [
+      "The answer is 391.",
+      "<think>hmm</think>Answer: 391",
+      "Final answer: 390",
+      "answer is 391!",
+      "B",
+      "I think it is 391",
+      "### 391",
+      "Answer: 390"
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

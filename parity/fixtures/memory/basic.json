@@ -1,0 +1,37 @@
+{
+ "description": "context is mined for margin notes, then the query is answered from them",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "memory-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Ada Lovelace wrote the first published algorithm for Babbage's Analytical Engine. She was born in 1815 in London. Charles Babbage designed the engine. Query: When was Ada Lovelace born?"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Copy over all context relevant"
+    },
+    "response": {
+     "content": "YES#Ada Lovelace was born in 1815 in London."
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "1815"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

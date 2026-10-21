@@ -1,0 +1,36 @@
+{
+ "description": "model answers without tools: its first reply is returned",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mcp-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391 (no tools needed)"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/mcp_config.json": "{\n  \"mcpServers\": {\n    \"calc\": {\n      \"command\": \"{PYTHON}\",\n      \"args\": [\n        \"{PARITY_DIR}/fixture_data/mcp_server.py\"\n      ],\n      \"description\": \"Calculator\"\n    }\n  }\n}"
+ }
+}

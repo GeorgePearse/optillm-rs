@@ -1,0 +1,59 @@
+{
+ "description": "proxy_wrap runs an approach with the proxy client",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "proxy_wrap": "moa"
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "contents": [
+      "390",
+      "391",
+      "392"
+     ]
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide your critique"
+    },
+    "response": {
+     "content": "Candidate 2 is right."
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide a final, optimized response"
+    },
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/proxy_config.yaml": "providers:\n  - name: primary\n    base_url: {MOCK}/v1\n    api_key: sk-primary-key\n  - name: secondary\n    base_url: {MOCK}/v1\n    api_key: sk-secondary-key\n    model_map:\n      gpt-4o-mini: mapped-model\nrouting:\n  strategy: round_robin\n  health_check:\n    enabled: false\n"
+ }
+}

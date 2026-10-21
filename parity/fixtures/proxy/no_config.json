@@ -1,0 +1,33 @@
+{
+ "description": "no providers configured: default config is written and the original client answers (full response dict)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "proxy-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

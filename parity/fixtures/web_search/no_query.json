@@ -1,0 +1,22 @@
+{
+ "description": "a bare search command has nothing to search: the query passes through",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "web_search-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "search for"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

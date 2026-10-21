@@ -1,0 +1,48 @@
+{
+ "description": "4 candidates, LLM comparison picks BEST CANDIDATE",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "genselect-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 4
+    },
+    "response": {
+     "contents": [
+      "390",
+      "391 because 17*23",
+      "392",
+      null
+     ]
+    }
+   },
+   {
+    "match": {
+     "system_contains": "expert evaluator"
+    },
+    "response": {
+     "content": "COMPARISON:\nok\n\nBEST CANDIDATE: 2\n\nREASONING:\nIt multiplies correctly."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

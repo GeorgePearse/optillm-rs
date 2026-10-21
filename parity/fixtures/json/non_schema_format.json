@@ -1,0 +1,36 @@
+{
+ "description": "response_format json_object is not a schema: plain completion",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "json-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "response_format": {
+     "type": "json_object"
+    }
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "{\"a\": 1}"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

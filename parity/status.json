@@ -228,8 +228,8 @@
    "fixtures": [
     "coc"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "code runs in a Jupyter kernel through upstream's own execute_code (py_helper.py via $OPTILLM_PYTHON with nbconvert + ipykernel); literal_eval via the same helper"
   },
   {
    "group": "plugin",
@@ -237,8 +237,8 @@
    "fixtures": [
     "compact"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "tiktoken cl100k_base via tiktoken-rs; models.retrieve() context-length probe reproduced"
   },
   {
    "group": "plugin",
@@ -246,8 +246,8 @@
    "fixtures": [
     "deep_research"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "TTD-DR loop ported (draft, decomposition, gap analysis, targeted search, readurls, denoising, scoring, finalisation with placeholder cleanup, report fixing, references and metadata), including the client wrapper's max_retries=0 attempt with fallback to the original client. Searches use web_search's HTTP backend instead of upstream's shared Chrome session; the harness swaps upstream's searcher onto the same backend to compare"
   },
   {
    "group": "plugin",
@@ -255,8 +255,8 @@
    "fixtures": [
     "deepthink"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum)"
   },
   {
    "group": "plugin",
@@ -264,8 +264,8 @@
    "fixtures": [
     "executecode"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced"
   },
   {
    "group": "plugin",
@@ -273,7 +273,7 @@
    "fixtures": [
     "genselect"
    ],
-   "status": "not started",
+   "status": "parity",
    "notes": ""
   },
   {
@@ -282,8 +282,8 @@
    "fixtures": [
     "json"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "no-schema and error paths at parity; with a json_schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines), optillm-rs asks the provider for strict structured output (xfail fixture)"
   },
   {
    "group": "plugin",
@@ -291,8 +291,8 @@
    "fixtures": [
     "longcepo"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "upstream v0.4.0 loads longcepo/main.py as a top-level module, so its relative imports raise 'attempted relative import with no known parent package' on every request; that error is reproduced. The LongCePO pipeline itself is not ported, since upstream cannot run it"
   },
   {
    "group": "plugin",
@@ -300,7 +300,7 @@
    "fixtures": [
     "majority_voting"
    ],
-   "status": "not started",
+   "status": "parity",
    "notes": ""
   },
   {
@@ -309,8 +309,8 @@
    "fixtures": [
     "mcp"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "native MCP client (stdio, legacy SSE, Streamable HTTP; initialize handshake as the mcp 2.3 SDK) against ~/.optillm/mcp_config.json; server.tool functions, per-call fresh connections, result/error JSON verbatim. Not reproduced: upstream's extra pre-spawned stdio process and 2 s startup sleep; the output-schema check covers missing structured content but does not jsonschema-validate it. Upstream's `server.tool` names fail OpenAI's function-name pattern, so against OpenAI both fall back to a plain completion"
   },
   {
    "group": "plugin",
@@ -318,8 +318,8 @@
    "fixtures": [
     "memory"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "sklearn TfidfVectorizer + cosine ported; OPTILLM_MEMORY_FILE persistence"
   },
   {
    "group": "plugin",
@@ -327,8 +327,8 @@
    "fixtures": [
     "privacy"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "Presidio + spaCy en_core_web_lg anonymisation through upstream's own code (py_helper.py via $OPTILLM_PYTHON); de-anonymisation native"
   },
   {
    "group": "plugin",
@@ -336,8 +336,8 @@
    "fixtures": [
     "proxy"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "~/.optillm/proxy_config.yaml (env interpolation, defaults, validation), round_robin / failover routing, model_map, system-message probe + merge, unhealthy marking, fallback client, wrapped approaches with upstream's handler quirks (rstar / cepo TypeErrors), /v1/models listing. Weighted routing draws from its own RNG rather than the request-seeded one"
   },
   {
    "group": "plugin",
@@ -345,8 +345,8 @@
    "fixtures": [
     "readurls"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "bs4 get_text rules on an HTML5 parser (html5ever instead of lxml: malformed-HTML recovery can differ); requests URL normalisation (empty query dropped); network errors worded differently"
   },
   {
    "group": "plugin",
@@ -354,8 +354,8 @@
    "fixtures": [
     "router"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "routing model (ModernBERT-large) runs through upstream's own code in py_helper.py (torch + transformers); routed approaches run natively with upstream's call defaults; fallback path harness-verified (model offline in CI)"
   },
   {
    "group": "plugin",
@@ -363,8 +363,8 @@
    "fixtures": [
     "spl"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here)"
   },
   {
    "group": "plugin",
@@ -372,8 +372,8 @@
    "fixtures": [
     "web_search"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "query extraction, formatting, enhanced-query layout and the post-search delay (randint(4, 32) after every loaded results page) verbatim, harness-verified with upstream's searcher swapped onto the same backend. The search itself uses an HTTP backend (DuckDuckGo HTML, SearXNG or Tavily) instead of upstream's Selenium-driven Chrome on google.com; OPTILLM_SEARCH_DELAY_SCALE scales the sleep"
   }
  ]
 }

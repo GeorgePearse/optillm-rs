@@ -1,0 +1,105 @@
+{
+ "description": "a non-integer max_iterations fails after the initial research",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "deep_research-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Research the history and market of X"
+     }
+    ],
+    "max_iterations": 1.5
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "break it down"
+    },
+    "response": {
+     "content": "1. history of X"
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "# X\n\n## Intro\nX began [NEEDS RESEARCH: history].\n\n## Market\nBig [SOURCE NEEDED]."
+    }
+   }
+  ],
+  "pages": {
+   "hist": {
+    "html": "<html><body><h1>History</h1><p>X began in 1999.</p></body></html>"
+   },
+   "market": {
+    "html": "<html><body><p>The X market is worth 3 billion.</p></body></html>"
+   },
+   "overview": {
+    "html": "<html><body><div class='content'><p>X is a thing.</p></div></body></html>"
+   }
+  },
+  "search": [
+   {
+    "match": "broken",
+    "status": 500
+   },
+   {
+    "match": "history",
+    "results": [
+     {
+      "title": "X History",
+      "url": "{MOCK}/__page/hist",
+      "content": "A timeline of X"
+     }
+    ]
+   },
+   {
+    "match": "market",
+    "results": [
+     {
+      "title": "X Market",
+      "url": "{MOCK}/__page/market",
+      "content": "Market size"
+     },
+     {
+      "title": "Gone",
+      "url": "{MOCK}/__page/missing",
+      "content": ""
+     }
+    ]
+   },
+   {
+    "match": "nothing",
+    "results": []
+   },
+   {
+    "match": "",
+    "results": [
+     {
+      "title": "X overview",
+      "url": "{MOCK}/__page/overview",
+      "content": ""
+     },
+     {
+      "title": "X wiki",
+      "url": "{MOCK}/__page/hist",
+      "content": "Encyclopedia entry"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact",
+ "env": {
+  "OPTILLM_SEARCH_BACKEND": "searxng",
+  "OPTILLM_SEARXNG_URL": "{MOCK}",
+  "OPTILLM_SEARCH_DELAY_SCALE": "0"
+ },
+ "seed": 11
+}

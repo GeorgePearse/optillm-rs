@@ -1,0 +1,67 @@
+{
+ "description": "legacy SSE server",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mcp-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "Add 2 and 3"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "is_error"
+    },
+    "response": {
+     "content": "The answer is 5."
+    }
+   },
+   {
+    "match": {
+     "has": "tools"
+    },
+    "response": {
+     "content": null,
+     "finish_reason": "tool_calls",
+     "tool_calls": [
+      {
+       "id": "call_1",
+       "type": "function",
+       "function": {
+        "name": "calc.add",
+        "arguments": "{\"a\": 2, \"b\": 3}"
+       }
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/mcp_config.json": "{\n  \"mcpServers\": {\n    \"calc\": {\n      \"transport\": \"sse\",\n      \"url\": \"http://127.0.0.1:{SVCPORT}/sse\"\n    }\n  }\n}"
+ },
+ "services": [
+  {
+   "cmd": [
+    "{PYTHON}",
+    "{PARITY_DIR}/fixture_data/mcp_server.py",
+    "sse",
+    "{SVCPORT}"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+{
+ "description": "OPTILLM_MEMORY_FILE persists notes; TF-IDF ranks them for later queries",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "memory-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Cats purr. Query: what do cats do?"
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "memory-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Dogs bark loudly at night. Query: what do dogs do at night?"
+     }
+    ]
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "memory-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Birds sing. Query: what do dogs and birds do?"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "Cats purr. "
+    },
+    "response": {
+     "content": "YES#Cats purr when happy."
+    }
+   },
+   {
+    "match": {
+     "contains": "Dogs bark"
+    },
+    "response": {
+     "content": "YES#Dogs bark loudly at night."
+    }
+   },
+   {
+    "match": {
+     "contains": "Birds sing. "
+    },
+    "response": {
+     "content": "YES#Birds sing in the morning."
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "ok"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "env": {
+  "OPTILLM_MEMORY_FILE": "{SERVER_TMP}/memory.json"
+ }
+}

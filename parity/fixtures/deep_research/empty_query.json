@@ -1,0 +1,28 @@
+{
+ "description": "a blank user turn still carries the User: prefix, so research proceeds",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "deep_research-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "   "
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact",
+ "env": {
+  "OPTILLM_SEARCH_BACKEND": "searxng",
+  "OPTILLM_SEARXNG_URL": "{MOCK}",
+  "OPTILLM_SEARCH_DELAY_SCALE": "0"
+ },
+ "seed": 11
+}

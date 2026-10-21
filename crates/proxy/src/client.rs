@@ -38,11 +38,28 @@ pub trait LlmClient: Send + Sync {
     /// `client.models.list()` as `{"object": "list", "data": [...]}`.
     async fn list_models(&self) -> std::result::Result<Value, LlmError>;
 
+    /// `client.models.retrieve(model)` (openai-python `Model`, extras kept).
+    async fn retrieve_model(&self, model: &str) -> std::result::Result<Value, LlmError> {
+        let _ = model;
+        Err(LlmError {
+            status: Some(404),
+            message: "models.retrieve is not supported by this client".into(),
+            body: None,
+        })
+    }
+
     /// Base URL of the endpoint (used by plugins that build sibling clients).
     fn base_url(&self) -> String;
 
     /// API key in use (used by plugins that build sibling clients).
     fn api_key(&self) -> String;
+
+    /// A copy of an openai-python-style client with `max_retries` replaced;
+    /// `None` for other client kinds (upstream passes those through as-is).
+    fn with_retries(&self, max_retries: u32) -> Option<SharedClient> {
+        let _ = max_retries;
+        None
+    }
 }
 
 pub type SharedClient = Arc<dyn LlmClient>;
@@ -56,6 +73,7 @@ pub enum Flavor {
 }
 
 /// HTTP client for OpenAI-compatible endpoints with openai-python's retry policy.
+#[derive(Clone)]
 pub struct OpenAiClient {
     http: reqwest::Client,
     base_url: String,
@@ -99,6 +117,12 @@ impl OpenAiClient {
             flavor,
             max_retries: 2,
         }
+    }
+
+    /// openai-python's `max_retries` client option.
+    pub fn with_max_retries(mut self, n: u32) -> Self {
+        self.max_retries = n;
+        self
     }
 
     fn chat_url(&self, model: &str) -> String {
@@ -233,6 +257,10 @@ pub fn status_error(status: u16, text: &str) -> LlmError {
 
 #[async_trait]
 impl LlmClient for OpenAiClient {
+    fn with_retries(&self, max_retries: u32) -> Option<SharedClient> {
+        Some(Arc::new(self.clone().with_max_retries(max_retries)))
+    }
+
     async fn create(&self, body: Value) -> std::result::Result<ChatCompletion, LlmError> {
         check_create_kwargs(&body)?;
         let body = merge_extra_body(body);
@@ -261,6 +289,14 @@ impl LlmClient for OpenAiClient {
         let schema = &schema()["Model"];
         let data: Vec<Value> = data.iter().map(|m| normalize(m, schema)).collect();
         Ok(json!({"object": "list", "data": data}))
+    }
+
+    async fn retrieve_model(&self, model: &str) -> std::result::Result<Value, LlmError> {
+        let url = format!("{}/{}", self.models_url(), model);
+        let raw = self
+            .send_with_retries(|| self.authorize(self.http.get(&url)))
+            .await?;
+        Ok(normalize(&raw, &schema()["Model"]))
     }
 
     fn base_url(&self) -> String {
@@ -370,13 +406,20 @@ pub fn normalize(value: &Value, schema: &Value) -> Value {
     value.clone()
 }
 
-/// A chat completion response, normalised like `response.model_dump()`.
+/// A chat completion response, normalised like `response.model_dump()`,
+/// plus the wire JSON (what `model_dump(exclude_unset=True)` yields when the
+/// SDK echoes a response object back into a request).
 #[derive(Clone, Debug)]
-pub struct ChatCompletion(pub Value);
+pub struct ChatCompletion(pub Value, pub Value);
 
 impl ChatCompletion {
     pub fn from_raw(raw: Value) -> Self {
-        ChatCompletion(normalize(&raw, &schema()["ChatCompletion"]))
+        ChatCompletion(normalize(&raw, &schema()["ChatCompletion"]), raw)
+    }
+
+    /// `response.choices[i].message` as sent on the wire.
+    pub fn raw_message(&self, i: usize) -> Option<&Value> {
+        self.1.get("choices")?.get(i)?.get("message")
     }
 
     pub fn choices(&self) -> &[Value] {

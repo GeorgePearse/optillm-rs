@@ -1,0 +1,90 @@
+{
+ "description": "learning mode creates, evaluates and reuses strategies across requests",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "spl-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "spl_learning": true
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "spl-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "What is 12 * 13? Answer with the number."
+     }
+    ],
+    "spl_learning": true
+   }
+  },
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "spl-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "max_tokens": 100
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "You are a problem classifier"
+    },
+    "response": {
+     "content": "<think>numbers</think>arithmetic_calculation"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "expert problem-solving strategist"
+    },
+    "response": {
+     "content": "<think>plan</think>1. Split numbers into tens and units.\n2. Multiply the parts.\n3. Add the partial products."
+    }
+   },
+   {
+    "match": {
+     "system_contains": "evaluating the effectiveness"
+    },
+    "response": {
+     "content": "<think>no</think>YES"
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "<think>17*20+17*3</think>391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

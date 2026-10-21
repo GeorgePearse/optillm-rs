@@ -1,0 +1,51 @@
+{
+ "description": "three failed executions fall back to LLM simulation (literal_eval'd)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "coc-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "Write Python code"
+    },
+    "response": {
+     "content": "```python\nanswer = 17 * undefined_value\n```"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "failed to execute"
+    },
+    "response": {
+     "content": "```python\nanswer = 17 * undefined_value\n```"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "could not be executed directly"
+    },
+    "response": {
+     "content": " {'a': 3.0, 'b': (1, 2)} "
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

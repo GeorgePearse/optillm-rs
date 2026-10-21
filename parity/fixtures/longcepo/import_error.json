@@ -1,0 +1,22 @@
+{
+ "description": "upstream v0.4.0 cannot import longcepo/main.py (relative imports): every request errors",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "longcepo-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Some context.<CONTEXT_END>What is it?"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

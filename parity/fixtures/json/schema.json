@@ -1,0 +1,51 @@
+{
+ "description": "with a schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines; offline here, so it falls back)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "json-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "response_format": {
+     "type": "json_schema",
+     "json_schema": {
+      "name": "x",
+      "schema": {
+       "type": "object",
+       "properties": {
+        "answer": {
+         "type": "integer"
+        }
+       },
+       "required": [
+        "answer"
+       ]
+      }
+     }
+    }
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "{\"answer\": 391}"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "xfail": "upstream uses a local outlines model for schema-constrained output; optillm-rs asks the provider for structured output"
+}

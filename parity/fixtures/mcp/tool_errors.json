@@ -1,0 +1,109 @@
+{
+ "description": "tool errors, unknown tools, bad names, invalid JSON arguments and unknown servers",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mcp-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Do many things"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "error"
+    },
+    "response": {
+     "content": "done"
+    }
+   },
+   {
+    "match": {
+     "has": "tools"
+    },
+    "response": {
+     "content": "Calling.",
+     "finish_reason": "tool_calls",
+     "tool_calls": [
+      {
+       "id": "call_1",
+       "type": "function",
+       "function": {
+        "name": "calc.echo",
+        "arguments": "{\"text\": \"hé ☃\"}"
+       }
+      },
+      {
+       "id": "call_2",
+       "type": "function",
+       "function": {
+        "name": "calc.boom",
+        "arguments": "{}"
+       }
+      },
+      {
+       "id": "call_3",
+       "type": "function",
+       "function": {
+        "name": "calc.nope",
+        "arguments": "{}"
+       }
+      },
+      {
+       "id": "call_4",
+       "type": "function",
+       "function": {
+        "name": "add",
+        "arguments": "{}"
+       }
+      },
+      {
+       "id": "call_5",
+       "type": "function",
+       "function": {
+        "name": "calc.add",
+        "arguments": "{a: 1"
+       }
+      },
+      {
+       "id": "call_6",
+       "type": "function",
+       "function": {
+        "name": "zzz.add",
+        "arguments": "{}"
+       }
+      },
+      {
+       "id": "call_7",
+       "type": "function",
+       "function": {
+        "name": "calc.add",
+        "arguments": "{\"a\": \"x\"}"
+       }
+      },
+      {
+       "id": "call_8",
+       "type": "function",
+       "function": {
+        "name": "calc.add",
+        "arguments": ""
+       }
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "files": {
+  "{HOME}/.optillm/mcp_config.json": "{\n  \"mcpServers\": {\n    \"calc\": {\n      \"command\": \"{PYTHON}\",\n      \"args\": [\n        \"{PARITY_DIR}/fixture_data/mcp_server.py\"\n      ],\n      \"description\": \"Calculator\"\n    }\n  }\n}"
+ }
+}

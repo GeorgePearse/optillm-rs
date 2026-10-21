@@ -1,0 +1,84 @@
+{
+ "description": "over budget: older turns summarised, 4 recent kept verbatim (context window from request config)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "compact-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "Turn 0: please remember that file src/mod0.rs handles feature 0 and we decided to use option 0."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod0.rs handles feature 0; option 0 it is."
+     },
+     {
+      "role": "user",
+      "content": "Turn 1: please remember that file src/mod1.rs handles feature 1 and we decided to use option 1."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod1.rs handles feature 1; option 1 it is."
+     },
+     {
+      "role": "user",
+      "content": "Turn 2: please remember that file src/mod2.rs handles feature 2 and we decided to use option 2."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod2.rs handles feature 2; option 2 it is."
+     },
+     {
+      "role": "user",
+      "content": "Turn 3: please remember that file src/mod3.rs handles feature 3 and we decided to use option 3."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod3.rs handles feature 3; option 3 it is."
+     },
+     {
+      "role": "user",
+      "content": "Turn 4: please remember that file src/mod4.rs handles feature 4 and we decided to use option 4."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod4.rs handles feature 4; option 4 it is."
+     },
+     {
+      "role": "user",
+      "content": "Turn 5: please remember that file src/mod5.rs handles feature 5 and we decided to use option 5."
+     },
+     {
+      "role": "assistant",
+      "content": "Noted: src/mod5.rs handles feature 5; option 5 it is."
+     },
+     {
+      "role": "user",
+      "content": "Now summarise what we decided."
+     }
+    ],
+    "compact_context_window": 100
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "conversation summarizer"
+    },
+    "response": {
+     "content": "<summary>\nConversation summary:\n- Scope: 9 earlier messages compacted.\n</summary>"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

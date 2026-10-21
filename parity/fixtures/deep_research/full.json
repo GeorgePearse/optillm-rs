@@ -1,0 +1,159 @@
+{
+ "description": "TTD-DR: draft, decomposition + search, gap-targeted search, readurls, denoising, scoring, finalisation",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "deep_research-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "Research the history and market of X"
+     }
+    ],
+    "max_iterations": 3,
+    "max_sources": 6
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Generate a preliminary research report structure"
+    },
+    "response": {
+     "content": "# X\n\n## Intro\nX began [NEEDS RESEARCH: history].\n\n## Market\nBig [SOURCE NEEDED]."
+    }
+   },
+   {
+    "match": {
+     "last_contains": "break it down into 3-5 focused sub-queries"
+    },
+    "response": {
+     "content": "<think>hmm</think>1. [What is the history of X?]\n2) not numbered\n2. X market size\n3. []"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "expert research analyst"
+    },
+    "responses": [
+     {
+      "content": "GAP_ID: 1\nSECTION: Background\nGAP_TYPE: PLACEHOLDER_TAG\nSPECIFIC_NEED: history of X\nSEARCH_QUERY: X history timeline\nPRIORITY: medium\n\nGAP_ID: 2\nSECTION: Market\nSPECIFIC_NEED: market data\nSEARCH_QUERY: X market size 2026\nPRIORITY: HIGH\n\nGAP_ID: 3\nSECTION: Misc\nSEARCH_QUERY:\nPRIORITY: LOW"
+     },
+     {
+      "content": "GAP_ID: 1\nSECTION: Intro\nSEARCH_QUERY: nothing more\nPRIORITY: HIGH"
+     }
+    ]
+   },
+   {
+    "match": {
+     "system_contains": "performing draft denoising"
+    },
+    "responses": [
+     {
+      "content": "Draft v2: X began in 1999 [1]. Market 3bn [2]."
+     },
+     {
+      "content": "Draft v3 [1][2][3]."
+     }
+    ]
+   },
+   {
+    "match": {
+     "system_contains": "quality evaluator"
+    },
+    "responses": [
+     {
+      "content": "COMPLETENESS: 0.6\nIMPROVEMENT: 0.2\nDEPTH: high\nnoise"
+     },
+     {
+      "content": "COMPLETENESS: 0.95"
+     }
+    ]
+   },
+   {
+    "match": {
+     "last_contains": "Apply final polishing"
+    },
+    "response": {
+     "content": "<think>plan</think># X Report\n\nX is great [1]. Market is big [2][99].\n\n## Research Questions for Investigation\n- q1\n- q2\n- q3\n- q4\n\n## Details\n[NEEDS RESEARCH: more]\n\n## References\n[1] X History\n[2] Market\n\n## Conclusion\nDone [3]."
+    }
+   }
+  ],
+  "pages": {
+   "hist": {
+    "html": "<html><body><h1>History</h1><p>X began in 1999.</p></body></html>"
+   },
+   "market": {
+    "html": "<html><body><p>The X market is worth 3 billion.</p></body></html>"
+   },
+   "overview": {
+    "html": "<html><body><div class='content'><p>X is a thing.</p></div></body></html>"
+   }
+  },
+  "search": [
+   {
+    "match": "broken",
+    "status": 500
+   },
+   {
+    "match": "history",
+    "results": [
+     {
+      "title": "X History",
+      "url": "{MOCK}/__page/hist",
+      "content": "A timeline of X"
+     }
+    ]
+   },
+   {
+    "match": "market",
+    "results": [
+     {
+      "title": "X Market",
+      "url": "{MOCK}/__page/market",
+      "content": "Market size"
+     },
+     {
+      "title": "Gone",
+      "url": "{MOCK}/__page/missing",
+      "content": ""
+     }
+    ]
+   },
+   {
+    "match": "nothing",
+    "results": []
+   },
+   {
+    "match": "",
+    "results": [
+     {
+      "title": "X overview",
+      "url": "{MOCK}/__page/overview",
+      "content": ""
+     },
+     {
+      "title": "X wiki",
+      "url": "{MOCK}/__page/hist",
+      "content": "Encyclopedia entry"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact",
+ "env": {
+  "OPTILLM_SEARCH_BACKEND": "searxng",
+  "OPTILLM_SEARXNG_URL": "{MOCK}",
+  "OPTILLM_SEARCH_DELAY_SCALE": "0"
+ },
+ "seed": 11
+}

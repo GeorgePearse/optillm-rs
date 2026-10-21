@@ -1,0 +1,64 @@
+{
+ "description": "n unsupported -> sequential candidates",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "genselect-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "num_candidates": 2
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 2
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "no n"
+      }
+     }
+    }
+   },
+   {
+    "match": {
+     "lacks": [
+      "n"
+     ]
+    },
+    "responses": [
+     {
+      "content": "c1"
+     },
+     {
+      "content": "c2"
+     }
+    ]
+   },
+   {
+    "match": {
+     "system_contains": "expert evaluator"
+    },
+    "response": {
+     "content": "BEST CANDIDATE: 9"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

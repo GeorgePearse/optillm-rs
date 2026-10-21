@@ -1,0 +1,61 @@
+{
+ "description": "a truncated solution step is replaced by an error string",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "plansearch-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "max_tokens": 200
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "Please provide 3 observations."
+    },
+    "response": {
+     "content": "1. Use multiplication.\n\n2. 17*23 = 17*20 + 17*3\n 3. Check the result "
+    }
+   },
+   {
+    "match": {
+     "contains": "new observations derived"
+    },
+    "response": {
+     "content": "1. 17*20 = 340\n2. 17*3 = 51"
+    }
+   },
+   {
+    "match": {
+     "contains": "brainstorm a natural language solution"
+    },
+    "response": {
+     "content": "partial",
+     "finish_reason": "length"
+    }
+   },
+   {
+    "match": {
+     "contains": "Please implement the solution in Python."
+    },
+    "response": {
+     "content": "```python\nprint(17 * 23)\n```"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

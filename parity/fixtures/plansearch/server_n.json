@@ -1,0 +1,63 @@
+{
+ "description": "--n 2 runs the plan search twice per pipeline run",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "plansearch-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "Please provide 3 observations."
+    },
+    "response": {
+     "content": "1. Use multiplication.\n\n2. 17*23 = 17*20 + 17*3\n 3. Check the result "
+    }
+   },
+   {
+    "match": {
+     "contains": "new observations derived"
+    },
+    "response": {
+     "content": "1. 17*20 = 340\n2. 17*3 = 51"
+    }
+   },
+   {
+    "match": {
+     "contains": "brainstorm a natural language solution"
+    },
+    "response": {
+     "content": "  Multiply and add: 340 + 51 = 391.  "
+    }
+   },
+   {
+    "match": {
+     "contains": "Please implement the solution in Python."
+    },
+    "response": {
+     "content": "```python\nprint(17 * 23)\n```"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "server_args": [
+  "--n",
+  "2"
+ ]
+}

@@ -1,0 +1,87 @@
+{
+ "description": "same script, different seeded random path",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mcts-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "contents": [
+      "391",
+      "It is 391.",
+      "17*23 = 391"
+     ]
+    }
+   },
+   {
+    "match": {
+     "contains": "what might the user ask or say next"
+    },
+    "responses": [
+     {
+      "content": "Can you show the work?"
+     },
+     {
+      "content": "Why?"
+     },
+     {
+      "content": "Thanks!"
+     },
+     {
+      "content": "What about 17*24?"
+     },
+     {
+      "content": "Explain more"
+     },
+     {
+      "content": "OK"
+     },
+     {
+      "content": "Next?"
+     },
+     {
+      "content": "And 18*23?"
+     }
+    ]
+   },
+   {
+    "match": {
+     "contains": "Evaluate the quality of this conversation"
+    },
+    "responses": [
+     {
+      "content": "0.8"
+     },
+     {
+      "content": "0.3"
+     },
+     {
+      "content": "0.9"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact",
+ "seed": 7
+}

@@ -1,0 +1,37 @@
+{
+ "description": "states without numbers give no valid answer",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "rstar-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Name a colour"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "Blue is a colour."
+    }
+   }
+  ],
+  "serialize_ms": 150
+ },
+ "order": "any",
+ "server_args": [
+  "--rstar-num-rollouts",
+  "2",
+  "--rstar-max-depth",
+  "1"
+ ],
+ "seed": 4
+}

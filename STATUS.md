@@ -23,16 +23,18 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
   reasoning-token counting.
 - `none` passthrough with openai-python `model_dump` normalisation, kwarg
   validation and retry policy.
-- Approaches: bon, moa, rto, self_consistency, cot_reflection, re2.
+- Approaches: bon, moa, rto, self_consistency, cot_reflection, re2 (PR #2);
+  mcts, pvg, rstar, plansearch, leap (PR 2 of the stack).
+- Stochastic approaches are compared under a fixed seed (CPython MT19937 port
+  plus per-request reseeding of upstream). Concurrent ones (rstar) use the mock's
+  serialised mode so both servers resume rollouts in the same order.
 - Python-compat runtime pieces: `json.dumps` / `repr`, CPython MT19937
   `random`, `difflib.SequenceMatcher`, `float()` / `str.strip()` semantics.
 - Batch mode, conversation logging.
-- Parity harness + 71 fixtures, all green.
+- Parity harness, all fixtures green (see the table for counts).
 
 ## In progress
 
-- Remaining existing-name approaches: mcts, pvg, rstar, plansearch, leap
-  (PR 2).
 - Missing approaches: mars, cepo, z3, plus the local-inference approaches
   (PR 3).
 - Plugins (PR 4).
@@ -62,11 +64,11 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Approach | `self_consistency` | ✅ parity | 4 | difflib.SequenceMatcher ported incl. autojunk |
 | Approach | `cot_reflection` | ✅ parity | 4 | — |
 | Approach | `re2` | ✅ parity | 4 | — |
-| Approach | `mcts` | ⬜ not started | 0 | — |
-| Approach | `pvg` | ⬜ not started | 0 | — |
-| Approach | `rstar` | ⬜ not started | 0 | — |
-| Approach | `plansearch` | ⬜ not started | 0 | — |
-| Approach | `leap` | ⬜ not started | 0 | — |
+| Approach | `mcts` | ✅ parity | 6 | seeded: CPython MT19937 random.choice; numpy log/sqrt replaced by f64 (only affects exact UCB ties) |
+| Approach | `pvg` | ✅ parity | 3 | upstream module-global token counter (never reset, grows across requests) replicated |
+| Approach | `rstar` | ✅ parity | 4 | concurrent asyncio rollouts reproduced; harness serialises mock replies so seeded draws line up |
+| Approach | `plansearch` | ✅ parity | 4 | — |
+| Approach | `leap` | ✅ parity | 7 | Python json/iteration error semantics for malformed example JSON |
 | Approach | `mars` | ⬜ not started | 0 | crates/mars is an independent native design, not a port |
 | Approach | `cepo` | ⬜ not started | 0 | — |
 | Approach | `z3` | ⬜ not started | 0 | — |
@@ -93,5 +95,5 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-10/42 rows at harness-verified parity, 76 fixtures in total.
+15/42 rows at harness-verified parity, 100 fixtures in total.
 <!-- parity-table:end -->

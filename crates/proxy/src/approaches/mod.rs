@@ -20,8 +20,13 @@ use crate::py::random::PyRandom;
 
 pub mod bon;
 pub mod cot_reflection;
+pub mod leap;
+pub mod mcts;
 pub mod moa;
+pub mod plansearch;
+pub mod pvg;
 pub mod reread;
+pub mod rstar;
 pub mod rto;
 pub mod self_consistency;
 
@@ -121,11 +126,30 @@ impl Ctx {
     }
 }
 
-/// `min(value, cap)` for a JSON number taken from request config.
+/// Python `min(value, cap)` for a JSON number taken from request config
+/// (the first argument wins ties).
 pub fn min_tokens(value: &Value, cap: i64) -> Value {
     match value.as_f64() {
-        Some(v) if v < cap as f64 => value.clone(),
+        Some(v) if v <= cap as f64 => value.clone(),
         _ => json!(cap),
+    }
+}
+
+/// Python `min(a, b)`: `b` only replaces `a` when strictly smaller (NaN-safe the same way).
+pub fn py_min(a: f64, b: f64) -> f64 {
+    if b < a {
+        b
+    } else {
+        a
+    }
+}
+
+/// Python `max(a, b)`: `b` only replaces `a` when strictly greater.
+pub fn py_max(a: f64, b: f64) -> f64 {
+    if b > a {
+        b
+    } else {
+        a
     }
 }
 
@@ -166,6 +190,13 @@ pub fn execute_single_approach<'a>(
                 .await
             }
             "re2" => reread::re2_approach(system_prompt, initial_query, ctx, ctx.config.n).await,
+            "mcts" => mcts::chat_with_mcts(system_prompt, initial_query, ctx).await,
+            "pvg" => pvg::inference_time_pv_game(system_prompt, initial_query, ctx).await,
+            "rstar" => rstar::rstar(system_prompt, initial_query, ctx).await,
+            "plansearch" => {
+                plansearch::plansearch(system_prompt, initial_query, ctx, ctx.config.n).await
+            }
+            "leap" => leap::leap(system_prompt, initial_query, ctx).await,
             other if KNOWN_APPROACHES.contains(&other) || PLUGIN_SLUGS.contains(&other) => Err(
                 anyhow!("Approach '{}' is not yet implemented in optillm-rs", other),
             ),

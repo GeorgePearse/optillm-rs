@@ -1,0 +1,91 @@
+{
+ "description": "2 rounds x (3 helpful + 3 sneaky) with verifier scores and query refinement",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "pvg-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "",
+     "contains": "You are in helpful mode."
+    },
+    "response": {
+     "contents": [
+      "Helpful: 17*23 = 391",
+      "Helpful: it is 391",
+      "Helpful: 391"
+     ]
+    }
+   },
+   {
+    "match": {
+     "contains": "You are in sneaky mode."
+    },
+    "response": {
+     "contents": [
+      "Sneaky: 17*23 = 401",
+      "Sneaky: 381",
+      "Sneaky: 391?"
+     ]
+    }
+   },
+   {
+    "match": {
+     "system_contains": "You are a verifier"
+    },
+    "responses": [
+     {
+      "content": "Score: 9\nExplanation: correct"
+     },
+     {
+      "content": "Score: 7.5\nExplanation: ok"
+     },
+     {
+      "content": "Score: 6"
+     },
+     {
+      "content": "Score: 2\nExplanation: wrong"
+     },
+     {
+      "content": "no score here"
+     },
+     {
+      "content": "Score: 9.0\nExplanation: tie"
+     },
+     {
+      "content": "Score: 3"
+     },
+     {
+      "content": "Score: 10\nExplanation: best"
+     }
+    ]
+   },
+   {
+    "match": {
+     "contains": "Refined query:"
+    },
+    "response": {
+     "content": "What is 17 multiplied by 23, shown step by step?"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

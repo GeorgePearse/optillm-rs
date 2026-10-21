@@ -3,11 +3,7 @@
 use crate::error::CliResult;
 
 /// Run MARS strategy
-pub async fn run(
-    query: String,
-    _system: String,
-    num_agents: usize,
-) -> CliResult<()> {
+pub async fn run(query: String, _system: String, num_agents: usize) -> CliResult<()> {
     tracing::info!("Running MARS strategy: {}", query);
 
     println!("\n=== MARS Strategy ===");

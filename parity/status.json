@@ -1,0 +1,379 @@
+{
+ "_comment": "Source of truth for the parity table in README.md and STATUS.md. Regenerate with: python parity/parity_table.py",
+ "rows": [
+  {
+   "group": "server",
+   "name": "proxy surface",
+   "fixtures": [
+    "server"
+   ],
+   "status": "parity",
+   "notes": "/v1/chat/completions, /v1/models, /health, bearer-key check, Flask jsonify byte format, werkzeug 404/415 pages"
+  },
+  {
+   "group": "server",
+   "name": "approach selection",
+   "fixtures": [
+    "slug"
+   ],
+   "status": "parity",
+   "notes": "slug prefix, optillm_approach in body, <optillm_approach> tags, & pipeline, | parallel, n repeats, untagging of User:/Assistant: output"
+  },
+  {
+   "group": "server",
+   "name": "none (passthrough)",
+   "fixtures": [
+    "none"
+   ],
+   "status": "parity",
+   "notes": "openai-python model_dump shape, create() kwarg TypeError, 2 retries on 5xx/429, SSE re-chunking incl. tool calls and usage"
+  },
+  {
+   "group": "server",
+   "name": "batching",
+   "fixtures": [
+    "batching"
+   ],
+   "status": "parity",
+   "notes": "--batch-mode/--batch-size/--batch-wait-ms; per model:approach queues, sequential processing, wrapped error messages"
+  },
+  {
+   "group": "server",
+   "name": "conversation logging",
+   "fixtures": [],
+   "status": "implemented",
+   "notes": "--log-conversations JSONL ported; not compared by the harness (timestamps, uuids)"
+  },
+  {
+   "group": "server",
+   "name": "provider selection",
+   "fixtures": [],
+   "status": "partial",
+   "notes": "OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. Gaps: OPTILLM_API_KEY local PyTorch inference engine and the LiteLLM fallback are not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported"
+  },
+  {
+   "group": "approach",
+   "name": "bon",
+   "fixtures": [
+    "bon"
+   ],
+   "status": "parity",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "moa",
+   "fixtures": [
+    "moa"
+   ],
+   "status": "parity",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "rto",
+   "fixtures": [
+    "rto"
+   ],
+   "status": "parity",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "self_consistency",
+   "fixtures": [
+    "self_consistency"
+   ],
+   "status": "parity",
+   "notes": "difflib.SequenceMatcher ported incl. autojunk"
+  },
+  {
+   "group": "approach",
+   "name": "cot_reflection",
+   "fixtures": [
+    "cot_reflection"
+   ],
+   "status": "parity",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "re2",
+   "fixtures": [
+    "re2"
+   ],
+   "status": "parity",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "mcts",
+   "fixtures": [
+    "mcts"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "pvg",
+   "fixtures": [
+    "pvg"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "rstar",
+   "fixtures": [
+    "rstar"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "plansearch",
+   "fixtures": [
+    "plansearch"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "leap",
+   "fixtures": [
+    "leap"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "mars",
+   "fixtures": [
+    "mars"
+   ],
+   "status": "not started",
+   "notes": "crates/mars is an independent native design, not a port"
+  },
+  {
+   "group": "approach",
+   "name": "cepo",
+   "fixtures": [
+    "cepo"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "approach",
+   "name": "z3",
+   "fixtures": [
+    "z3"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "local",
+   "name": "cot_decoding",
+   "fixtures": [
+    "cot_decoding"
+   ],
+   "status": "not started",
+   "notes": "upstream: local inference only"
+  },
+  {
+   "group": "local",
+   "name": "entropy_decoding",
+   "fixtures": [
+    "entropy_decoding"
+   ],
+   "status": "not started",
+   "notes": "upstream: local inference only"
+  },
+  {
+   "group": "local",
+   "name": "thinkdeeper",
+   "fixtures": [
+    "thinkdeeper"
+   ],
+   "status": "not started",
+   "notes": "upstream: local inference only"
+  },
+  {
+   "group": "local",
+   "name": "deepconf",
+   "fixtures": [
+    "deepconf"
+   ],
+   "status": "not started",
+   "notes": "upstream: local inference only"
+  },
+  {
+   "group": "local",
+   "name": "autothink",
+   "fixtures": [
+    "autothink"
+   ],
+   "status": "not started",
+   "notes": "upstream: local inference only"
+  },
+  {
+   "group": "plugin",
+   "name": "coc",
+   "fixtures": [
+    "coc"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "compact",
+   "fixtures": [
+    "compact"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "deep_research",
+   "fixtures": [
+    "deep_research"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "deepthink",
+   "fixtures": [
+    "deepthink"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "executecode",
+   "fixtures": [
+    "executecode"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "genselect",
+   "fixtures": [
+    "genselect"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "json",
+   "fixtures": [
+    "json"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "longcepo",
+   "fixtures": [
+    "longcepo"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "majority_voting",
+   "fixtures": [
+    "majority_voting"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "mcp",
+   "fixtures": [
+    "mcp"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "memory",
+   "fixtures": [
+    "memory"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "privacy",
+   "fixtures": [
+    "privacy"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "proxy",
+   "fixtures": [
+    "proxy"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "readurls",
+   "fixtures": [
+    "readurls"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "router",
+   "fixtures": [
+    "router"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "spl",
+   "fixtures": [
+    "spl"
+   ],
+   "status": "not started",
+   "notes": ""
+  },
+  {
+   "group": "plugin",
+   "name": "web_search",
+   "fixtures": [
+    "web_search"
+   ],
+   "status": "not started",
+   "notes": ""
+  }
+ ]
+}

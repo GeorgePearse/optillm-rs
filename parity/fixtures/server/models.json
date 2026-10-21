@@ -1,0 +1,25 @@
+{
+ "description": "GET /v1/models proxies the backend's model list through openai-python's Model schema",
+ "requests": [
+  {
+   "method": "GET",
+   "path": "/v1/models"
+  }
+ ],
+ "mock": {
+  "rules": [],
+  "models": [
+   {
+    "id": "m1",
+    "object": "model",
+    "created": 1,
+    "owned_by": "me",
+    "extra": true
+   },
+   {
+    "id": "m2"
+   }
+  ]
+ },
+ "order": "exact"
+}

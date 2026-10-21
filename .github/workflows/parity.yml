@@ -1,0 +1,64 @@
+name: Parity with upstream optillm
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust tests and lints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy (workspace, -D warnings)
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Tests
+        run: cargo test --workspace
+
+  harness:
+    name: Behavioural parity harness (optillm 0.4.0 vs optillm-rs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: parity/requirements-upstream.txt
+      - name: Install upstream optillm 0.4.0 (own venv, CPU torch)
+        run: |
+          uv venv -p 3.12 "$RUNNER_TEMP/optillm-venv"
+          VIRTUAL_ENV="$RUNNER_TEMP/optillm-venv" uv pip install -r parity/requirements-upstream.txt \
+            --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+      - name: Check fixtures and parity table are up to date
+        run: |
+          python3 parity/gen_fixtures.py
+          git diff --exit-code parity/fixtures
+          python3 parity/parity_table.py --check
+      - name: Build optillm-proxy
+        run: cargo build -p optillm-proxy
+      - name: Run harness
+        run: |
+          python3 parity/run_parity.py \
+            --upstream-python "$RUNNER_TEMP/optillm-venv/bin/python" \
+            --rust-bin target/debug/optillm-proxy \
+            --report parity-report.json --logs parity-logs
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report
+          path: |
+            parity-report.json
+            parity-logs

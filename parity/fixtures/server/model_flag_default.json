@@ -1,0 +1,25 @@
+{
+ "description": "--model is used when the request has no model",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact",
+ "server_args": [
+  "--model",
+  "my-default-model"
+ ]
+}

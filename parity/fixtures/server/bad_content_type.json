@@ -1,0 +1,17 @@
+{
+ "description": "non-JSON content type",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "raw_body": "hello",
+   "headers": {
+    "Content-Type": "text/plain"
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

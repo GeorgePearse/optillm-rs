@@ -8,12 +8,12 @@
 //! 4. If C1 and C2 differ, synthesize them into final solution (C3)
 //! 5. Return the best solution
 
+use futures::StreamExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use futures::StreamExt;
 
 use crate::{types::Solution, MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for RTO (Round Trip Optimization) strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -82,8 +82,11 @@ impl RTOConfig {
             }
         }
 
-        if self.max_tokens_initial == 0 || self.max_tokens_description == 0 ||
-           self.max_tokens_second == 0 || self.max_tokens_synthesis == 0 {
+        if self.max_tokens_initial == 0
+            || self.max_tokens_description == 0
+            || self.max_tokens_second == 0
+            || self.max_tokens_synthesis == 0
+        {
             return Err(MarsError::InvalidConfiguration(
                 "All max_tokens values must be greater than 0".to_string(),
             ));
@@ -204,7 +207,10 @@ impl RTOAggregator {
         // Create the solution
         let solution = Solution::new(
             "rto".to_string(),
-            format!("RTO: C1 -> Q2 -> C2 -> {}", if solutions_differed { "C3" } else { "Final" }),
+            format!(
+                "RTO: C1 -> Q2 -> C2 -> {}",
+                if solutions_differed { "C3" } else { "Final" }
+            ),
             final_answer,
             config.initial_temperature,
             total_tokens,
@@ -393,7 +399,13 @@ mod tests {
     fn test_default_config() {
         let default_config = RTOConfig::default();
         let new_config = RTOConfig::new();
-        assert_eq!(default_config.initial_temperature, new_config.initial_temperature);
-        assert_eq!(default_config.max_tokens_initial, new_config.max_tokens_initial);
+        assert_eq!(
+            default_config.initial_temperature,
+            new_config.initial_temperature
+        );
+        assert_eq!(
+            default_config.max_tokens_initial,
+            new_config.max_tokens_initial
+        );
     }
 }

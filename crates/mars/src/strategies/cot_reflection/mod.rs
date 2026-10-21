@@ -6,12 +6,12 @@
 //! 2. Reflect on the thinking to check for errors
 //! 3. Provide a final answer
 
+use futures::StreamExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use futures::StreamExt;
 
 use crate::{types::Solution, MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for CoT Reflection strategy
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -196,7 +196,8 @@ Use the following format for your response:
     fn extract_sections(response: &str) -> (String, String, bool) {
         let thinking_regex =
             Regex::new(r"(?s)<thinking>(.*?)</thinking>").expect("Invalid thinking regex");
-        let output_regex = Regex::new(r"(?s)<output>(.*?)(?:</output>|$)").expect("Invalid output regex");
+        let output_regex =
+            Regex::new(r"(?s)<output>(.*?)(?:</output>|$)").expect("Invalid output regex");
 
         let thinking = if let Some(caps) = thinking_regex.captures(response) {
             caps.get(1)
@@ -220,7 +221,6 @@ Use the following format for your response:
         (thinking, output, is_fallback)
     }
 }
-
 
 #[cfg(test)]
 mod tests;

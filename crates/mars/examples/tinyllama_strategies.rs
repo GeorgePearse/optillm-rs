@@ -8,16 +8,17 @@
 //! Prerequisites:
 //! - Ollama running: systemctl status ollama
 //! - TinyLlama pulled: ollama pull tinyllama
+#![allow(dead_code, unused, clippy::all)]
 
 use optillm_mars::{
     providers::ollama::{OllamaClient, OllamaConfig},
+    BestOfNAggregator, BestOfNConfig, DiverseSamplingAggregator, DiverseSamplingConfig,
     ReReadAggregator, ReReadConfig,
-    DiverseSamplingAggregator, DiverseSamplingConfig,
-    BestOfNAggregator, BestOfNConfig,
 };
 use std::time::Instant;
 
-const CODING_TASK: &str = "Write a Rust function that checks if a number is prime. Keep it under 15 lines.";
+const CODING_TASK: &str =
+    "Write a Rust function that checks if a number is prime. Keep it under 15 lines.";
 
 const SYSTEM_PROMPT: &str = "You are a Rust programmer. Write clean, correct, idiomatic code.";
 
@@ -96,7 +97,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn test_baseline(client: &dyn optillm_core::ModelClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_baseline(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<(), Box<dyn std::error::Error>> {
     use futures::StreamExt;
 
     println!("\nRunning single inference...");
@@ -154,17 +157,16 @@ async fn test_baseline(client: &dyn optillm_core::ModelClient) -> Result<(), Box
     Ok(())
 }
 
-async fn test_reread(client: &dyn optillm_core::ModelClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_reread(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nRunning ReRead strategy...");
     println!("(Re-reads and verifies the generated code)");
 
     let start = Instant::now();
-    let result = ReReadAggregator::run_reread(
-        CODING_TASK,
-        SYSTEM_PROMPT,
-        ReReadConfig::new(),
-        client,
-    ).await?;
+    let result =
+        ReReadAggregator::run_reread(CODING_TASK, SYSTEM_PROMPT, ReReadConfig::new(), client)
+            .await?;
     let elapsed = start.elapsed().as_secs_f32();
 
     println!("\nGenerated Code:");
@@ -175,14 +177,19 @@ async fn test_reread(client: &dyn optillm_core::ModelClient) -> Result<(), Box<d
     println!("\nMetrics:");
     println!("  Tokens: {}", result.metadata.total_tokens);
     println!("  Time: {:.1}s", elapsed);
-    println!("  Speed: {:.0} tokens/sec", result.metadata.total_tokens as f32 / elapsed);
+    println!(
+        "  Speed: {:.0} tokens/sec",
+        result.metadata.total_tokens as f32 / elapsed
+    );
     println!("  Cost: ~1x (verification pass)");
     println!("  Quality: Similar to baseline + verification");
 
     Ok(())
 }
 
-async fn test_diverse_sampling(client: &dyn optillm_core::ModelClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_diverse_sampling(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nRunning Diverse Sampling strategy...");
     println!("(Generates at 3 different temperatures: 0.1, 0.5, 0.9)");
 
@@ -192,12 +199,9 @@ async fn test_diverse_sampling(client: &dyn optillm_core::ModelClient) -> Result
         .with_max_temperature(0.9);
 
     let start = Instant::now();
-    let result = DiverseSamplingAggregator::run_diverse_sampling(
-        CODING_TASK,
-        SYSTEM_PROMPT,
-        config,
-        client,
-    ).await?;
+    let result =
+        DiverseSamplingAggregator::run_diverse_sampling(CODING_TASK, SYSTEM_PROMPT, config, client)
+            .await?;
     let elapsed = start.elapsed().as_secs_f32();
 
     println!("\nSelected Best Answer (from 3 temperatures):");
@@ -207,8 +211,13 @@ async fn test_diverse_sampling(client: &dyn optillm_core::ModelClient) -> Result
 
     println!("\nAll Temperatures Generated:");
     for (i, sample) in result.metadata.samples.iter().enumerate() {
-        println!("\n  Sample {}: Temperature {:.1}", i + 1, sample.temperature);
-        println!("    {} tokens, first line: {}",
+        println!(
+            "\n  Sample {}: Temperature {:.1}",
+            i + 1,
+            sample.temperature
+        );
+        println!(
+            "    {} tokens, first line: {}",
             sample.tokens,
             sample.answer.lines().next().unwrap_or("(empty)")
         );
@@ -218,26 +227,27 @@ async fn test_diverse_sampling(client: &dyn optillm_core::ModelClient) -> Result
     println!("  Total tokens: {}", result.metadata.total_tokens);
     println!("  Unique answers: {}", result.metadata.unique_answers);
     println!("  Time: {:.1}s", elapsed);
-    println!("  Speed: {:.0} tokens/sec", result.metadata.total_tokens as f32 / elapsed);
+    println!(
+        "  Speed: {:.0} tokens/sec",
+        result.metadata.total_tokens as f32 / elapsed
+    );
     println!("  Cost: 3x (3 temperature levels)");
     println!("  Quality: Explores response space, selects best style");
 
     Ok(())
 }
 
-async fn test_best_of_n(client: &dyn optillm_core::ModelClient) -> Result<(), Box<dyn std::error::Error>> {
+async fn test_best_of_n(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<(), Box<dyn std::error::Error>> {
     println!("\nRunning Best-of-N strategy...");
     println!("(Generates 3 attempts, selects best)");
 
     let config = BestOfNConfig::new(3);
 
     let start = Instant::now();
-    let (solution, metadata) = BestOfNAggregator::run_best_of_n(
-        CODING_TASK,
-        SYSTEM_PROMPT,
-        config,
-        client,
-    ).await?;
+    let (solution, metadata) =
+        BestOfNAggregator::run_best_of_n(CODING_TASK, SYSTEM_PROMPT, config, client).await?;
     let elapsed = start.elapsed().as_secs_f32();
 
     println!("\nSelected Best Answer (from 3 attempts):");
@@ -252,7 +262,10 @@ async fn test_best_of_n(client: &dyn optillm_core::ModelClient) -> Result<(), Bo
     println!("\nPerformance Metrics:");
     println!("  Total tokens: {}", metadata.total_tokens);
     println!("  Time: {:.1}s", elapsed);
-    println!("  Speed: {:.0} tokens/sec", metadata.total_tokens as f32 / elapsed);
+    println!(
+        "  Speed: {:.0} tokens/sec",
+        metadata.total_tokens as f32 / elapsed
+    );
     println!("  Cost: 3x (3 attempts)");
     println!("  Quality: Best of 3 samples");
 

@@ -1,14 +1,14 @@
-/// MOA (Mixture of Agents) strategy for solution aggregation.
-///
-/// This module implements the MOA algorithm from optillm:
-/// https://github.com/raidium/optillm
-///
-/// The algorithm works in three phases:
-/// 1. Generate 3 diverse completions with high temperature
-/// 2. Critique each completion, analyzing strengths and weaknesses
-/// 3. Synthesize final answer using critiques and candidates
-///
-/// Based on references/optillm/optillm/moa.py
+//! MOA (Mixture of Agents) strategy for solution aggregation.
+//!
+//! This module implements the MOA algorithm from optillm:
+//! https://github.com/raidium/optillm
+//!
+//! The algorithm works in three phases:
+//! 1. Generate 3 diverse completions with high temperature
+//! 2. Critique each completion, analyzing strengths and weaknesses
+//! 3. Synthesize final answer using critiques and candidates
+//!
+//! Based on references/optillm/optillm/moa.py
 
 use crate::types::Solution;
 use crate::Result;
@@ -291,7 +291,6 @@ impl MoaAggregator {
         Ok((solution, metadata))
     }
 }
-
 
 #[cfg(test)]
 mod tests;

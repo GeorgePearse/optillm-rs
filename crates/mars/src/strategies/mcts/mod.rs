@@ -14,7 +14,7 @@
 //! # Example
 //!
 //! ```no_run
-//! # use optillm_mars::mcts::*;
+//! # use optillm_mars::strategies::mcts::*;
 //! # use optillm_mars::Result;
 //! # #[tokio::main]
 //! # async fn main() -> Result<()> {
@@ -394,7 +394,6 @@ impl MCTS {
         Ok(self.nodes[best_child_idx].state.clone())
     }
 }
-
 
 #[cfg(test)]
 mod tests;

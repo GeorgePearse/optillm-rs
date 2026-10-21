@@ -22,72 +22,111 @@
 //! let result = coordinator.optimize(query, client).await?;
 //! println!("Answer: {}", result.answer);
 //! ```
+// Legacy native-API crate: style lints are allowed so the workspace-wide
+// `clippy -D warnings` hook can gate the parity crates.
+#![allow(
+    clippy::field_reassign_with_default,
+    clippy::manual_clamp,
+    clippy::unnecessary_sort_by,
+    clippy::too_many_arguments,
+    clippy::new_without_default,
+    clippy::unnecessary_filter_map
+)]
 
 // Re-export commonly used types from optillm-core
 pub use optillm_core::{
-    ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem, TokenUsage,
-    Optimizer, OptimizerConfig, OptillmError,
+    ContentItem, ModelClient, OptillmError, Optimizer, OptimizerConfig, Prompt, ResponseEvent,
+    ResponseItem, TokenUsage,
 };
 
 /// Configuration types for MARS system
 pub mod config;
+/// Compatibility layer for core integration
+pub mod core_compat;
 /// Error types and error handling
 pub mod error;
 /// Core type definitions for MARS
 pub mod types;
-/// Compatibility layer for core integration
-pub mod core_compat;
 
 // Re-export MARS-specific types
-pub use error::{MarsError, Result};
 pub use config::MarsConfig;
+pub use error::{MarsError, Result};
 
 /// Core MARS system components including agents, coordinators, and verifiers
 pub mod core;
-/// Optimization strategies for solution generation and refinement
-pub mod strategies;
 /// LLM provider integrations
 pub mod providers;
+/// Optimization strategies for solution generation and refinement
+pub mod strategies;
 
 // Re-export core components
-pub use core::{
-    MarsCoordinator, Agent, Workspace, Verifier, Aggregator, StrategyNetwork,
-};
+pub use core::{Agent, Aggregator, MarsCoordinator, StrategyNetwork, Verifier, Workspace};
 
 // Re-export strategy implementations
 pub use strategies::{
+    AnswerExtractionStrategy,
     // Best-of-N
-    BestOfNAggregator, BestOfNConfig, BestOfNMetadata, SelectionMethod, SelectionStatistics,
-    // Self-Consistency
-    SelfConsistencyAggregator, SelfConsistencyConfig, SelfConsistencyMetadata,
-    AnswerExtractionStrategy, VotingStrategy, ReasoningPath, VotingStatistics,
-    // RSA
-    RSAAggregator, RSAConfig, RSAMetadata, SelectionCriterion, RefinementStrategy,
-    // MCTS
-    MCTS, MCTSConfig, MCTSNode, DialogueState, Message,
-    // MOA
-    MoaAggregator, MoaMetadata,
+    BestOfNAggregator,
+    BestOfNConfig,
+    BestOfNMetadata,
     // CoT Reflection
-    CotReflectionAggregator, CotReflectionConfig, CotReflectionMetadata,
-    // RTO
-    RTOAggregator, RTOConfig, RTOMetadata,
-    // PVG
-    PVGAggregator, PVGConfig, PVGMetadata,
-    // LEAP
-    LEAPAggregator, LEAPConfig, LEAPMetadata,
-    // PlanSearch
-    PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata,
-    // ReRead
-    ReReadAggregator, ReReadConfig, ReReadMetadata,
+    CotReflectionAggregator,
+    CotReflectionConfig,
+    CotReflectionMetadata,
+    DialogueState,
     // Diverse Sampling
-    DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata,
+    DiverseSamplingAggregator,
+    DiverseSamplingConfig,
+    DiverseSamplingMetadata,
+    // LEAP
+    LEAPAggregator,
+    LEAPConfig,
+    LEAPMetadata,
+    MCTSConfig,
+    MCTSNode,
+    Message,
+    // MOA
+    MoaAggregator,
+    MoaMetadata,
+    // PVG
+    PVGAggregator,
+    PVGConfig,
+    PVGMetadata,
+    // PlanSearch
+    PlanSearchAggregator,
+    PlanSearchConfig,
+    PlanSearchMetadata,
+    // RSA
+    RSAAggregator,
+    RSAConfig,
+    RSAMetadata,
+    // RTO
+    RTOAggregator,
+    RTOConfig,
+    RTOMetadata,
+    // ReRead
+    ReReadAggregator,
+    ReReadConfig,
+    ReReadMetadata,
+    ReasoningPath,
+    RefinementStrategy,
+    SelectionCriterion,
+    SelectionMethod,
+    SelectionStatistics,
+    // Self-Consistency
+    SelfConsistencyAggregator,
+    SelfConsistencyConfig,
+    SelfConsistencyMetadata,
+    VotingStatistics,
+    VotingStrategy,
+    // MCTS
+    MCTS,
 };
 
 // Re-export provider types
 pub use providers::{
-    LLMProvider, ModelClientRouter, ModelStream,
-    ProviderRoutingConfig, ProviderSpec, RoutingStrategy,
-    OllamaClient, OllamaConfig,
+    LLMProvider, ModelClientRouter, ModelStream, OllamaClient, OllamaConfig, ProviderRoutingConfig,
+    ProviderSpec, RoutingStrategy,
 };
 
 /// MARS module version

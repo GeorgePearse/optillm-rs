@@ -1,4 +1,4 @@
-/// Error types for MARS operations.
+//! Error types for MARS operations.
 
 use std::error::Error as StdError;
 use thiserror::Error;

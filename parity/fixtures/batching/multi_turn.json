@@ -1,0 +1,46 @@
+{
+ "description": "batched none rebuilds messages from system prompt + flattened query",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "Hi"
+     },
+     {
+      "role": "assistant",
+      "content": "Hello"
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact",
+ "server_args": [
+  "--batch-mode",
+  "--batch-wait-ms",
+  "10"
+ ]
+}

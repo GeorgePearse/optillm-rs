@@ -5,6 +5,7 @@ use thiserror::Error;
 pub type CliResult<T> = Result<T, CliError>;
 
 #[derive(Error, Debug)]
+#[allow(dead_code)]
 pub enum CliError {
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),

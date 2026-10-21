@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 optillm-core = { path = "../core" }
 optillm-mars = { path = "../mars" }
+optillm-proxy = { path = "../proxy" }
 
 tokio = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }

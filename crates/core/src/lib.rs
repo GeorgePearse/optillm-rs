@@ -10,7 +10,7 @@ pub mod error;
 pub mod optimizer;
 pub mod solution;
 
-pub use client::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem, TokenUsage};
+pub use client::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem, TokenUsage};
 pub use error::{OptillmError, Result};
 pub use optimizer::{Optimizer, OptimizerConfig};
 pub use solution::Solution;

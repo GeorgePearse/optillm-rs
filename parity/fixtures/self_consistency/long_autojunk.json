@@ -1,0 +1,47 @@
+{
+ "description": "long answers exercise difflib's autojunk heuristic",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "self_consistency-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "responses": [
+     {
+      "content": "step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step 391"
+     },
+     {
+      "content": "step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step step x 391"
+     },
+     {
+      "content": "work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work 392"
+     },
+     {
+      "content": "work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work 393"
+     },
+     {
+      "content": "work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work work 392"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

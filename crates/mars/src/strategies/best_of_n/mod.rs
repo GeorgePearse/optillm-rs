@@ -1,12 +1,12 @@
-/// Best-of-N sampling strategy for solution optimization.
-///
-/// This strategy generates N diverse solutions and selects the best one based on
-/// various criteria such as verification score, ranking, or heuristics.
-/// Simple but effective for many use cases.
+//! Best-of-N sampling strategy for solution optimization.
+//!
+//! This strategy generates N diverse solutions and selects the best one based on
+//! various criteria such as verification score, ranking, or heuristics.
+//! Simple but effective for many use cases.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 #[cfg(test)]
 mod tests;
@@ -107,7 +107,12 @@ impl BestOfNAggregator {
         let mut total_tokens = 0;
 
         // Generate N diverse solutions
-        for (idx, &temperature) in config.temperatures.iter().take(config.num_candidates).enumerate() {
+        for (idx, &temperature) in config
+            .temperatures
+            .iter()
+            .take(config.num_candidates)
+            .enumerate()
+        {
             // Create system message
             let system_msg = ResponseItem::Message {
                 id: None,
@@ -303,8 +308,7 @@ impl BestOfNAggregator {
         }
         if max_reasoning > 0 {
             for (idx, sol) in solutions.iter().enumerate() {
-                scores[idx] +=
-                    ((sol.reasoning.len() as f32) / (max_reasoning as f32)) * 0.3;
+                scores[idx] += ((sol.reasoning.len() as f32) / (max_reasoning as f32)) * 0.3;
             }
         }
 
@@ -388,11 +392,7 @@ impl BestOfNAggregator {
             .unwrap_or(0.0);
 
         let variance = if !scores.is_empty() {
-            scores
-                .iter()
-                .map(|s| (s - avg_score).powi(2))
-                .sum::<f32>()
-                / scores.len() as f32
+            scores.iter().map(|s| (s - avg_score).powi(2)).sum::<f32>() / scores.len() as f32
         } else {
             0.0
         };

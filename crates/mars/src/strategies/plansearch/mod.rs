@@ -3,13 +3,13 @@
 //! PlanSearch solves problems by generating observations, deriving new insights,
 //! and using these to create both natural language and code solutions.
 
+use futures::StreamExt;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use futures::StreamExt;
 
 use crate::{MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for PlanSearch strategy
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -196,18 +196,16 @@ impl PlanSearchAggregator {
         .await?;
         total_tokens += tokens;
 
-        let all_observations: Vec<String> =
-            initial_observations.iter().chain(derived_observations.iter()).cloned().collect();
+        let all_observations: Vec<String> = initial_observations
+            .iter()
+            .chain(derived_observations.iter())
+            .cloned()
+            .collect();
 
         // Step 3: Generate natural language solution
-        let (natural_language_solution, tokens) = Self::generate_solution(
-            problem,
-            &all_observations,
-            system_prompt,
-            &config,
-            client,
-        )
-        .await?;
+        let (natural_language_solution, tokens) =
+            Self::generate_solution(problem, &all_observations, system_prompt, &config, client)
+                .await?;
         total_tokens += tokens;
 
         // Step 4: Implement the solution
@@ -303,9 +301,13 @@ impl PlanSearchAggregator {
             problem, num_observations
         );
 
-        let (response, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, config.max_tokens_observations, client)
-                .await?;
+        let (response, tokens) = Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_observations,
+            client,
+        )
+        .await?;
 
         let observations: Vec<String> = response
             .lines()
@@ -343,9 +345,13 @@ impl PlanSearchAggregator {
             problem, observations_text, num_new_observations
         );
 
-        let (response, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, config.max_tokens_observations, client)
-                .await?;
+        let (response, tokens) = Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_observations,
+            client,
+        )
+        .await?;
 
         let observations: Vec<String> = response
             .lines()
@@ -382,7 +388,13 @@ impl PlanSearchAggregator {
             problem, observations_text
         );
 
-        Self::generate_response(&prompt_text, system_prompt, config.max_tokens_solution, client).await
+        Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_solution,
+            client,
+        )
+        .await
     }
 
     /// Implement the solution in code
@@ -404,9 +416,13 @@ impl PlanSearchAggregator {
             problem, natural_language_solution
         );
 
-        let (response, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, config.max_tokens_implementation, client)
-                .await?;
+        let (response, tokens) = Self::generate_response(
+            &prompt_text,
+            system_prompt,
+            config.max_tokens_implementation,
+            client,
+        )
+        .await?;
 
         // Extract code from markdown blocks if present
         let code = Self::extract_code(&response);

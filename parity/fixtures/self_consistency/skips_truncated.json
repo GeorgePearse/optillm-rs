@@ -1,0 +1,48 @@
+{
+ "description": "truncated / empty samples are skipped",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "self_consistency-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "responses": [
+     {
+      "content": "A",
+      "finish_reason": "length"
+     },
+     {
+      "content": null
+     },
+     {
+      "content": "B"
+     },
+     {
+      "content": "C"
+     },
+     {
+      "content": "B"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact"
+}

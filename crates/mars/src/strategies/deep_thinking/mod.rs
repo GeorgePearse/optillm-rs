@@ -1,7 +1,7 @@
-/// Deep Thinking: Inference-time scaling based on problem difficulty.
-///
-/// Deep Thinking allocates computation (tokens) proportionally to problem difficulty,
-/// allowing harder problems to receive more reasoning capacity.
+//! Deep Thinking: Inference-time scaling based on problem difficulty.
+//!
+//! Deep Thinking allocates computation (tokens) proportionally to problem difficulty,
+//! allowing harder problems to receive more reasoning capacity.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
@@ -119,10 +119,16 @@ impl DeepThinkingAggregator {
 
     fn parse_response(response: &str) -> (String, String) {
         if let Some(idx) = response.rfind("Final Answer") {
-            (response[..idx].trim().to_string(), response[idx..].trim().to_string())
+            (
+                response[..idx].trim().to_string(),
+                response[idx..].trim().to_string(),
+            )
         } else {
             let mid = response.len() / 2;
-            (response[..mid].trim().to_string(), response[mid..].trim().to_string())
+            (
+                response[..mid].trim().to_string(),
+                response[mid..].trim().to_string(),
+            )
         }
     }
 }

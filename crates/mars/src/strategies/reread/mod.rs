@@ -3,12 +3,12 @@
 //! ReRead is a simple but effective strategy that re-reads a question before answering.
 //! This encourages the model to reconsider and improve its response quality.
 
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use futures::StreamExt;
 
 use crate::{MarsError, Result};
-use optillm_core::{ModelClient, Prompt, ResponseEvent, ResponseItem, ContentItem};
+use optillm_core::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 
 /// Configuration for ReRead strategy
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -98,14 +98,10 @@ impl ReReadAggregator {
         config.validate()?;
 
         // Create a prompt that encourages re-reading the question
-        let prompt_text = format!(
-            "{}\n\nRead the question again: {}",
-            query, query
-        );
+        let prompt_text = format!("{}\n\nRead the question again: {}", query, query);
 
         let (answer, tokens) =
-            Self::generate_response(&prompt_text, system_prompt, &config, client)
-                .await?;
+            Self::generate_response(&prompt_text, system_prompt, &config, client).await?;
 
         Ok(ReReadResult {
             answer,
@@ -222,18 +218,14 @@ mod tests {
 
     #[test]
     fn test_reread_metadata_creation() {
-        let metadata = ReReadMetadata {
-            total_tokens: 1500,
-        };
+        let metadata = ReReadMetadata { total_tokens: 1500 };
 
         assert_eq!(metadata.total_tokens, 1500);
     }
 
     #[test]
     fn test_reread_metadata_display() {
-        let metadata = ReReadMetadata {
-            total_tokens: 2000,
-        };
+        let metadata = ReReadMetadata { total_tokens: 2000 };
 
         let display_str = format!("{}", metadata);
         assert!(display_str.contains("2000"));

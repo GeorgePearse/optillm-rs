@@ -1,7 +1,7 @@
-/// CoT Decoding: Structured chain-of-thought decoding guidance.
-///
-/// Guides model to follow structured reasoning patterns, improving quality
-/// through step-by-step problem decomposition and analysis.
+//! CoT Decoding: Structured chain-of-thought decoding guidance.
+//!
+//! Guides model to follow structured reasoning patterns, improving quality
+//! through step-by-step problem decomposition and analysis.
 
 use crate::{types::Solution, MarsError, Result};
 use futures::StreamExt;
@@ -62,9 +62,7 @@ impl CotDecodingAggregator {
         let system_msg = ResponseItem::Message {
             id: None,
             role: "system".to_string(),
-            content: vec![ContentItem::InputText {
-                text: cot_prompt,
-            }],
+            content: vec![ContentItem::InputText { text: cot_prompt }],
         };
 
         let user_msg = ResponseItem::Message {
@@ -123,10 +121,16 @@ impl CotDecodingAggregator {
 
     fn parse_response(response: &str) -> (String, String) {
         if let Some(idx) = response.rfind("Final Answer") {
-            (response[..idx].trim().to_string(), response[idx..].trim().to_string())
+            (
+                response[..idx].trim().to_string(),
+                response[idx..].trim().to_string(),
+            )
         } else {
             let mid = response.len() / 2;
-            (response[..mid].trim().to_string(), response[mid..].trim().to_string())
+            (
+                response[..mid].trim().to_string(),
+                response[mid..].trim().to_string(),
+            )
         }
     }
 }

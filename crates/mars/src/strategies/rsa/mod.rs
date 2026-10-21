@@ -1,8 +1,8 @@
-/// RSA (Reinforced Self-Aggregation) strategy for iterative solution improvement.
-///
-/// RSA is a population-based optimization strategy that maintains a population of solutions
-/// and iteratively selects, refines, and synthesizes the best ones to improve overall quality.
-/// Similar to evolutionary algorithms, it balances exploration and exploitation.
+//! RSA (Reinforced Self-Aggregation) strategy for iterative solution improvement.
+//!
+//! RSA is a population-based optimization strategy that maintains a population of solutions
+//! and iteratively selects, refines, and synthesizes the best ones to improve overall quality.
+//! Similar to evolutionary algorithms, it balances exploration and exploitation.
 
 use crate::{types::Solution, MarsError, Result};
 use std::collections::HashSet;
@@ -128,10 +128,15 @@ impl RSAAggregator {
             let iteration_start = population.len();
 
             // Select solutions based on criterion
-            let selected = Self::select_solutions(&population, config.selection_size, &config.selection_criterion)?;
+            let selected = Self::select_solutions(
+                &population,
+                config.selection_size,
+                &config.selection_criterion,
+            )?;
 
             // Refine selected solutions
-            let refined = Self::refine_solutions(&selected, iteration, &config.refinement_strategy)?;
+            let refined =
+                Self::refine_solutions(&selected, iteration, &config.refinement_strategy)?;
 
             // Add refined solutions to population
             population.extend(refined);
@@ -155,7 +160,7 @@ impl RSAAggregator {
             }
 
             let iteration_stat = IterationStatistics {
-                iteration: iteration,
+                iteration,
                 population_size: population.len(),
                 solutions_added: iteration_start,
                 best_score: best_solution.verification_score,
@@ -192,7 +197,9 @@ impl RSAAggregator {
         let selected = match criterion {
             SelectionCriterion::BestScore => Self::select_by_score(population, num_to_select),
             SelectionCriterion::Diversity => Self::select_by_diversity(population, num_to_select),
-            SelectionCriterion::Thoroughness => Self::select_by_thoroughness(population, num_to_select),
+            SelectionCriterion::Thoroughness => {
+                Self::select_by_thoroughness(population, num_to_select)
+            }
             SelectionCriterion::Random => Self::select_random(population, num_to_select),
             SelectionCriterion::Tournament => Self::select_by_tournament(population, num_to_select),
         };
@@ -335,8 +342,7 @@ impl RSAAggregator {
         for (idx, solution) in solutions.iter().enumerate() {
             let mut merged_sol = solution.clone();
             merged_sol.id = format!("rsa-merged-{}-{}", iteration, idx);
-            merged_sol.verification_score =
-                (merged_sol.verification_score + 0.1).min(1.0); // Slight boost for attempted improvement
+            merged_sol.verification_score = (merged_sol.verification_score + 0.1).min(1.0); // Slight boost for attempted improvement
             merged.push(merged_sol);
         }
 
@@ -365,7 +371,8 @@ impl RSAAggregator {
     fn ensemble_solutions(solutions: &[Solution], iteration: usize) -> Result<Vec<Solution>> {
         let combined_reasoning = Self::combine_reasoning(solutions);
         let best_answer = Self::select_consensus_answer(solutions);
-        let avg_temp = solutions.iter().map(|s| s.temperature).sum::<f32>() / solutions.len() as f32;
+        let avg_temp =
+            solutions.iter().map(|s| s.temperature).sum::<f32>() / solutions.len() as f32;
 
         let mut ensemble = Solution::new(
             format!("rsa-ensemble-iter{}", iteration),
@@ -422,7 +429,11 @@ impl RSAAggregator {
         let mut combined = String::from("Combined Reasoning from RSA Iteration:\n\n");
 
         for (idx, solution) in solutions.iter().enumerate() {
-            combined.push_str(&format!("Approach {}:\n{}\n\n", idx + 1, solution.reasoning));
+            combined.push_str(&format!(
+                "Approach {}:\n{}\n\n",
+                idx + 1,
+                solution.reasoning
+            ));
         }
 
         combined
@@ -540,7 +551,6 @@ pub struct RSAStatistics {
     /// Average score across iterations
     pub average_iteration_score: f32,
 }
-
 
 #[cfg(test)]
 mod tests;

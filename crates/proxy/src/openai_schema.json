@@ -1,0 +1,596 @@
+{
+ "ChatCompletion": {
+  "model": "ChatCompletion",
+  "fields": [
+   [
+    "id",
+    {}
+   ],
+   [
+    "choices",
+    {
+     "list": {
+      "model": "Choice",
+      "fields": [
+       [
+        "finish_reason",
+        {}
+       ],
+       [
+        "index",
+        {}
+       ],
+       [
+        "logprobs",
+        {
+         "model": "ChoiceLogprobs",
+         "fields": [
+          [
+           "content",
+           {
+            "list": {
+             "model": "ChatCompletionTokenLogprob",
+             "fields": [
+              [
+               "token",
+               {}
+              ],
+              [
+               "bytes",
+               {
+                "list": {}
+               }
+              ],
+              [
+               "logprob",
+               {}
+              ],
+              [
+               "top_logprobs",
+               {
+                "list": {
+                 "model": "TopLogprob",
+                 "fields": [
+                  [
+                   "token",
+                   {}
+                  ],
+                  [
+                   "bytes",
+                   {
+                    "list": {}
+                   }
+                  ],
+                  [
+                   "logprob",
+                   {}
+                  ]
+                 ]
+                }
+               }
+              ]
+             ]
+            }
+           }
+          ],
+          [
+           "refusal",
+           {
+            "list": {
+             "model": "ChatCompletionTokenLogprob",
+             "fields": [
+              [
+               "token",
+               {}
+              ],
+              [
+               "bytes",
+               {
+                "list": {}
+               }
+              ],
+              [
+               "logprob",
+               {}
+              ],
+              [
+               "top_logprobs",
+               {
+                "list": {
+                 "model": "TopLogprob",
+                 "fields": [
+                  [
+                   "token",
+                   {}
+                  ],
+                  [
+                   "bytes",
+                   {
+                    "list": {}
+                   }
+                  ],
+                  [
+                   "logprob",
+                   {}
+                  ]
+                 ]
+                }
+               }
+              ]
+             ]
+            }
+           }
+          ]
+         ]
+        }
+       ],
+       [
+        "message",
+        {
+         "model": "ChatCompletionMessage",
+         "fields": [
+          [
+           "content",
+           {}
+          ],
+          [
+           "refusal",
+           {}
+          ],
+          [
+           "role",
+           {}
+          ],
+          [
+           "annotations",
+           {
+            "list": {
+             "model": "Annotation",
+             "fields": [
+              [
+               "type",
+               {}
+              ],
+              [
+               "url_citation",
+               {
+                "model": "AnnotationURLCitation",
+                "fields": [
+                 [
+                  "end_index",
+                  {}
+                 ],
+                 [
+                  "start_index",
+                  {}
+                 ],
+                 [
+                  "title",
+                  {}
+                 ],
+                 [
+                  "url",
+                  {}
+                 ]
+                ]
+               }
+              ]
+             ]
+            }
+           }
+          ],
+          [
+           "audio",
+           {
+            "model": "ChatCompletionAudio",
+            "fields": [
+             [
+              "id",
+              {}
+             ],
+             [
+              "data",
+              {}
+             ],
+             [
+              "expires_at",
+              {}
+             ],
+             [
+              "transcript",
+              {}
+             ]
+            ]
+           }
+          ],
+          [
+           "function_call",
+           {
+            "model": "FunctionCall",
+            "fields": [
+             [
+              "arguments",
+              {}
+             ],
+             [
+              "name",
+              {}
+             ]
+            ]
+           }
+          ],
+          [
+           "tool_calls",
+           {
+            "list": {
+             "union": {
+              "function": {
+               "model": "ChatCompletionMessageFunctionToolCall",
+               "fields": [
+                [
+                 "id",
+                 {}
+                ],
+                [
+                 "function",
+                 {
+                  "model": "Function",
+                  "fields": [
+                   [
+                    "arguments",
+                    {}
+                   ],
+                   [
+                    "name",
+                    {}
+                   ]
+                  ]
+                 }
+                ],
+                [
+                 "type",
+                 {}
+                ]
+               ]
+              },
+              "custom": {
+               "model": "ChatCompletionMessageCustomToolCall",
+               "fields": [
+                [
+                 "id",
+                 {}
+                ],
+                [
+                 "custom",
+                 {
+                  "model": "Custom",
+                  "fields": [
+                   [
+                    "input",
+                    {}
+                   ],
+                   [
+                    "name",
+                    {}
+                   ]
+                  ]
+                 }
+                ],
+                [
+                 "type",
+                 {}
+                ]
+               ]
+              }
+             }
+            }
+           }
+          ]
+         ]
+        }
+       ]
+      ]
+     }
+    }
+   ],
+   [
+    "created",
+    {}
+   ],
+   [
+    "model",
+    {}
+   ],
+   [
+    "object",
+    {}
+   ],
+   [
+    "moderation",
+    {
+     "model": "Moderation",
+     "fields": [
+      [
+       "input",
+       {
+        "union": {
+         "moderation_results": {
+          "model": "ModerationInputModerationResults",
+          "fields": [
+           [
+            "model",
+            {}
+           ],
+           [
+            "results",
+            {
+             "list": {
+              "model": "ModerationInputModerationResultsResult",
+              "fields": [
+               [
+                "categories",
+                {}
+               ],
+               [
+                "category_applied_input_types",
+                {}
+               ],
+               [
+                "category_scores",
+                {}
+               ],
+               [
+                "flagged",
+                {}
+               ],
+               [
+                "model",
+                {}
+               ],
+               [
+                "type",
+                {}
+               ]
+              ]
+             }
+            }
+           ],
+           [
+            "type",
+            {}
+           ]
+          ]
+         },
+         "error": {
+          "model": "ModerationInputError",
+          "fields": [
+           [
+            "code",
+            {}
+           ],
+           [
+            "message",
+            {}
+           ],
+           [
+            "type",
+            {}
+           ]
+          ]
+         }
+        }
+       }
+      ],
+      [
+       "output",
+       {
+        "union": {
+         "moderation_results": {
+          "model": "ModerationOutputModerationResults",
+          "fields": [
+           [
+            "model",
+            {}
+           ],
+           [
+            "results",
+            {
+             "list": {
+              "model": "ModerationOutputModerationResultsResult",
+              "fields": [
+               [
+                "categories",
+                {}
+               ],
+               [
+                "category_applied_input_types",
+                {}
+               ],
+               [
+                "category_scores",
+                {}
+               ],
+               [
+                "flagged",
+                {}
+               ],
+               [
+                "model",
+                {}
+               ],
+               [
+                "type",
+                {}
+               ]
+              ]
+             }
+            }
+           ],
+           [
+            "type",
+            {}
+           ]
+          ]
+         },
+         "error": {
+          "model": "ModerationOutputError",
+          "fields": [
+           [
+            "code",
+            {}
+           ],
+           [
+            "message",
+            {}
+           ],
+           [
+            "type",
+            {}
+           ]
+          ]
+         }
+        }
+       }
+      ]
+     ]
+    }
+   ],
+   [
+    "service_tier",
+    {}
+   ],
+   [
+    "system_fingerprint",
+    {}
+   ],
+   [
+    "usage",
+    {
+     "model": "CompletionUsage",
+     "fields": [
+      [
+       "completion_tokens",
+       {}
+      ],
+      [
+       "prompt_tokens",
+       {}
+      ],
+      [
+       "total_tokens",
+       {}
+      ],
+      [
+       "completion_tokens_details",
+       {
+        "model": "CompletionTokensDetails",
+        "fields": [
+         [
+          "accepted_prediction_tokens",
+          {}
+         ],
+         [
+          "audio_tokens",
+          {}
+         ],
+         [
+          "reasoning_tokens",
+          {}
+         ],
+         [
+          "rejected_prediction_tokens",
+          {}
+         ]
+        ]
+       }
+      ],
+      [
+       "prompt_tokens_details",
+       {
+        "model": "PromptTokensDetails",
+        "fields": [
+         [
+          "audio_tokens",
+          {}
+         ],
+         [
+          "cache_write_tokens",
+          {}
+         ],
+         [
+          "cached_tokens",
+          {}
+         ]
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  ]
+ },
+ "Model": {
+  "model": "Model",
+  "fields": [
+   [
+    "id",
+    {}
+   ],
+   [
+    "created",
+    {}
+   ],
+   [
+    "object",
+    {}
+   ],
+   [
+    "owned_by",
+    {}
+   ]
+  ]
+ },
+ "create_params": [
+  "messages",
+  "model",
+  "audio",
+  "frequency_penalty",
+  "function_call",
+  "functions",
+  "logit_bias",
+  "logprobs",
+  "max_completion_tokens",
+  "max_tokens",
+  "metadata",
+  "modalities",
+  "moderation",
+  "n",
+  "parallel_tool_calls",
+  "prediction",
+  "presence_penalty",
+  "prompt_cache_key",
+  "prompt_cache_options",
+  "prompt_cache_retention",
+  "reasoning_effort",
+  "response_format",
+  "safety_identifier",
+  "seed",
+  "service_tier",
+  "stop",
+  "store",
+  "stream",
+  "stream_options",
+  "temperature",
+  "tool_choice",
+  "tools",
+  "top_logprobs",
+  "top_p",
+  "user",
+  "verbosity",
+  "web_search_options",
+  "extra_headers",
+  "extra_query",
+  "extra_body",
+  "timeout"
+ ]
+}

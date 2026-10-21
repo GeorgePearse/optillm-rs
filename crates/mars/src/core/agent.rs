@@ -1,9 +1,9 @@
-/// Individual agents that explore solution paths with different temperatures.
+//! Individual agents that explore solution paths with different temperatures.
 
-use crate::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 use crate::core::prompts;
 use crate::types::Solution;
 use crate::Result;
+use crate::{ContentItem, ModelClient, Prompt, ResponseEvent, ResponseItem};
 use futures::StreamExt;
 use uuid::Uuid;
 
@@ -42,20 +42,14 @@ impl Agent {
             prompts::MARS_SYSTEM_PROMPT.to_string()
         };
 
-        let user_prompt = format!(
-            "{}\n\n{}",
-            prompts::MARS_REASONING_PROMPT,
-            query
-        );
+        let user_prompt = format!("{}\n\n{}", prompts::MARS_REASONING_PROMPT, query);
 
         // Build prompt for ModelClient
         let mut prompt = Prompt::default();
         prompt.input = vec![ResponseItem::Message {
             id: None,
             role: "user".to_string(),
-            content: vec![ContentItem::InputText {
-                text: user_prompt,
-            }],
+            content: vec![ContentItem::InputText { text: user_prompt }],
         }];
         prompt.base_instructions_override = Some(system_prompt);
         prompt.set_log_tag(&format!("mars_agent_{}", self.id));
@@ -72,7 +66,7 @@ impl Agent {
                 }
                 ResponseEvent::Completed { token_usage, .. } => {
                     if let Some(usage) = token_usage {
-                        token_count = usage.total_tokens() as usize;
+                        token_count = usage.total_tokens();
                     }
                     break;
                 }
@@ -103,7 +97,9 @@ impl Agent {
     ) -> Result<f32> {
         let verification_prompt = format!(
             "{}\n\nSolution to verify:\n{}\n\nAnswer: {}",
-            prompts::VERIFICATION_SYSTEM_PROMPT, solution.reasoning, solution.answer
+            prompts::VERIFICATION_SYSTEM_PROMPT,
+            solution.reasoning,
+            solution.answer
         );
 
         // Build prompt for ModelClient
@@ -215,7 +211,8 @@ impl Agent {
     ) -> Result<Vec<String>> {
         let extraction_prompt = format!(
             "{}\n\nSolution:\n{}",
-            prompts::STRATEGY_EXTRACTION_PROMPT, solution.reasoning
+            prompts::STRATEGY_EXTRACTION_PROMPT,
+            solution.reasoning
         );
 
         // Build prompt for ModelClient
@@ -283,11 +280,7 @@ impl Agent {
         let score = if let Some(score_start) = response.find("SCORE:") {
             let rest = &response[score_start + 6..];
             let score_str = rest.split_whitespace().next().unwrap_or("0.5");
-            score_str
-                .parse::<f32>()
-                .unwrap_or(0.5)
-                .max(0.0)
-                .min(1.0)
+            score_str.parse::<f32>().unwrap_or(0.5).max(0.0).min(1.0)
         } else {
             // Default to reasonable score
             0.5

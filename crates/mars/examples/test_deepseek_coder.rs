@@ -15,12 +15,13 @@
 //!
 //! This tests using the Self-Consistency strategy (voting across multiple attempts)
 //! to improve code quality with a small model.
+#![allow(dead_code, unused, clippy::all)]
 
-use std::time::Instant;
 use optillm_mars::{
-    SelfConsistencyAggregator, SelfConsistencyConfig,
     providers::ollama::{OllamaClient, OllamaConfig},
+    SelfConsistencyAggregator, SelfConsistencyConfig,
 };
+use std::time::Instant;
 
 const CODING_PROBLEM: &str = r#"
 Write a Rust function that:
@@ -65,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "http://localhost:11434".to_string(),
         "deepseek-coder:6.7b-base-q4_K_M".to_string(),
     )
-    .with_temperature(0.3)  // Low temperature for deterministic coding
+    .with_temperature(0.3) // Low temperature for deterministic coding
     .with_num_predict(1024);
 
     println!("\nConfiguration:");
@@ -93,7 +94,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n✓ Single inference completed");
     println!("  Tokens generated: {}", result.tokens);
     println!("  Time: {:.2}s", elapsed);
-    println!("  Throughput: {:.1} tokens/sec", result.tokens as f32 / elapsed);
+    println!(
+        "  Throughput: {:.1} tokens/sec",
+        result.tokens as f32 / elapsed
+    );
     println!("\nGenerated code:");
     println!("{}", "-".repeat(70));
     println!("{}", result.answer);
@@ -113,7 +117,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n✓ Self-Consistency completed");
     println!("  Total tokens: {}", consistency_result.total_tokens);
     println!("  Time: {:.2}s", elapsed);
-    println!("  Throughput: {:.1} tokens/sec", consistency_result.total_tokens as f32 / elapsed);
+    println!(
+        "  Throughput: {:.1} tokens/sec",
+        consistency_result.total_tokens as f32 / elapsed
+    );
     println!("  Agreement: {:.0}%", consistency_result.agreement);
     println!("  Paths generated: 3");
 
@@ -176,7 +183,9 @@ struct ConsistencyResult {
     agreement: f32,
 }
 
-async fn test_single_inference(client: &dyn optillm_core::ModelClient) -> Result<SingleResult, Box<dyn std::error::Error>> {
+async fn test_single_inference(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<SingleResult, Box<dyn std::error::Error>> {
     let mut prompt = optillm_core::Prompt::new();
     prompt.input = vec![
         optillm_core::ResponseItem::Message {
@@ -216,22 +225,23 @@ async fn test_single_inference(client: &dyn optillm_core::ModelClient) -> Result
     Ok(SingleResult { answer, tokens })
 }
 
-async fn test_self_consistency(client: &dyn optillm_core::ModelClient) -> Result<ConsistencyResult, Box<dyn std::error::Error>> {
-    let config = SelfConsistencyConfig::new()
-        .with_num_sampling_paths(3)
-        .with_temperature(0.4);
+async fn test_self_consistency(
+    client: &dyn optillm_core::ModelClient,
+) -> Result<ConsistencyResult, Box<dyn std::error::Error>> {
+    let config = SelfConsistencyConfig::new(3).with_temperatures(vec![0.4, 0.4, 0.4]);
 
-    let result = SelfConsistencyAggregator::run_self_consistency(
+    let (solution, metadata) = SelfConsistencyAggregator::run_self_consistency(
         CODING_PROBLEM,
         SYSTEM_PROMPT,
         config,
         client,
-    ).await?;
+    )
+    .await?;
 
     Ok(ConsistencyResult {
-        final_answer: result.final_answer,
-        total_tokens: result.metadata.total_tokens,
-        agreement: result.metadata.agreement_percentage,
+        final_answer: solution.answer,
+        total_tokens: metadata.total_tokens,
+        agreement: metadata.consensus_score,
     })
 }
 

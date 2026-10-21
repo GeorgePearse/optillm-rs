@@ -4,13 +4,31 @@
 pub fn run() {
     println!("\n=== Available OptimLLM Strategies ===\n");
 
-    let strategies = vec![
-        ("AutoThink", "Complexity-aware reasoning with adaptive temperature adjustment"),
-        ("Deep Thinking", "Difficulty-based token allocation for variable-complexity problems"),
-        ("Entropy Decoding", "Diversity control using Shannon entropy metrics"),
-        ("CoT Decoding", "Structured chain-of-thought reasoning patterns"),
-        ("R* Algorithm", "Enhanced Monte Carlo Tree Search with learned value estimates"),
-        ("MARS", "Multi-agent reasoning system with verification and aggregation"),
+    let strategies = [
+        (
+            "AutoThink",
+            "Complexity-aware reasoning with adaptive temperature adjustment",
+        ),
+        (
+            "Deep Thinking",
+            "Difficulty-based token allocation for variable-complexity problems",
+        ),
+        (
+            "Entropy Decoding",
+            "Diversity control using Shannon entropy metrics",
+        ),
+        (
+            "CoT Decoding",
+            "Structured chain-of-thought reasoning patterns",
+        ),
+        (
+            "R* Algorithm",
+            "Enhanced Monte Carlo Tree Search with learned value estimates",
+        ),
+        (
+            "MARS",
+            "Multi-agent reasoning system with verification and aggregation",
+        ),
     ];
 
     for (idx, (name, desc)) in strategies.iter().enumerate() {

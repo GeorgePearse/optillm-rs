@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::strategies::diverse_sampling::{
-        DiverseSamplingConfig, DiverseSamplingAggregator, DiverseSamplingMetadata, Sample,
+        DiverseSamplingAggregator, DiverseSamplingConfig, DiverseSamplingMetadata, Sample,
     };
 
     #[test]

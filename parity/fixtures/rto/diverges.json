@@ -1,0 +1,55 @@
+{
+ "description": "different round-trip code triggers a merge call",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "rto-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Write f doubling x"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Write f doubling x"
+    },
+    "response": {
+     "content": "```python\ndef f(x):\n    return x * 2\n```"
+    }
+   },
+   {
+    "match": {
+     "contains": "Summarize or describe"
+    },
+    "response": {
+     "content": "Write a function f that doubles x."
+    }
+   },
+   {
+    "match": {
+     "last_contains": "Write a function f"
+    },
+    "response": {
+     "content": "```py\ndef f(x):\n    return 2 * x\n```"
+    }
+   },
+   {
+    "match": {
+     "contains": "Second generated code"
+    },
+    "response": {
+     "content": "def f(x): return x + x"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

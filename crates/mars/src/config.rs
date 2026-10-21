@@ -1,4 +1,4 @@
-/// Configuration for MARS (Multi-Agent Reasoning System).
+//! Configuration for MARS (Multi-Agent Reasoning System).
 
 use serde::{Deserialize, Serialize};
 

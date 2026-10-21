@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use crate::strategies::plansearch::{PlanSearchConfig, PlanSearchAggregator, PlanSearchMetadata};
+    use crate::strategies::plansearch::{
+        PlanSearchAggregator, PlanSearchConfig, PlanSearchMetadata,
+    };
 
     #[test]
     fn test_plansearch_config_defaults() {
@@ -151,10 +153,7 @@ mod tests {
                 "Observation 2".to_string(),
                 "Observation 3".to_string(),
             ],
-            derived_observations: vec![
-                "Derived 1".to_string(),
-                "Derived 2".to_string(),
-            ],
+            derived_observations: vec!["Derived 1".to_string(), "Derived 2".to_string()],
         };
 
         assert_eq!(metadata.total_tokens, 15000);
@@ -188,8 +187,14 @@ mod tests {
             default.implementation_temperature,
             new.implementation_temperature
         );
-        assert_eq!(default.num_initial_observations, new.num_initial_observations);
-        assert_eq!(default.num_derived_observations, new.num_derived_observations);
+        assert_eq!(
+            default.num_initial_observations,
+            new.num_initial_observations
+        );
+        assert_eq!(
+            default.num_derived_observations,
+            new.num_derived_observations
+        );
     }
 
     #[test]

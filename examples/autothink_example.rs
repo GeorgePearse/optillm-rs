@@ -12,8 +12,14 @@ fn main() {
     // Example queries with different complexities
     let queries = vec![
         ("What is the capital of France?", ComplexityLevel::Simple),
-        ("Explain how binary search trees work and analyze their time complexity", ComplexityLevel::Medium),
-        ("Prove that the set of all prime numbers is infinite using contradiction", ComplexityLevel::Complex),
+        (
+            "Explain how binary search trees work and analyze their time complexity",
+            ComplexityLevel::Medium,
+        ),
+        (
+            "Prove that the set of all prime numbers is infinite using contradiction",
+            ComplexityLevel::Complex,
+        ),
     ];
 
     println!("=== AutoThink Complexity Classification ===\n");
@@ -27,7 +33,7 @@ fn main() {
         println!("Expected Complexity: {:?}", expected_level);
         println!("Detected Complexity: {:?}", complexity);
         println!("Temperature Selected: {:.1}", temperature);
-        println!("Reasoning: ", );
+        println!("Reasoning: ",);
         match complexity {
             ComplexityLevel::Simple => {
                 println!("  → Low temperature (0.3) for focused, deterministic response");

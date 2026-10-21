@@ -8,16 +8,16 @@
 //! Prerequisites:
 //! - Ollama running: systemctl status ollama
 //! - Models pulled: ollama pull tinyllama, ollama pull neural-chat
+#![allow(dead_code, unused, clippy::all)]
 
+use futures::StreamExt;
 use optillm_mars::{
     providers::ollama::{OllamaClient, OllamaConfig},
+    BestOfNAggregator, BestOfNConfig, DiverseSamplingAggregator, DiverseSamplingConfig,
     ReReadAggregator, ReReadConfig,
-    DiverseSamplingAggregator, DiverseSamplingConfig,
-    BestOfNAggregator, BestOfNConfig,
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::time::Instant;
-use futures::StreamExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct TestTask {
@@ -72,16 +72,9 @@ const TEST_TASKS: &[(&str, &str, &str)] = &[
     ),
 ];
 
-const MODELS: &[(&str, &str, &str)] = &[
-    ("tinyllama", "1.1B", "tiny"),
-];
+const MODELS: &[(&str, &str, &str)] = &[("tinyllama", "1.1B", "tiny")];
 
-const STRATEGIES: &[&str] = &[
-    "baseline",
-    "reread",
-    "diverse_sampling",
-    "best_of_n",
-];
+const STRATEGIES: &[&str] = &["baseline", "reread", "diverse_sampling", "best_of_n"];
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,28 +88,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::collections::HashMap::new();
 
     for (model_name, _, _) in MODELS {
-        let config = OllamaConfig::new(
-            "http://localhost:11434".to_string(),
-            model_name.to_string(),
-        )
-        .with_temperature(0.3)
-        .with_num_predict(512);
+        let config =
+            OllamaConfig::new("http://localhost:11434".to_string(), model_name.to_string())
+                .with_temperature(0.3)
+                .with_num_predict(512);
 
         match config.validate() {
-            Ok(_) => {
-                match OllamaClient::new(config) {
-                    Ok(client) => {
-                        println!("✓ Connected to {}", model_name);
-                        clients.insert(
-                            model_name.to_string(),
-                            Box::new(client) as Box<dyn optillm_core::ModelClient>,
-                        );
-                    }
-                    Err(e) => {
-                        println!("✗ Failed to connect to {}: {}", model_name, e);
-                    }
+            Ok(_) => match OllamaClient::new(config) {
+                Ok(client) => {
+                    println!("✓ Connected to {}", model_name);
+                    clients.insert(
+                        model_name.to_string(),
+                        Box::new(client) as Box<dyn optillm_core::ModelClient>,
+                    );
                 }
-            }
+                Err(e) => {
+                    println!("✗ Failed to connect to {}: {}", model_name, e);
+                }
+            },
             Err(e) => {
                 println!("✗ Invalid config for {}: {}", model_name, e);
             }
@@ -154,9 +143,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::io::Write::flush(&mut std::io::stdout()).ok();
 
                 let result = run_strategy_test(
-                    *strategy,
-                    *model_name,
-                    *task_id,
+                    strategy,
+                    model_name,
+                    task_id,
                     prompt,
                     system_prompt,
                     client.as_ref(),
@@ -286,14 +275,7 @@ async fn run_reread(
     system_prompt: &str,
     client: &dyn optillm_core::ModelClient,
 ) -> (u32, String) {
-    match ReReadAggregator::run_reread(
-        prompt,
-        system_prompt,
-        ReReadConfig::new(),
-        client,
-    )
-    .await
-    {
+    match ReReadAggregator::run_reread(prompt, system_prompt, ReReadConfig::new(), client).await {
         Ok(result) => (result.metadata.total_tokens as u32, result.answer),
         Err(_) => (0, String::new()),
     }
@@ -309,13 +291,8 @@ async fn run_diverse_sampling(
         .with_min_temperature(0.1)
         .with_max_temperature(0.9);
 
-    match DiverseSamplingAggregator::run_diverse_sampling(
-        prompt,
-        system_prompt,
-        config,
-        client,
-    )
-    .await
+    match DiverseSamplingAggregator::run_diverse_sampling(prompt, system_prompt, config, client)
+        .await
     {
         Ok(result) => (result.metadata.total_tokens as u32, result.best_answer),
         Err(_) => (0, String::new()),
@@ -327,13 +304,8 @@ async fn run_best_of_n(
     system_prompt: &str,
     client: &dyn optillm_core::ModelClient,
 ) -> (u32, String) {
-    match BestOfNAggregator::run_best_of_n(
-        prompt,
-        system_prompt,
-        BestOfNConfig::new(3),
-        client,
-    )
-    .await
+    match BestOfNAggregator::run_best_of_n(prompt, system_prompt, BestOfNConfig::new(3), client)
+        .await
     {
         Ok((solution, metadata)) => (metadata.total_tokens as u32, solution.answer),
         Err(_) => (0, String::new()),
@@ -358,7 +330,7 @@ async fn generate_report(results: &[BenchmarkResult]) {
     for result in results {
         strategy_stats
             .entry(result.strategy.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(result);
     }
 
@@ -377,10 +349,10 @@ async fn generate_report(results: &[BenchmarkResult]) {
             if !successful.is_empty() {
                 let avg_tokens = successful.iter().map(|r| r.tokens as f32).sum::<f32>()
                     / successful.len() as f32;
-                let avg_latency = successful.iter().map(|r| r.latency_ms).sum::<f32>()
-                    / successful.len() as f32;
-                let avg_throughput = successful.iter().map(|r| r.throughput).sum::<f32>()
-                    / successful.len() as f32;
+                let avg_latency =
+                    successful.iter().map(|r| r.latency_ms).sum::<f32>() / successful.len() as f32;
+                let avg_throughput =
+                    successful.iter().map(|r| r.throughput).sum::<f32>() / successful.len() as f32;
                 let cost = results[0].cost_multiplier;
                 let success_rate = (successful.len() as f32 / results.len() as f32) * 100.0;
 
@@ -403,7 +375,7 @@ async fn generate_report(results: &[BenchmarkResult]) {
     for result in results {
         by_model
             .entry(result.model.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(result);
     }
 
@@ -431,11 +403,14 @@ async fn generate_report(results: &[BenchmarkResult]) {
 
     let successful: Vec<_> = results.iter().filter(|r| r.success).collect();
     if !successful.is_empty() {
-        let fastest = successful.iter().min_by(|a, b| {
-            a.latency_ms.partial_cmp(&b.latency_ms).unwrap()
-        });
+        let fastest = successful
+            .iter()
+            .min_by(|a, b| a.latency_ms.partial_cmp(&b.latency_ms).unwrap());
         if let Some(fast) = fastest {
-            println!("✓ Fastest strategy: {} ({:.0}ms)", fast.strategy, fast.latency_ms);
+            println!(
+                "✓ Fastest strategy: {} ({:.0}ms)",
+                fast.strategy, fast.latency_ms
+            );
         }
 
         let best_efficiency = successful.iter().min_by(|a, b| {

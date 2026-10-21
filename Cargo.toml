@@ -2,6 +2,7 @@
 members = [ "crates/cli",
     "crates/core",
     "crates/mars",
+    "crates/proxy",
 ]
 resolver = "2"
 
@@ -11,7 +12,7 @@ edition = "2021"
 
 [workspace.dependencies]
 tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "sync", "time"] }
-reqwest = { version = "0.11", features = ["json", "stream"] }
+reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 futures = { version = "0.3" }

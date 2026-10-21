@@ -9,24 +9,24 @@
 //! - Strategy: defines the reasoning strategy network
 //! - Prompts: system prompts and templates
 
-/// Main coordinator for orchestrating multi-agent reasoning
-pub mod coordinator;
 /// Individual reasoning agents with configurable parameters
 pub mod agent;
-/// Workspace for managing shared state and results
-pub mod workspace;
-/// Verification module for cross-validating solutions
-pub mod verifier;
 /// Aggregation of multiple solutions
 pub mod aggregator;
-/// Strategy network for reasoning approach selection
-pub mod strategy;
+/// Main coordinator for orchestrating multi-agent reasoning
+pub mod coordinator;
 /// Predefined system prompts and templates
 pub mod prompts;
+/// Strategy network for reasoning approach selection
+pub mod strategy;
+/// Verification module for cross-validating solutions
+pub mod verifier;
+/// Workspace for managing shared state and results
+pub mod workspace;
 
-pub use coordinator::MarsCoordinator;
 pub use agent::Agent;
-pub use workspace::Workspace;
-pub use verifier::Verifier;
 pub use aggregator::Aggregator;
+pub use coordinator::MarsCoordinator;
 pub use strategy::StrategyNetwork;
+pub use verifier::Verifier;
+pub use workspace::Workspace;

@@ -1,0 +1,33 @@
+{
+ "description": "output tag is extracted",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "cot_reflection-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "<thinking>17*23\n<reflection>ok</reflection></thinking>\n<output>\n391\n</output>"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

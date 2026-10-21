@@ -1,6 +1,6 @@
-/// Provider configuration for multi-model support.
-///
-/// Manages provider selection, API keys, and routing strategies.
+//! Provider configuration for multi-model support.
+//!
+//! Manages provider selection, API keys, and routing strategies.
 
 use serde::{Deserialize, Serialize};
 
@@ -80,19 +80,17 @@ impl ProviderSpec {
             return Err("Model name cannot be empty".to_string());
         }
         if self.api_key.is_empty() {
-            return Err(format!(
-                "API key not set for provider: {}",
-                self.provider
-            ));
+            return Err(format!("API key not set for provider: {}", self.provider));
         }
         Ok(())
     }
 }
 
 /// Strategy for routing requests to providers
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RoutingStrategy {
     /// Always use the primary provider
+    #[default]
     Primary,
 
     /// Round-robin through available providers
@@ -112,12 +110,6 @@ pub enum RoutingStrategy {
 
     /// Distribute evenly across all providers
     BalanceLoad,
-}
-
-impl Default for RoutingStrategy {
-    fn default() -> Self {
-        Self::Primary
-    }
 }
 
 /// Configuration for multi-provider routing
@@ -170,11 +162,7 @@ impl ProviderRoutingConfig {
     /// Get all enabled providers
     pub fn get_enabled_providers(&self) -> Vec<&ProviderSpec> {
         let mut providers = vec![&self.primary];
-        providers.extend(
-            self.alternatives
-                .iter()
-                .filter(|p| p.enabled),
-        );
+        providers.extend(self.alternatives.iter().filter(|p| p.enabled));
         providers.retain(|p| p.enabled);
         providers
     }
@@ -255,8 +243,7 @@ mod tests {
 
     #[test]
     fn test_provider_routing_config() {
-        let primary = ProviderSpec::new("openai", "gpt-4o")
-            .with_api_key("key1".to_string());
+        let primary = ProviderSpec::new("openai", "gpt-4o").with_api_key("key1".to_string());
         let config = ProviderRoutingConfig::single(primary);
 
         assert_eq!(config.strategy, RoutingStrategy::Primary);
@@ -265,10 +252,9 @@ mod tests {
 
     #[test]
     fn test_multi_provider_routing() {
-        let primary = ProviderSpec::new("openai", "gpt-4o")
-            .with_api_key("key1".to_string());
-        let alt = ProviderSpec::new("anthropic", "claude-3-5-sonnet")
-            .with_api_key("key2".to_string());
+        let primary = ProviderSpec::new("openai", "gpt-4o").with_api_key("key1".to_string());
+        let alt =
+            ProviderSpec::new("anthropic", "claude-3-5-sonnet").with_api_key("key2".to_string());
 
         let config = ProviderRoutingConfig::multi(primary, vec![alt]);
         assert_eq!(config.strategy, RoutingStrategy::RoundRobin);

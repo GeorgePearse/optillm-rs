@@ -1,0 +1,43 @@
+{
+ "description": "sampling params pass straight through",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "max_tokens": 50,
+    "stop": [
+     "\n"
+    ],
+    "seed": 7,
+    "presence_penalty": 0.1,
+    "frequency_penalty": 0.2,
+    "user": "u1"
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

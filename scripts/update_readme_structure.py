@@ -24,6 +24,7 @@ EXCLUDE_DIRS = {
     "dist",
     "build",
     "*.egg-info",
+    "fixtures",
 }
 
 EXCLUDE_FILES = {

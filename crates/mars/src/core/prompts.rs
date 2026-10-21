@@ -1,7 +1,7 @@
-/// Prompt templates for MARS stages.
-///
-/// These prompts are derived from the optillm MARS implementation
-/// and guide agents through reasoning, verification, and improvement.
+//! Prompt templates for MARS stages.
+//!
+//! These prompts are derived from the optillm MARS implementation
+//! and guide agents through reasoning, verification, and improvement.
 
 /// System prompt for agents in MARS (with thinking tags)
 pub const MARS_SYSTEM_PROMPT_WITH_THINKING: &str = r#"You are a helpful assistant tasked with solving complex problems.

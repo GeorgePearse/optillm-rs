@@ -1,0 +1,57 @@
+{
+ "description": "truncated final answer falls back to candidate 1",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "moa-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "max_tokens": 64
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "contents": [
+      "390",
+      "391",
+      "392"
+     ]
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide your critique"
+    },
+    "response": {
+     "content": "Candidate 2 is right."
+    }
+   },
+   {
+    "match": {
+     "contains": "Please provide a final"
+    },
+    "response": {
+     "content": "partial",
+     "finish_reason": "length"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

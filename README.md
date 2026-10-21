@@ -78,11 +78,11 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Approach | `self_consistency` | ✅ parity | 4 | difflib.SequenceMatcher ported incl. autojunk |
 | Approach | `cot_reflection` | ✅ parity | 4 | — |
 | Approach | `re2` | ✅ parity | 4 | — |
-| Approach | `mcts` | ⬜ not started | 0 | — |
-| Approach | `pvg` | ⬜ not started | 0 | — |
-| Approach | `rstar` | ⬜ not started | 0 | — |
-| Approach | `plansearch` | ⬜ not started | 0 | — |
-| Approach | `leap` | ⬜ not started | 0 | — |
+| Approach | `mcts` | ✅ parity | 6 | seeded: CPython MT19937 random.choice; numpy log/sqrt replaced by f64 (only affects exact UCB ties) |
+| Approach | `pvg` | ✅ parity | 3 | upstream module-global token counter (never reset, grows across requests) replicated |
+| Approach | `rstar` | ✅ parity | 4 | concurrent asyncio rollouts reproduced; harness serialises mock replies so seeded draws line up |
+| Approach | `plansearch` | ✅ parity | 4 | — |
+| Approach | `leap` | ✅ parity | 7 | Python json/iteration error semantics for malformed example JSON |
 | Approach | `mars` | ⬜ not started | 0 | crates/mars is an independent native design, not a port |
 | Approach | `cepo` | ⬜ not started | 0 | — |
 | Approach | `z3` | ⬜ not started | 0 | — |
@@ -109,7 +109,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-10/42 rows at harness-verified parity, 76 fixtures in total.
+15/42 rows at harness-verified parity, 100 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

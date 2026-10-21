@@ -1,0 +1,68 @@
+{
+ "description": "numeric answers never equal the generated string answer",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "leap-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Q: 2+2? A: 4\nQ: 3+5? A: 8\nQ: 17*23? A:"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "few-shot examples"
+    },
+    "response": {
+     "content": "<output>[{\"question\": 2.5, \"answer\": 4}]</output>"
+    }
+   },
+   {
+    "match": {
+     "contains": "deliberately introduce an error"
+    },
+    "responses": [
+     {
+      "content": "2+2 is 5. <output>5</output>"
+     },
+     {
+      "content": "3+5=8 <output>8</output>"
+     }
+    ]
+   },
+   {
+    "match": {
+     "contains": "Conduct a thorough analysis"
+    },
+    "response": {
+     "content": "Reasoning: arithmetic slip. <output>Double-check additions.</output>"
+    }
+   },
+   {
+    "match": {
+     "contains": "Create a list of *unique*"
+    },
+    "response": {
+     "content": "<output>1. Double-check arithmetic.\n2. Verify each step.</output>"
+    }
+   },
+   {
+    "match": {
+     "contains": "Keep in mind these principles"
+    },
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

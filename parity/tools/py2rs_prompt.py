@@ -80,16 +80,20 @@ def main():
     source = open(path).read()
     tree = ast.parse(source)
     found = None
+    candidates = []
     for node in ast.walk(tree):
         if target.isdigit():
             if isinstance(node, (ast.Constant, ast.JoinedStr)) and node.lineno == int(target):
                 if isinstance(node, ast.JoinedStr) or isinstance(node.value, str):
-                    found = node
-                    break
+                    candidates.append(node)
         elif isinstance(node, ast.Assign):
             for t in node.targets:
                 if isinstance(t, ast.Name) and t.id == target:
                     found = node.value
+    if candidates:
+        # Several literals can start on one line ("content": f"""..."""): take
+        # the f-string if there is one, else the longest string.
+        found = max(candidates, key=lambda n: (isinstance(n, ast.JoinedStr), len(ast.unparse(n))))
     if found is None:
         raise SystemExit("literal not found")
     print(convert(found, source))

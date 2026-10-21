@@ -1,0 +1,85 @@
+{
+ "description": "5 concurrent rollouts, depth 3",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "rstar-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "Generate the next logical step"
+    },
+    "response": {
+     "content": "Next step: multiply 17 by 23. The answer is 391"
+    }
+   },
+   {
+    "match": {
+     "contains": "Continue the reasoning process"
+    },
+    "response": {
+     "content": "Continuing: 17*20 = 340 and 17*3 = 51, so 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "Identify a key sub-question"
+    },
+    "response": {
+     "content": "Sub-question: what is 17*20? It is 340. Then add 51 to get 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "Re-examine the previous step"
+    },
+    "response": {
+     "content": "Re-examining the step: 340 + 51 = 391. Thus, the answer is 391"
+    }
+   },
+   {
+    "match": {
+     "contains": "Rephrase"
+    },
+    "response": {
+     "content": "Rephrased: compute the product of 17 and 23."
+    }
+   },
+   {
+    "match": {
+     "contains": "Complete the reasoning to solve the problem"
+    },
+    "responses": [
+     {
+      "content": "The final answer is 391"
+     },
+     {
+      "content": "multiply 17 by 23 the answer is 391"
+     },
+     {
+      "content": "no idea"
+     }
+    ]
+   }
+  ],
+  "serialize_ms": 150
+ },
+ "order": "any",
+ "seed": 0
+}

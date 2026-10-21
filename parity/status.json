@@ -111,8 +111,8 @@
    "fixtures": [
     "mcts"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "seeded: CPython MT19937 random.choice; numpy log/sqrt replaced by f64 (only affects exact UCB ties)"
   },
   {
    "group": "approach",
@@ -120,8 +120,8 @@
    "fixtures": [
     "pvg"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "upstream module-global token counter (never reset, grows across requests) replicated"
   },
   {
    "group": "approach",
@@ -129,8 +129,8 @@
    "fixtures": [
     "rstar"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "concurrent asyncio rollouts reproduced; harness serialises mock replies so seeded draws line up"
   },
   {
    "group": "approach",
@@ -138,7 +138,7 @@
    "fixtures": [
     "plansearch"
    ],
-   "status": "not started",
+   "status": "parity",
    "notes": ""
   },
   {
@@ -147,8 +147,8 @@
    "fixtures": [
     "leap"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "Python json/iteration error semantics for malformed example JSON"
   },
   {
    "group": "approach",

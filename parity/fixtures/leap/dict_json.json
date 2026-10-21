@@ -1,0 +1,35 @@
+{
+ "description": "a JSON object instead of a list raises like Python's iteration",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "leap-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "few-shot examples"
+    },
+    "response": {
+     "content": "<output>{\"question\": \"x\", \"answer\": \"y\"}</output>"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

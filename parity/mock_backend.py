@@ -23,6 +23,12 @@ Rule shape:
       "response": {...}              # or "responses": [{...}, ...] consumed in order
     }
 
+Serialised mode ("serialize_ms": 150 next to "rules"): concurrent requests are
+held until no request has arrived (or been released) for serialize_ms, then
+released one at a time in canonical-body order. Upstream approaches that fan
+out with asyncio / threads (rstar, mars, cepo, ...) then resume in the same
+order in both servers, which makes their seeded random draws comparable.
+
 Response spec:
     {"content": "x"} | {"contents": ["a", "b"]}     # cycled over n choices
     {"content": null}                               # message.content = null
@@ -40,10 +46,40 @@ import argparse
 import hashlib
 import json
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
-STATE = {"rules": [], "counters": {}, "calls": [], "models": None}
+STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None}
+GATE = threading.Condition()
+PENDING = []  # [canonical_body, released_flag_list]
+LAST_EVENT = [0.0]
+
+
+def gate_wait(body):
+    """Block until the scheduler releases this request (serialised mode)."""
+    entry = [canonical(body), [False]]
+    with GATE:
+        PENDING.append(entry)
+        LAST_EVENT[0] = time.time()
+        GATE.notify_all()
+        while not entry[1][0]:
+            GATE.wait(0.01)
+
+
+def scheduler():
+    while True:
+        time.sleep(0.005)
+        quiet = STATE.get("serialize_ms")
+        if not quiet:
+            continue
+        with GATE:
+            if PENDING and time.time() - LAST_EVENT[0] >= quiet / 1000.0:
+                PENDING.sort(key=lambda e: e[0])
+                entry = PENDING.pop(0)
+                entry[1][0] = True
+                LAST_EVENT[0] = time.time()
+                GATE.notify_all()
 
 
 def canonical(obj):
@@ -221,11 +257,14 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 STATE["rules"] = body.get("rules", [])
                 STATE["models"] = body.get("models")
+                STATE["serialize_ms"] = body.get("serialize_ms")
                 STATE["counters"] = {}
                 STATE["calls"] = []
             return self._send(200, {"ok": True})
         self._record(body)
         if self.path.split("?")[0].endswith("/chat/completions"):
+            if STATE.get("serialize_ms"):
+                gate_wait(body)
             status, payload = respond_chat(body)
             return self._send(status, payload)
         self._send(404, {"error": {"message": "not found"}})
@@ -236,6 +275,7 @@ def main():
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
+    threading.Thread(target=scheduler, daemon=True).start()
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True
     server.serve_forever()

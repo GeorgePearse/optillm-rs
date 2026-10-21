@@ -1,0 +1,52 @@
+{
+ "description": "truncated observation calls yield empty lists",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "plansearch-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "observations"
+    },
+    "response": {
+     "content": "cut",
+     "finish_reason": "length"
+    }
+   },
+   {
+    "match": {
+     "contains": "brainstorm a natural language solution"
+    },
+    "response": {
+     "content": "  Multiply and add: 340 + 51 = 391.  "
+    }
+   },
+   {
+    "match": {
+     "contains": "Please implement the solution in Python."
+    },
+    "response": {
+     "content": "```python\nprint(17 * 23)\n```"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -1,0 +1,43 @@
+{
+ "description": "examples without question/answer keys are dropped",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "leap-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "few-shot examples"
+    },
+    "response": {
+     "content": "<output>[{\"q\": \"2+2\", \"a\": \"4\"}]</output>"
+    }
+   },
+   {
+    "match": {
+     "contains": "Keep in mind"
+    },
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -33,12 +33,15 @@ def rule(response=None, responses=None, **match):
     return r
 
 
-def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None):
+def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
+       serialize_ms=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
     if models is not None:
         data["mock"]["models"] = models
+    if serialize_ms:
+        data["mock"]["serialize_ms"] = serialize_ms
     if server_args:
         data["server_args"] = list(server_args)
     if env:
@@ -256,6 +259,107 @@ fx("batching/multi_turn", "batched none rebuilds messages from system prompt + f
 fx("batching/stream_rejected", "streaming requests cannot be batched", chat(stream=True), server_args=BATCH)
 fx("batching/error", "a failing request fails the batch with a wrapped message", chat(model="rto-gpt-4o-mini"),
    [rule({"content": "x", "finish_reason": "length"})], server_args=BATCH)
+
+# --------------------------------------------------------------------------
+# mcts (stochastic: seeded)
+# --------------------------------------------------------------------------
+MCTS_RULES = [
+    rule({"contents": ["391", "It is 391.", "17*23 = 391"]}, n=3),
+    rule(responses=[{"content": "Can you show the work?"}, {"content": "Why?"}, {"content": "Thanks!"},
+                    {"content": "What about 17*24?"}, {"content": "Explain more"}, {"content": "OK"},
+                    {"content": "Next?"}, {"content": "And 18*23?"}], contains="what might the user ask or say next"),
+    rule(responses=[{"content": "0.8"}, {"content": "0.3"}, {"content": "0.9"}], contains="Evaluate the quality of this conversation"),
+]
+fx("mcts/basic", "2 simulations, depth 1 (server defaults)", chat(model="mcts-gpt-4o-mini"), MCTS_RULES, seed=0)
+fx("mcts/seed_7", "same script, different seeded random path", chat(model="mcts-gpt-4o-mini"), MCTS_RULES, seed=7)
+fx("mcts/request_params", "mcts_* request params override the server defaults", chat(model="mcts-gpt-4o-mini", mcts_simulations=3, mcts_depth=2, max_tokens=500),
+   MCTS_RULES, seed=1)
+fx("mcts/server_flags", "--mcts-* flags", chat(model="mcts-gpt-4o-mini"), MCTS_RULES, seed=3,
+   server_args=["--mcts-simulations", "3", "--mcts-exploration", "1.0", "--mcts-depth", "2"])
+fx("mcts/goodbye_terminal", "states whose next query says goodbye are terminal", chat(model="mcts-gpt-4o-mini"),
+   [MCTS_RULES[0], rule({"content": "Goodbye!"}, contains="what might the user ask or say next"), MCTS_RULES[2]], seed=0)
+fx("mcts/eval_parsing", "unparseable / out-of-range evaluations", chat(model="mcts-gpt-4o-mini"),
+   [MCTS_RULES[0], MCTS_RULES[1], rule(responses=[{"content": "great"}, {"content": "1.7"}, {"content": "-2"}], contains="Evaluate the quality")], seed=2)
+
+# --------------------------------------------------------------------------
+# pvg
+# --------------------------------------------------------------------------
+PVG_RULES = [
+    rule({"contents": ["Helpful: 17*23 = 391", "Helpful: it is 391", "Helpful: 391"]}, system_contains="", contains="You are in helpful mode."),
+    rule({"contents": ["Sneaky: 17*23 = 401", "Sneaky: 381", "Sneaky: 391?"]}, contains="You are in sneaky mode."),
+    rule(responses=[{"content": "Score: 9\nExplanation: correct"}, {"content": "Score: 7.5\nExplanation: ok"}, {"content": "Score: 6"},
+                    {"content": "Score: 2\nExplanation: wrong"}, {"content": "no score here"}, {"content": "Score: 9.0\nExplanation: tie"},
+                    {"content": "Score: 3"}, {"content": "Score: 10\nExplanation: best"}],
+         system_contains="You are a verifier"),
+    rule({"content": "What is 17 multiplied by 23, shown step by step?"}, contains="Refined query:"),
+]
+fx("pvg/basic", "2 rounds x (3 helpful + 3 sneaky) with verifier scores and query refinement", chat(model="pvg-gpt-4o-mini"), PVG_RULES)
+fx("pvg/global_token_counter", "upstream's module-global token counter grows across requests (replicated)",
+   [chat(model="pvg-gpt-4o-mini"), chat(model="pvg-gpt-4o-mini", max_tokens=300)], PVG_RULES)
+fx("pvg/no_scores", "verifier replies without a Score line score 0", chat(model="pvg-gpt-4o-mini"),
+   [PVG_RULES[0], PVG_RULES[1], rule({"content": "I cannot rate this."}, system_contains="You are a verifier"), PVG_RULES[3]])
+
+# --------------------------------------------------------------------------
+# rstar (stochastic + concurrent rollouts: seeded, mock releases requests in canonical order)
+# --------------------------------------------------------------------------
+RSTAR_RULES = [
+    rule({"content": "Next step: multiply 17 by 23. The answer is 391"}, contains="Generate the next logical step"),
+    rule({"content": "Continuing: 17*20 = 340 and 17*3 = 51, so 391."}, contains="Continue the reasoning process"),
+    rule({"content": "Sub-question: what is 17*20? It is 340. Then add 51 to get 391."}, contains="Identify a key sub-question"),
+    rule({"content": "Re-examining the step: 340 + 51 = 391. Thus, the answer is 391"}, contains="Re-examine the previous step"),
+    rule({"content": "Rephrased: compute the product of 17 and 23."}, contains="Rephrase"),
+    rule(responses=[{"content": "The final answer is 391"}, {"content": "multiply 17 by 23 the answer is 391"}, {"content": "no idea"}],
+         contains="Complete the reasoning to solve the problem"),
+]
+fx("rstar/single_rollout", "one rollout (no concurrency)", chat(model="rstar-gpt-4o-mini"), RSTAR_RULES, seed=0,
+   server_args=["--rstar-num-rollouts", "1", "--rstar-max-depth", "2"])
+fx("rstar/default", "5 concurrent rollouts, depth 3", chat(model="rstar-gpt-4o-mini"), RSTAR_RULES, seed=0, order="any", serialize_ms=150)
+fx("rstar/seed_11", "5 concurrent rollouts, another seed", chat(model="rstar-gpt-4o-mini"), RSTAR_RULES, seed=11, order="any", serialize_ms=150)
+fx("rstar/no_numbers", "states without numbers give no valid answer", chat(model="rstar-gpt-4o-mini", messages=[{"role": "user", "content": "Name a colour"}]),
+   [rule({"content": "Blue is a colour."})], seed=4, order="any", serialize_ms=150,
+   server_args=["--rstar-num-rollouts", "2", "--rstar-max-depth", "1"])
+
+# --------------------------------------------------------------------------
+# plansearch
+# --------------------------------------------------------------------------
+PS_RULES = [
+    rule({"content": "1. Use multiplication.\n\n2. 17*23 = 17*20 + 17*3\n 3. Check the result "}, contains="Please provide 3 observations."),
+    rule({"content": "1. 17*20 = 340\n2. 17*3 = 51"}, contains="new observations derived"),
+    rule({"content": "  Multiply and add: 340 + 51 = 391.  "}, contains="brainstorm a natural language solution"),
+    rule({"content": "```python\nprint(17 * 23)\n```"}, contains="Please implement the solution in Python."),
+]
+fx("plansearch/basic", "observations -> derived observations -> solution -> code", chat(model="plansearch-gpt-4o-mini"), PS_RULES)
+fx("plansearch/server_n", "--n 2 runs the plan search twice per pipeline run", chat(model="plansearch-gpt-4o-mini"), PS_RULES, server_args=["--n", "2"])
+fx("plansearch/truncated_solution", "a truncated solution step is replaced by an error string", chat(model="plansearch-gpt-4o-mini", max_tokens=200),
+   [PS_RULES[0], PS_RULES[1], rule({"content": "partial", "finish_reason": "length"}, contains="brainstorm a natural language solution"), PS_RULES[3]])
+fx("plansearch/no_observations", "truncated observation calls yield empty lists", chat(model="plansearch-gpt-4o-mini"),
+   [rule({"content": "cut", "finish_reason": "length"}, contains="observations"), PS_RULES[2], PS_RULES[3]])
+
+# --------------------------------------------------------------------------
+# leap
+# --------------------------------------------------------------------------
+FEWSHOT = "Q: 2+2? A: 4\nQ: 3+5? A: 8\nQ: 17*23? A:"
+LEAP_EXAMPLES = rule({"content": '<output>[{"question": "2+2?", "answer": "4"}, {"question": "3+5?", "answer": "8"}]</output>'},
+                     contains="determine if it contains few-shot examples")
+LEAP_RULES = [
+    LEAP_EXAMPLES,
+    rule(responses=[{"content": "2+2 is 5. <output>5</output>"}, {"content": "3+5=8 <output>8</output>"}], contains="deliberately introduce an error"),
+    rule({"content": "Reasoning: arithmetic slip. <output>Double-check additions.</output>"}, contains="Conduct a thorough analysis"),
+    rule({"content": "<output>1. Double-check arithmetic.\n2. Verify each step.</output>"}, contains="Create a list of *unique*"),
+    rule({"content": "391"}, contains="Keep in mind these principles"),
+]
+fx("leap/basic", "few-shot examples -> mistakes -> principles -> answer", chat(model="leap-gpt-4o-mini", messages=[{"role": "user", "content": FEWSHOT}]), LEAP_RULES)
+fx("leap/no_examples", "no examples: answer directly with empty principles", chat(model="leap-gpt-4o-mini"),
+   [rule({"content": "<output>[]</output>"}, contains="few-shot examples"), rule({"content": "391"}, contains="Keep in mind these principles")])
+fx("leap/bad_json", "unparseable example JSON falls back to no examples", chat(model="leap-gpt-4o-mini"),
+   [rule({"content": "<output>[{question: 1}]</output>"}, contains="few-shot examples"), rule({"content": "391"}, contains="Keep in mind")])
+fx("leap/missing_keys", "examples without question/answer keys are dropped", chat(model="leap-gpt-4o-mini"),
+   [rule({"content": '<output>[{"q": "2+2", "a": "4"}]</output>'}, contains="few-shot examples"), rule({"content": "391"}, contains="Keep in mind")])
+fx("leap/non_string_answers", "numeric answers never equal the generated string answer", chat(model="leap-gpt-4o-mini", messages=[{"role": "user", "content": FEWSHOT}]),
+   [rule({"content": '<output>[{"question": 2.5, "answer": 4}]</output>'}, contains="few-shot examples")] + LEAP_RULES[1:])
+fx("leap/dict_json", "a JSON object instead of a list raises like Python's iteration", chat(model="leap-gpt-4o-mini"),
+   [rule({"content": '<output>{"question": "x", "answer": "y"}</output>'}, contains="few-shot examples")])
+fx("leap/truncated", "truncated responses raise", chat(model="leap-gpt-4o-mini"), [rule({"content": "x", "finish_reason": "length"})])
 
 
 def main():

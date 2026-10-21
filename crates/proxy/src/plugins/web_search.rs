@@ -4,7 +4,8 @@
 //! verbatim. Upstream drives a real Chrome against google.com through
 //! Selenium (with CAPTCHA waits); optillm-rs fetches results over HTTP
 //! instead: `$OPTILLM_SEARCH_BACKEND` = `duckduckgo` (default, the
-//! html.duckduckgo.com endpoint) or `searxng` (`$OPTILLM_SEARXNG_URL`, JSON API).
+//! html.duckduckgo.com endpoint), `searxng` (`$OPTILLM_SEARXNG_URL`, JSON API)
+//! or `tavily` (`$TAVILY_API_KEY`).
 
 use anyhow::{anyhow, Result};
 use regex::Regex;
@@ -107,6 +108,40 @@ pub async fn search(query: &str, num_results: usize) -> Result<Vec<SearchResult>
         .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
         .build()?;
     match backend.as_str() {
+        "tavily" => {
+            let key = std::env::var("TAVILY_API_KEY")
+                .map_err(|_| anyhow!("TAVILY_API_KEY is not set"))?;
+            let v: Value = client
+                .post("https://api.tavily.com/search")
+                .bearer_auth(key)
+                .json(&json!({"query": query, "max_results": num_results}))
+                .send()
+                .await?
+                .error_for_status()?
+                .json()
+                .await?;
+            Ok(v.get("results")
+                .and_then(|r| r.as_array())
+                .map(|a| {
+                    a.iter()
+                        .take(num_results)
+                        .map(|r| {
+                            let field = |k: &str| {
+                                r.get(k)
+                                    .and_then(|x| x.as_str())
+                                    .unwrap_or_default()
+                                    .to_string()
+                            };
+                            SearchResult {
+                                title: field("title"),
+                                url: field("url"),
+                                snippet: field("content"),
+                            }
+                        })
+                        .collect()
+                })
+                .unwrap_or_default())
+        }
         "searxng" => {
             let base = std::env::var("OPTILLM_SEARXNG_URL")
                 .map_err(|_| anyhow!("OPTILLM_SEARXNG_URL is not set"))?;
@@ -145,14 +180,17 @@ pub async fn search(query: &str, num_results: usize) -> Result<Vec<SearchResult>
                 .unwrap_or_default())
         }
         _ => {
-            let html = client
+            let resp = client
                 .post("https://html.duckduckgo.com/html/")
                 .form(&[("q", query)])
                 .send()
                 .await?
-                .error_for_status()?
-                .text()
-                .await?;
+                .error_for_status()?;
+            // 202 is DuckDuckGo's bot challenge page: the results never loaded.
+            if resp.status().as_u16() == 202 {
+                anyhow::bail!("DuckDuckGo returned its bot challenge (HTTP 202)");
+            }
+            let html = resp.text().await?;
             let doc = Html::parse_document(&html);
             let result = Selector::parse("div.result").unwrap();
             let link = Selector::parse("a.result__a").unwrap();

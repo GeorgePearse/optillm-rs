@@ -310,7 +310,7 @@
     "mcp"
    ],
    "status": "parity",
-   "notes": "native MCP client (stdio, legacy SSE, Streamable HTTP; initialize handshake as the mcp 2.3 SDK) against ~/.optillm/mcp_config.json; server.tool functions, per-call fresh connections, result/error JSON verbatim. Not reproduced: upstream's extra pre-spawned stdio process and 2 s startup sleep; the output-schema check covers missing structured content but does not jsonschema-validate it"
+   "notes": "native MCP client (stdio, legacy SSE, Streamable HTTP; initialize handshake as the mcp 2.3 SDK) against ~/.optillm/mcp_config.json; server.tool functions, per-call fresh connections, result/error JSON verbatim. Not reproduced: upstream's extra pre-spawned stdio process and 2 s startup sleep; the output-schema check covers missing structured content but does not jsonschema-validate it. Upstream's `server.tool` names fail OpenAI's function-name pattern, so against OpenAI both fall back to a plain completion"
   },
   {
    "group": "plugin",
@@ -373,7 +373,7 @@
     "web_search"
    ],
    "status": "partial",
-   "notes": "query extraction, formatting, enhanced-query layout and the post-search delay (randint(4, 32) after every loaded results page) verbatim, harness-verified with upstream's searcher swapped onto the same backend. The search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com; OPTILLM_SEARCH_DELAY_SCALE scales the sleep"
+   "notes": "query extraction, formatting, enhanced-query layout and the post-search delay (randint(4, 32) after every loaded results page) verbatim, harness-verified with upstream's searcher swapped onto the same backend. The search itself uses an HTTP backend (DuckDuckGo HTML, SearXNG or Tavily) instead of upstream's Selenium-driven Chrome on google.com; OPTILLM_SEARCH_DELAY_SCALE scales the sleep"
   }
  ]
 }

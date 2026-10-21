@@ -345,6 +345,10 @@ impl LlmClient for LocalEmulationClient {
         self.inner.list_models().await
     }
 
+    async fn retrieve_model(&self, model: &str) -> std::result::Result<Value, LlmError> {
+        self.inner.retrieve_model(model).await
+    }
+
     fn base_url(&self) -> String {
         self.inner.base_url()
     }

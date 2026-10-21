@@ -29,6 +29,9 @@ regex = "1.10"
 fancy-regex = "0.14"
 indexmap = "2"
 serde_yaml = "0.9"
+tiktoken-rs = "0.7"
+scraper = "0.20"
+url = "2"
 async-stream = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }

@@ -1,0 +1,67 @@
+{
+ "description": "unparseable structures fall back to the default structure",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "deepthink-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Selected modules (JSON array only):"
+    },
+    "response": {
+     "content": "Selected: [9, 38, 39]"
+    }
+   },
+   {
+    "match": {
+     "last_contains": "Provide the adapted modules as a numbered list:"
+    },
+    "response": {
+     "content": "1. Break the multiplication into parts.\n2. Think step by step about partial products.\nnot numbered\n3. Plan and verify."
+    }
+   },
+   {
+    "match": {
+     "last_contains": "Valid JSON reasoning structure:"
+    },
+    "response": {
+     "content": "{'step': 'one', bad: two,}"
+    }
+   },
+   {
+    "match": {
+     "temperature": 0.7
+    },
+    "response": {
+     "content": "<think>17*20=340, 17*3=51</think>\nThe answer is 391"
+    }
+   },
+   {
+    "match": {
+     "temperature": 0.0
+    },
+    "response": {
+     "content": "<think>340+51</think>\nThe final answer is 391."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

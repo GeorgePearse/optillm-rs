@@ -92,14 +92,14 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Local-inference approach | `deepconf` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: warmup/threshold/consensus/weighted vote over top-k logprobs; early termination applied post hoc |
 | Local-inference approach | `autothink` | 🟠 partial | 2 | Remote: parity. Local mode: NOT available (needs in-process complexity classifier + steering vectors on hidden states) |
 | Plugin | `coc` | ⬜ not started | 0 | — |
-| Plugin | `compact` | ⬜ not started | 0 | — |
+| Plugin | `compact` | ✅ parity | 4 | tiktoken cl100k_base via tiktoken-rs; models.retrieve() context-length probe reproduced |
 | Plugin | `deep_research` | ⬜ not started | 0 | — |
-| Plugin | `deepthink` | ⬜ not started | 0 | — |
+| Plugin | `deepthink` | ✅ parity | 4 | SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum) |
 | Plugin | `executecode` | ⬜ not started | 0 | — |
-| Plugin | `genselect` | ⬜ not started | 0 | — |
+| Plugin | `genselect` | ✅ parity | 4 | — |
 | Plugin | `json` | ⬜ not started | 0 | — |
 | Plugin | `longcepo` | ⬜ not started | 0 | — |
-| Plugin | `majority_voting` | ⬜ not started | 0 | — |
+| Plugin | `majority_voting` | ✅ parity | 4 | — |
 | Plugin | `mcp` | ⬜ not started | 0 | — |
 | Plugin | `memory` | ⬜ not started | 0 | — |
 | Plugin | `privacy` | ⬜ not started | 0 | — |
@@ -109,7 +109,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-18/42 rows at harness-verified parity, 129 fixtures in total.
+22/42 rows at harness-verified parity, 145 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

@@ -237,8 +237,8 @@
    "fixtures": [
     "compact"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "tiktoken cl100k_base via tiktoken-rs; models.retrieve() context-length probe reproduced"
   },
   {
    "group": "plugin",
@@ -255,8 +255,8 @@
    "fixtures": [
     "deepthink"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum)"
   },
   {
    "group": "plugin",
@@ -273,7 +273,7 @@
    "fixtures": [
     "genselect"
    ],
-   "status": "not started",
+   "status": "parity",
    "notes": ""
   },
   {
@@ -300,7 +300,7 @@
    "fixtures": [
     "majority_voting"
    ],
-   "status": "not started",
+   "status": "parity",
    "notes": ""
   },
   {

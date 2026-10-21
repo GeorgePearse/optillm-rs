@@ -38,6 +38,16 @@ pub trait LlmClient: Send + Sync {
     /// `client.models.list()` as `{"object": "list", "data": [...]}`.
     async fn list_models(&self) -> std::result::Result<Value, LlmError>;
 
+    /// `client.models.retrieve(model)` (openai-python `Model`, extras kept).
+    async fn retrieve_model(&self, model: &str) -> std::result::Result<Value, LlmError> {
+        let _ = model;
+        Err(LlmError {
+            status: Some(404),
+            message: "models.retrieve is not supported by this client".into(),
+            body: None,
+        })
+    }
+
     /// Base URL of the endpoint (used by plugins that build sibling clients).
     fn base_url(&self) -> String;
 
@@ -261,6 +271,14 @@ impl LlmClient for OpenAiClient {
         let schema = &schema()["Model"];
         let data: Vec<Value> = data.iter().map(|m| normalize(m, schema)).collect();
         Ok(json!({"object": "list", "data": data}))
+    }
+
+    async fn retrieve_model(&self, model: &str) -> std::result::Result<Value, LlmError> {
+        let url = format!("{}/{}", self.models_url(), model);
+        let raw = self
+            .send_with_retries(|| self.authorize(self.http.get(&url)))
+            .await?;
+        Ok(normalize(&raw, &schema()["Model"]))
     }
 
     fn base_url(&self) -> String {

@@ -1,0 +1,42 @@
+{
+ "description": "k / temperature / max_tokens from the request",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "majority_voting-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "k": 3,
+    "temperature": 0.2,
+    "max_tokens": 99
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 3
+    },
+    "response": {
+     "contents": [
+      "A",
+      "C",
+      "C"
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

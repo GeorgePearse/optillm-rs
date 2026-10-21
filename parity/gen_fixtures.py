@@ -464,6 +464,62 @@ for name in ["cot_decoding", "entropy_decoding", "thinkdeeper", "deepconf", "aut
     fx(f"{name}/not_a_slug", f"'{name}-' is not an approach slug: the whole string is the model name",
        chat(model=f"{name}-gpt-4o-mini"), [rule({"content": "391"})])
 
+# --------------------------------------------------------------------------
+# plugins
+# --------------------------------------------------------------------------
+fx("majority_voting/basic", "k=8 samples, normalised extracted answers, most common wins", chat(model="majority_voting-gpt-4o-mini"),
+   [rule({"contents": ["The answer is 391.", "<think>hmm</think>Answer: 391", "Final answer: 390", "answer is 391!",
+                       "B", "I think it is 391", "### 391", "Answer: 390"]}, n=8)])
+fx("majority_voting/k_and_temperature", "k / temperature / max_tokens from the request", chat(model="majority_voting-gpt-4o-mini", k=3, temperature=0.2, max_tokens=99),
+   [rule({"contents": ["A", "C", "C"]}, n=3)])
+fx("majority_voting/sequential_fallback", "n unsupported -> k sequential calls", chat(model="majority_voting-gpt-4o-mini", k=3),
+   [rule({"status": 400, "body": {"error": {"message": "n not supported"}}}, n=3), rule(responses=[{"content": "x"}, {"content": "y"}, {"content": "y"}])])
+fx("majority_voting/nothing_extracted", "no extractable answers returns the first candidate", chat(model="majority_voting-gpt-4o-mini", k=2),
+   [rule({"contents": ["...", "<think>only thinking</think>"]}, n=2)])
+
+LONG_CONV = []
+for i in range(6):
+    LONG_CONV.append({"role": "user", "content": f"Turn {i}: please remember that file src/mod{i}.rs handles feature {i} and we decided to use option {i}."})
+    LONG_CONV.append({"role": "assistant", "content": f"Noted: src/mod{i}.rs handles feature {i}; option {i} it is."})
+LONG_CONV.append({"role": "user", "content": "Now summarise what we decided."})
+fx("compact/passthrough", "short conversations pass through untouched", chat(model="compact-gpt-4o-mini"))
+fx("compact/compress", "over budget: older turns summarised, 4 recent kept verbatim (context window from request config)",
+   chat(model="compact-gpt-4o-mini", messages=[{"role": "system", "content": SYS}] + LONG_CONV, compact_context_window=100),
+   [rule({"content": "<summary>\nConversation summary:\n- Scope: 9 earlier messages compacted.\n</summary>"}, system_contains="conversation summarizer")])
+fx("compact/model_context_length", "context window read from models.retrieve()", chat(model="compact-gpt-4o-mini", messages=LONG_CONV),
+   [rule({"content": "no tags here"}, system_contains="conversation summarizer")],
+   models=[{"id": "gpt-4o-mini", "object": "model", "created": 1, "owned_by": "x", "context_length": 120}])
+fx("compact/pipeline", "compact&re2: the compacted conversation feeds the next approach", chat(model="compact&re2-gpt-4o-mini",
+   messages=LONG_CONV, compact_context_window=100, compact_keep_recent=2),
+   [rule({"content": "<summary>short</summary>"}, system_contains="conversation summarizer"), rule({"content": "391"})])
+
+fx("genselect/basic", "4 candidates, LLM comparison picks BEST CANDIDATE", chat(model="genselect-gpt-4o-mini"),
+   [rule({"contents": ["390", "391 because 17*23", "392", None]}, n=4),
+    rule({"content": "COMPARISON:\nok\n\nBEST CANDIDATE: 2\n\nREASONING:\nIt multiplies correctly."}, system_contains="expert evaluator")])
+fx("genselect/include_reasoning", "include_reasoning appends the reasoning; fallback selection pattern", chat(model="genselect-gpt-4o-mini", num_candidates=2, include_reasoning=True),
+   [rule({"contents": ["a", "b"]}, n=2), rule({"content": "I would select Candidate 2 here."}, system_contains="expert evaluator")])
+fx("genselect/unparseable", "no selection found defaults to the first candidate", chat(model="genselect-gpt-4o-mini", num_candidates=1),
+   [rule({"contents": ["first", "second"]}, n=2), rule({"content": "both fine"}, system_contains="expert evaluator")])
+fx("genselect/sequential", "n unsupported -> sequential candidates", chat(model="genselect-gpt-4o-mini", num_candidates=2),
+   [rule({"status": 400, "body": {"error": {"message": "no n"}}}, n=2), rule(responses=[{"content": "c1"}, {"content": "c2"}], lacks=["n"]),
+    rule({"content": "BEST CANDIDATE: 9"}, system_contains="expert evaluator")])
+
+DT_RULES = [
+    rule({"content": "Selected: [9, 38, 39]"}, last_contains="Selected modules (JSON array only):"),
+    rule({"content": "1. Break the multiplication into parts.\n2. Think step by step about partial products.\nnot numbered\n3. Plan and verify."}, last_contains="Provide the adapted modules as a numbered list:"),
+    rule({"content": "Here you go:\n```json\n{\"decompose\": \"split 23 into 20 + 3\", \"multiply\": {\"a\": \"17*20\", \"b\": \"17*3\"}, \"answer\": \"sum\"}\n```"},
+         last_contains="Valid JSON reasoning structure:"),
+    rule({"content": "<think>17*20=340, 17*3=51</think>\nThe answer is 391"}, temperature=0.7),
+    rule({"content": "<think>340+51</think>\nThe final answer is 391."}, temperature=0.0),
+]
+fx("deepthink/basic", "SELF-DISCOVER (select/adapt/implement) then uncertainty-routed CoT", chat(model="deepthink-gpt-4o-mini"), DT_RULES)
+fx("deepthink/low_confidence", "inconsistent samples route to the greedy answer", chat(model="deepthink-gpt-4o-mini", deepthink_samples=3),
+   DT_RULES[:3] + [rule(responses=[{"content": "<think>a</think> answer is 1"}, {"content": "<think>zzzz</think> answer is 99999"}, {"content": "nothing"}], temperature=0.7), DT_RULES[4]])
+fx("deepthink/no_self_discover", "enable_self_discover=false skips structure discovery", chat(model="deepthink-gpt-4o-mini", enable_self_discover=False, deepthink_samples=2, temperature=1.5, top_p=0.5, max_tokens=300),
+   [rule({"content": "<think>x</think>Thus 391"}, temperature=1.5), DT_RULES[4]])
+fx("deepthink/bad_json_structure", "unparseable structures fall back to the default structure", chat(model="deepthink-gpt-4o-mini"),
+   DT_RULES[:2] + [rule({"content": "{'step': 'one', bad: two,}"}, last_contains="Valid JSON reasoning structure:")] + DT_RULES[3:])
+
 
 def main():
     if ROOT.exists():

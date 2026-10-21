@@ -244,6 +244,13 @@ class Handler(BaseHTTPRequestHandler):
             with LOCK:
                 return self._send(200, {"calls": list(STATE["calls"])})
         self._record(None)
+        path = self.path.split("?")[0]
+        if "/models/" in path:
+            model_id = path.split("/models/", 1)[1]
+            for m in STATE["models"] or []:
+                if m.get("id") == model_id:
+                    return self._send(200, m)
+            return self._send(404, {"error": {"message": f"The model '{model_id}' does not exist", "type": "invalid_request_error", "code": "model_not_found"}})
         if self.path.split("?")[0].endswith("/models"):
             models = STATE["models"]
             if models is None:

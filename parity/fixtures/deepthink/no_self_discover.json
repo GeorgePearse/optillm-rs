@@ -1,0 +1,48 @@
+{
+ "description": "enable_self_discover=false skips structure discovery",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "deepthink-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "enable_self_discover": false,
+    "deepthink_samples": 2,
+    "temperature": 1.5,
+    "top_p": 0.5,
+    "max_tokens": 300
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "temperature": 1.5
+    },
+    "response": {
+     "content": "<think>x</think>Thus 391"
+    }
+   },
+   {
+    "match": {
+     "temperature": 0.0
+    },
+    "response": {
+     "content": "<think>340+51</think>\nThe final answer is 391."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

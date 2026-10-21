@@ -1,0 +1,39 @@
+{
+ "description": "no extractable answers returns the first candidate",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "majority_voting-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "k": 2
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "n": 2
+    },
+    "response": {
+     "contents": [
+      "...",
+      "<think>only thinking</think>"
+     ]
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

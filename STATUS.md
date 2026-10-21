@@ -83,7 +83,7 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Local-inference approach | `autothink` | 🟠 partial | 2 | Remote: parity. Local mode: NOT available (needs in-process complexity classifier + steering vectors on hidden states) |
 | Plugin | `coc` | ✅ parity | 4 | code runs in a Jupyter kernel through upstream's own execute_code (py_helper.py via $OPTILLM_PYTHON with nbconvert + ipykernel); literal_eval via the same helper |
 | Plugin | `compact` | ✅ parity | 4 | tiktoken cl100k_base via tiktoken-rs; models.retrieve() context-length probe reproduced |
-| Plugin | `deep_research` | ⬜ not started | 0 | — |
+| Plugin | `deep_research` | 🟠 partial | 5 | TTD-DR loop ported (draft, decomposition, gap analysis, targeted search, readurls, denoising, scoring, finalisation with placeholder cleanup, report fixing, references and metadata), including the client wrapper's max_retries=0 attempt with fallback to the original client. Searches use web_search's HTTP backend instead of upstream's shared Chrome session; the harness swaps upstream's searcher onto the same backend to compare |
 | Plugin | `deepthink` | ✅ parity | 4 | SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum) |
 | Plugin | `executecode` | ✅ parity | 4 | same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced |
 | Plugin | `genselect` | ✅ parity | 4 | — |
@@ -97,7 +97,7 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Plugin | `readurls` | ✅ parity | 3 | bs4 get_text rules on an HTML5 parser (html5ever instead of lxml: malformed-HTML recovery can differ); requests URL normalisation (empty query dropped); network errors worded differently |
 | Plugin | `router` | ✅ parity | 1 | routing model (ModernBERT-large) runs through upstream's own code in py_helper.py (torch + transformers); routed approaches run natively with upstream's call defaults; fallback path harness-verified (model offline in CI) |
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
-| Plugin | `web_search` | 🟠 partial | 2 | query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com |
+| Plugin | `web_search` | 🟠 partial | 4 | query extraction, formatting, enhanced-query layout and the post-search delay (randint(4, 32) after every loaded results page) verbatim, harness-verified with upstream's searcher swapped onto the same backend. The search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com; OPTILLM_SEARCH_DELAY_SCALE scales the sleep |
 
-32/42 rows at harness-verified parity, 190 fixtures in total.
+32/42 rows at harness-verified parity, 197 fixtures in total.
 <!-- parity-table:end -->

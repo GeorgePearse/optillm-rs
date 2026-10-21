@@ -246,8 +246,8 @@
    "fixtures": [
     "deep_research"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "TTD-DR loop ported (draft, decomposition, gap analysis, targeted search, readurls, denoising, scoring, finalisation with placeholder cleanup, report fixing, references and metadata), including the client wrapper's max_retries=0 attempt with fallback to the original client. Searches use web_search's HTTP backend instead of upstream's shared Chrome session; the harness swaps upstream's searcher onto the same backend to compare"
   },
   {
    "group": "plugin",
@@ -373,7 +373,7 @@
     "web_search"
    ],
    "status": "partial",
-   "notes": "query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com"
+   "notes": "query extraction, formatting, enhanced-query layout and the post-search delay (randint(4, 32) after every loaded results page) verbatim, harness-verified with upstream's searcher swapped onto the same backend. The search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com; OPTILLM_SEARCH_DELAY_SCALE scales the sleep"
   }
  ]
 }

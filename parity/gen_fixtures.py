@@ -34,7 +34,7 @@ def rule(response=None, responses=None, **match):
 
 
 def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
-       serialize_ms=None, pages=None, files=None, services=None):
+       serialize_ms=None, pages=None, files=None, services=None, search=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
@@ -44,6 +44,8 @@ def fx(name, description, requests, rules=(), order="exact", server_args=(), env
         data["mock"]["serialize_ms"] = serialize_ms
     if pages:
         data["mock"]["pages"] = pages
+    if search:
+        data["mock"]["search"] = search
     if files:
         data["files"] = files
     if services:
@@ -704,6 +706,66 @@ fx("mcp/sse", "legacy SSE server",
    chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
    [MCP_FINAL, MCP_ADD], files=mcp_files({"calc": {"transport": "sse", "url": "http://127.0.0.1:{SVCPORT}/sse"}}),
    services=[{"cmd": MCP_SERVER + ["sse", "{SVCPORT}"]}])
+
+SEARCH_ENV = {"OPTILLM_SEARCH_BACKEND": "searxng", "OPTILLM_SEARXNG_URL": "{MOCK}", "OPTILLM_SEARCH_DELAY_SCALE": "0"}
+SEARCH = [
+    {"match": "broken", "status": 500},
+    {"match": "history", "results": [{"title": "X History", "url": "{MOCK}/__page/hist", "content": "A timeline of X"}]},
+    {"match": "market", "results": [{"title": "X Market", "url": "{MOCK}/__page/market", "content": "Market size"},
+                                    {"title": "Gone", "url": "{MOCK}/__page/missing", "content": ""}]},
+    {"match": "nothing", "results": []},
+    {"match": "", "results": [{"title": "X overview", "url": "{MOCK}/__page/overview", "content": ""},
+                              {"title": "X wiki", "url": "{MOCK}/__page/hist", "content": "Encyclopedia entry"}]},
+]
+SEARCH_PAGES = {
+    "hist": {"html": "<html><body><h1>History</h1><p>X began in 1999.</p></body></html>"},
+    "market": {"html": "<html><body><p>The X market is worth 3 billion.</p></body></html>"},
+    "overview": {"html": "<html><body><div class='content'><p>X is a thing.</p></div></body></html>"},
+}
+fx("web_search/searxng", "search path over the shared HTTP backend: several queries, num_results, empty results",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for: X market\nlook up X history\nresearch nothing here"}],
+        num_results=1), env=SEARCH_ENV, search=SEARCH, seed=7)
+fx("web_search/search_failure", "a failing search backend gives the no-results note (no delay drawn)",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for broken things"}]), env=SEARCH_ENV,
+   search=SEARCH, seed=7)
+
+DR_Q = "Research the history and market of X"
+DR_DRAFT = "# X\n\n## Intro\nX began [NEEDS RESEARCH: history].\n\n## Market\nBig [SOURCE NEEDED]."
+DR_GAPS = ("GAP_ID: 1\nSECTION: Background\nGAP_TYPE: PLACEHOLDER_TAG\nSPECIFIC_NEED: history of X\nSEARCH_QUERY: X history timeline\n"
+           "PRIORITY: medium\n\nGAP_ID: 2\nSECTION: Market\nSPECIFIC_NEED: market data\nSEARCH_QUERY: X market size 2026\n"
+           "PRIORITY: HIGH\n\nGAP_ID: 3\nSECTION: Misc\nSEARCH_QUERY:\nPRIORITY: LOW")
+DR_FINAL = ("<think>plan</think># X Report\n\nX is great [1]. Market is big [2][99].\n\n## Research Questions for Investigation\n"
+            "- q1\n- q2\n- q3\n- q4\n\n## Details\n[NEEDS RESEARCH: more]\n\n## References\n[1] X History\n[2] Market\n\n"
+            "## Conclusion\nDone [3].")
+DR_RULES = [
+    rule({"content": DR_DRAFT}, last_contains="Generate a preliminary research report structure"),
+    rule({"content": "<think>hmm</think>1. [What is the history of X?]\n2) not numbered\n2. X market size\n3. []"},
+         last_contains="break it down into 3-5 focused sub-queries"),
+    rule(responses=[{"content": DR_GAPS}, {"content": "GAP_ID: 1\nSECTION: Intro\nSEARCH_QUERY: nothing more\nPRIORITY: HIGH"}],
+         system_contains="expert research analyst"),
+    rule(responses=[{"content": "Draft v2: X began in 1999 [1]. Market 3bn [2]."}, {"content": "Draft v3 [1][2][3]."}],
+         system_contains="performing draft denoising"),
+    rule(responses=[{"content": "COMPLETENESS: 0.6\nIMPROVEMENT: 0.2\nDEPTH: high\nnoise"}, {"content": "COMPLETENESS: 0.95"}],
+         system_contains="quality evaluator"),
+    rule({"content": DR_FINAL}, last_contains="Apply final polishing"),
+]
+fx("deep_research/full", "TTD-DR: draft, decomposition + search, gap-targeted search, readurls, denoising, scoring, finalisation",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": DR_Q}],
+        max_iterations=3, max_sources=6), DR_RULES, env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/no_gaps", "unparseable decomposition falls back to the query; an empty gap analysis ends the loop",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=2),
+   [rule({"content": "no numbers here"}, last_contains="break it down"), rule({"content": "All good."}, system_contains="expert research analyst"),
+    rule({"content": "Short final [1]."}, last_contains="Apply final polishing"), rule({"content": DR_DRAFT})],
+   env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/llm_errors", "every completion fails (max_retries=0): each step's fallback text, then 'Finalization failed'",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=2),
+   [rule({"status": 500, "body": {"error": {"message": "upstream down"}}})], env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/bad_iterations", "a non-integer max_iterations fails after the initial research",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": DR_Q}], max_iterations=1.5),
+   [rule({"content": "1. history of X"}, last_contains="break it down"), rule({"content": DR_DRAFT})],
+   env=SEARCH_ENV, search=SEARCH, pages=SEARCH_PAGES, seed=11)
+fx("deep_research/empty_query", "a blank user turn still carries the User: prefix, so research proceeds",
+   chat(model="deep_research-gpt-4o-mini", messages=[{"role": "user", "content": "   "}]), env=SEARCH_ENV, seed=11)
 
 
 def main():

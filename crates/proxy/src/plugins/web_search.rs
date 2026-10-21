@@ -98,7 +98,8 @@ pub fn format_search_results(query: &str, results: &[SearchResult]) -> String {
     out
 }
 
-/// Fetch results from the configured HTTP backend.
+/// Fetch results from the configured HTTP backend (`Err` when the results
+/// page could not be loaded, where upstream's searcher returns `[]` early).
 pub async fn search(query: &str, num_results: usize) -> Result<Vec<SearchResult>> {
     let backend = std::env::var("OPTILLM_SEARCH_BACKEND").unwrap_or_else(|_| "duckduckgo".into());
     let client = reqwest::Client::builder()
@@ -188,49 +189,69 @@ pub async fn search(query: &str, num_results: usize) -> Result<Vec<SearchResult>
     }
 }
 
+/// Upstream's post-search pause: `delay_seconds`, else `random.randint(4, 32)`,
+/// applied after every search whose results page loaded.
+/// `$OPTILLM_SEARCH_DELAY_SCALE` multiplies the sleep (the draw is unchanged).
+async fn post_search_delay(ctx: &Ctx, delay: Option<f64>) {
+    let secs = match delay {
+        Some(d) => d,
+        None => ctx.rng().randint(4, 32) as f64,
+    };
+    if secs > 0.0 {
+        let scale = std::env::var("OPTILLM_SEARCH_DELAY_SCALE")
+            .ok()
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(1.0);
+        if secs * scale > 0.0 {
+            tokio::time::sleep(std::time::Duration::from_secs_f64(secs * scale)).await;
+        }
+    }
+}
+
+/// `web_search_plugin.run` with its request-config knobs resolved.
+pub async fn run_with(
+    initial_query: &str,
+    ctx: &Ctx,
+    num_results: usize,
+    delay: Option<f64>,
+) -> String {
+    let queries = extract_search_queries(initial_query);
+    if queries.is_empty() {
+        return initial_query.to_string();
+    }
+    let mut enhanced = initial_query.to_string();
+    for q in &queries {
+        let results = match search(q, num_results).await {
+            Ok(r) => {
+                post_search_delay(ctx, delay).await;
+                r
+            }
+            Err(_) => Vec::new(),
+        };
+        if results.is_empty() {
+            enhanced = format!(
+                "{}\n\n[Web Search Results]:\nNo results found for '{}'. This may be due to network issues or search restrictions.",
+                enhanced, q
+            );
+        } else {
+            enhanced = format!(
+                "{}\n\n[Web Search Results]:\n{}",
+                enhanced,
+                format_search_results(q, &results)
+            );
+        }
+    }
+    enhanced
+}
+
 pub async fn run(_system_prompt: &str, initial_query: &str, ctx: &Ctx) -> ApproachResult {
     let rc = &ctx.request_config;
     let num_results = rc.get("num_results").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
     let delay = rc.get("delay_seconds").and_then(|v| v.as_f64());
-    let queries = extract_search_queries(initial_query);
-    if queries.is_empty() {
-        return Ok((json!(initial_query), 0));
-    }
-    let mut enhanced = initial_query.to_string();
-    let attempt: Result<()> = async {
-        for (i, q) in queries.iter().enumerate() {
-            if i > 0 {
-                let secs = match delay {
-                    Some(d) => d,
-                    None => ctx.rng().randint(4, 32) as f64,
-                };
-                if secs > 0.0 {
-                    tokio::time::sleep(std::time::Duration::from_secs_f64(secs)).await;
-                }
-            }
-            let results = search(q, num_results).await.unwrap_or_default();
-            if results.is_empty() {
-                enhanced = format!(
-                    "{}\n\n[Web Search Results]:\nNo results found for '{}'. This may be due to network issues or search restrictions.",
-                    enhanced, q
-                );
-            } else {
-                enhanced = format!("{}\n\n[Web Search Results]:\n{}", enhanced, format_search_results(q, &results));
-            }
-        }
-        Ok(())
-    }
-    .await;
-    match attempt {
-        Ok(()) => Ok((json!(enhanced), 0)),
-        Err(e) => Ok((
-            json!(format!(
-                "{}\n\n[Web Search Error]: Web search error: {}",
-                initial_query, e
-            )),
-            0,
-        )),
-    }
+    Ok((
+        json!(run_with(initial_query, ctx, num_results, delay).await),
+        0,
+    ))
 }
 
 #[cfg(test)]

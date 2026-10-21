@@ -8,6 +8,9 @@ identical replies regardless of ordering or concurrency.
 Control endpoints (not part of the OpenAI surface):
     POST /__mock/script   {"rules": [...], "models": [...]}  -> resets calls
     GET  /__mock/calls    -> {"calls": [...]}
+    GET  /__page/<name>   -> an HTML page from "pages" (readurls fixtures)
+    GET  /search?q=..     -> SearXNG-style JSON from "search": [{"match": "substr", "results": [...]}]
+                             (first rule whose match is in q, "{MOCK}" in results -> this server)
 
 Rule shape:
     {
@@ -47,10 +50,11 @@ import hashlib
 import json
 import threading
 import time
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
-STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None, "pages": {}}
+STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None, "pages": {}, "search": []}
 GATE = threading.Condition()
 PENDING = []  # [canonical_body, released_flag_list]
 LAST_EVENT = [0.0]
@@ -256,6 +260,15 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if path == "/search":
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query).get("q", [""])[0]
+            for rule in STATE["search"]:
+                if rule.get("match", "") in q:
+                    if "status" in rule:
+                        return self._send(rule["status"], {"error": "search failed"})
+                    base = f"http://{self.headers.get('Host')}"
+                    return self._send(200, json.loads(json.dumps({"results": rule.get("results", [])}).replace("{MOCK}", base)))
+            return self._send(200, {"results": []})
         if "/models/" in path:
             model_id = path.split("/models/", 1)[1]
             for m in STATE["models"] or []:
@@ -277,6 +290,7 @@ class Handler(BaseHTTPRequestHandler):
                 STATE["models"] = body.get("models")
                 STATE["serialize_ms"] = body.get("serialize_ms")
                 STATE["pages"] = body.get("pages") or {}
+                STATE["search"] = body.get("search") or []
                 STATE["counters"] = {}
                 STATE["calls"] = []
             return self._send(200, {"ok": True})

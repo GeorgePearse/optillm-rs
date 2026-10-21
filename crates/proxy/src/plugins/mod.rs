@@ -7,6 +7,7 @@ use crate::approaches::{ApproachResult, Ctx};
 
 pub mod coc;
 pub mod compact;
+pub mod deep_research;
 pub mod deepthink;
 pub mod executecode;
 pub mod genselect;
@@ -45,6 +46,7 @@ pub async fn run(
         "proxy" => proxy::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         "mcp" => mcp::run(system_prompt, initial_query, ctx).await,
+        "deep_research" => deep_research::run(system_prompt, initial_query, ctx).await,
         // Upstream v0.4.0 loads longcepo/main.py as a top-level module, so its
         // relative imports fail before any work: every request errors.
         "longcepo" => Err(anyhow!(

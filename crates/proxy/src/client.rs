@@ -53,6 +53,13 @@ pub trait LlmClient: Send + Sync {
 
     /// API key in use (used by plugins that build sibling clients).
     fn api_key(&self) -> String;
+
+    /// A copy of an openai-python-style client with `max_retries` replaced;
+    /// `None` for other client kinds (upstream passes those through as-is).
+    fn with_retries(&self, max_retries: u32) -> Option<SharedClient> {
+        let _ = max_retries;
+        None
+    }
 }
 
 pub type SharedClient = Arc<dyn LlmClient>;
@@ -66,6 +73,7 @@ pub enum Flavor {
 }
 
 /// HTTP client for OpenAI-compatible endpoints with openai-python's retry policy.
+#[derive(Clone)]
 pub struct OpenAiClient {
     http: reqwest::Client,
     base_url: String,
@@ -249,6 +257,10 @@ pub fn status_error(status: u16, text: &str) -> LlmError {
 
 #[async_trait]
 impl LlmClient for OpenAiClient {
+    fn with_retries(&self, max_retries: u32) -> Option<SharedClient> {
+        Some(Arc::new(self.clone().with_max_retries(max_retries)))
+    }
+
     async fn create(&self, body: Value) -> std::result::Result<ChatCompletion, LlmError> {
         check_create_kwargs(&body)?;
         let body = merge_extra_body(body);

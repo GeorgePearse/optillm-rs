@@ -175,6 +175,8 @@ class Stack:
 
 
 TS_ID = re.compile(r"chatcmpl-\d{12,}(-\d+)?")
+# deep_research stamps its report with the wall clock.
+REPORT_TS = re.compile(r"Report generated: \d{4}-\d\d-\d\d \d\d:\d\d:\d\d")
 
 
 def normalize_value(v):
@@ -190,7 +192,7 @@ def normalize_value(v):
     if isinstance(v, list):
         return [normalize_value(x) for x in v]
     if isinstance(v, str):
-        return TS_ID.sub("chatcmpl-<ts>", v)
+        return REPORT_TS.sub("Report generated: <ts>", TS_ID.sub("chatcmpl-<ts>", v))
     return v
 
 
@@ -198,6 +200,7 @@ TS_CREATED = re.compile(r'"created": ?1\d{9}\b')
 
 
 def normalize_text(text):
+    text = REPORT_TS.sub("Report generated: <ts>", text)
     return TS_CREATED.sub('"created": <created>', TS_ID.sub("chatcmpl-<ts>", text))
 
 
@@ -371,7 +374,7 @@ def main():
         server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
         # Upstream's spl plugin persists strategies inside the installed package.
-        for data_dir in Path(args.upstream_python).resolve().parent.parent.glob("lib/python*/site-packages/optillm/plugins/spl/data"):
+        for data_dir in Path(os.path.abspath(args.upstream_python)).parent.parent.glob("lib/python*/site-packages/optillm/plugins/spl/data"):
             for f in data_dir.glob("*.json"):
                 f.unlink()
         up = rs = None

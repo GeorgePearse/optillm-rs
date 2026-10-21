@@ -1,0 +1,78 @@
+{
+ "description": "a failing search backend gives the no-results note (no delay drawn)",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "web_search-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "search for broken things"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [],
+  "search": [
+   {
+    "match": "broken",
+    "status": 500
+   },
+   {
+    "match": "history",
+    "results": [
+     {
+      "title": "X History",
+      "url": "{MOCK}/__page/hist",
+      "content": "A timeline of X"
+     }
+    ]
+   },
+   {
+    "match": "market",
+    "results": [
+     {
+      "title": "X Market",
+      "url": "{MOCK}/__page/market",
+      "content": "Market size"
+     },
+     {
+      "title": "Gone",
+      "url": "{MOCK}/__page/missing",
+      "content": ""
+     }
+    ]
+   },
+   {
+    "match": "nothing",
+    "results": []
+   },
+   {
+    "match": "",
+    "results": [
+     {
+      "title": "X overview",
+      "url": "{MOCK}/__page/overview",
+      "content": ""
+     },
+     {
+      "title": "X wiki",
+      "url": "{MOCK}/__page/hist",
+      "content": "Encyclopedia entry"
+     }
+    ]
+   }
+  ]
+ },
+ "order": "exact",
+ "env": {
+  "OPTILLM_SEARCH_BACKEND": "searxng",
+  "OPTILLM_SEARXNG_URL": "{MOCK}",
+  "OPTILLM_SEARCH_DELAY_SCALE": "0"
+ },
+ "seed": 7
+}

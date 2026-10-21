@@ -453,6 +453,15 @@ fx("mars/agent_errors", "provider errors during exploration become error solutio
    [rule({"status": 400, "body": {"error": {"message": "context too long"}}}, contains="in a collaborative reasoning system")] + MARS_COMMON[1:] + [MARS_CORRECT],
    order="any", serialize_ms=60)
 
+# --------------------------------------------------------------------------
+# local-inference decoders: with a remote provider upstream rejects them
+# --------------------------------------------------------------------------
+for name in ["cot_decoding", "entropy_decoding", "thinkdeeper", "deepconf", "autothink"]:
+    fx(f"{name}/remote_provider_rejects", f"decoding={name} is a TypeError in openai-python's create() with a remote provider",
+       chat(decoding=name))
+    fx(f"{name}/not_a_slug", f"'{name}-' is not an approach slug: the whole string is the model name",
+       chat(model=f"{name}-gpt-4o-mini"), [rule({"content": "391"})])
+
 
 def main():
     if ROOT.exists():

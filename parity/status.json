@@ -49,7 +49,7 @@
    "name": "provider selection",
    "fixtures": [],
    "status": "partial",
-   "notes": "OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. Gaps: OPTILLM_API_KEY local PyTorch inference engine and the LiteLLM fallback are not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported"
+   "notes": "OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. OPTILLM_API_KEY (upstream: in-process PyTorch engine) is emulated on the configured provider (see decoder rows). Gaps: LiteLLM fallback not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported"
   },
   {
    "group": "approach",
@@ -183,8 +183,8 @@
    "fixtures": [
     "cot_decoding"
    ],
-   "status": "not started",
-   "notes": "upstream: local inference only"
+   "status": "emulated",
+   "notes": "Remote provider: identical TypeError for decoding=, slug not an approach. OPTILLM_API_KEY mode: same algorithm over logprobs + assistant prefill (k capped at 20 top logprobs; num_beams/length_penalty/no_repeat_ngram_size unavailable)"
   },
   {
    "group": "local",
@@ -192,8 +192,8 @@
    "fixtures": [
     "entropy_decoding"
    ],
-   "status": "not started",
-   "notes": "upstream: local inference only"
+   "status": "emulated",
+   "notes": "Remote: parity. Local mode: logits-only approximation (1 call/token, top-20 logprobs, attention metrics = 0, no clarification-token insertion)"
   },
   {
    "group": "local",
@@ -201,8 +201,8 @@
    "fixtures": [
     "thinkdeeper"
    ],
-   "status": "not started",
-   "notes": "upstream: local inference only"
+   "status": "emulated",
+   "notes": "Remote: parity. Local mode: same control loop, chunked with stop=[end_think_token]; max_thoughts checked between chunks"
   },
   {
    "group": "local",
@@ -210,8 +210,8 @@
    "fixtures": [
     "deepconf"
    ],
-   "status": "not started",
-   "notes": "upstream: local inference only"
+   "status": "emulated",
+   "notes": "Remote: parity. Local mode: warmup/threshold/consensus/weighted vote over top-k logprobs; early termination applied post hoc"
   },
   {
    "group": "local",
@@ -219,8 +219,8 @@
    "fixtures": [
     "autothink"
    ],
-   "status": "not started",
-   "notes": "upstream: local inference only"
+   "status": "partial",
+   "notes": "Remote: parity. Local mode: NOT available (needs in-process complexity classifier + steering vectors on hidden states)"
   },
   {
    "group": "plugin",

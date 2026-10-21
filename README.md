@@ -71,7 +71,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Server | `none (passthrough)` | ✅ parity | 17 | openai-python model_dump shape, create() kwarg TypeError, 2 retries on 5xx/429, SSE re-chunking incl. tool calls and usage |
 | Server | `batching` | ✅ parity | 5 | --batch-mode/--batch-size/--batch-wait-ms; per model:approach queues, sequential processing, wrapped error messages |
 | Server | `conversation logging` | 🟡 implemented, not yet harness-verified | 0 | --log-conversations JSONL ported; not compared by the harness (timestamps, uuids) |
-| Server | `provider selection` | 🟠 partial | 0 | OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. Gaps: OPTILLM_API_KEY local PyTorch inference engine and the LiteLLM fallback are not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported |
+| Server | `provider selection` | 🟠 partial | 0 | OPENAI_API_KEY, CEREBRAS_API_KEY, AZURE_OPENAI_API_KEY supported. OPTILLM_API_KEY (upstream: in-process PyTorch engine) is emulated on the configured provider (see decoder rows). Gaps: LiteLLM fallback not ported; Azure AD (DefaultAzureCredential) auth not supported; --launch-gui (Gradio) not supported |
 | Approach | `bon` | ✅ parity | 7 | — |
 | Approach | `moa` | ✅ parity | 5 | — |
 | Approach | `rto` | ✅ parity | 4 | — |
@@ -86,11 +86,11 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Approach | `mars` | ✅ parity | 6 | port of optillm/mars (not crates/mars). Shared executor = FIFO semaphore; str-vs-int agent-id quirk kept (agent 0 verifies all, improvement never runs); math_verify fails in upstream's server threads (signal-based timeout) so voting uses the regex fallback natively; agg_HHMMSS ids normalised by the harness; CPython 3.12 Neumaier sum() ported |
 | Approach | `cepo` | ✅ parity | 8 | nested thread pools + as_completed reproduced; process-global mutable config; --cepo_bestofn_rating_type / --cepo_rating_model accepted as str (upstream argparse rejects them, use --cepo_config_file); majority vote uses the MCQ path only (math_verify is unreachable with non-empty completions) |
 | Approach | `z3` | ✅ parity | 5 | solver code runs in CPython+z3+sympy subprocess ($OPTILLM_Z3_PYTHON) with upstream exec globals; harness normalises the exec frame path in tracebacks |
-| Local-inference approach | `cot_decoding` | ⬜ not started | 0 | upstream: local inference only |
-| Local-inference approach | `entropy_decoding` | ⬜ not started | 0 | upstream: local inference only |
-| Local-inference approach | `thinkdeeper` | ⬜ not started | 0 | upstream: local inference only |
-| Local-inference approach | `deepconf` | ⬜ not started | 0 | upstream: local inference only |
-| Local-inference approach | `autothink` | ⬜ not started | 0 | upstream: local inference only |
+| Local-inference approach | `cot_decoding` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote provider: identical TypeError for decoding=, slug not an approach. OPTILLM_API_KEY mode: same algorithm over logprobs + assistant prefill (k capped at 20 top logprobs; num_beams/length_penalty/no_repeat_ngram_size unavailable) |
+| Local-inference approach | `entropy_decoding` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: logits-only approximation (1 call/token, top-20 logprobs, attention metrics = 0, no clarification-token insertion) |
+| Local-inference approach | `thinkdeeper` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: same control loop, chunked with stop=[end_think_token]; max_thoughts checked between chunks |
+| Local-inference approach | `deepconf` | 🟣 remote mode at parity; local mode emulated over API logprobs | 2 | Remote: parity. Local mode: warmup/threshold/consensus/weighted vote over top-k logprobs; early termination applied post hoc |
+| Local-inference approach | `autothink` | 🟠 partial | 2 | Remote: parity. Local mode: NOT available (needs in-process complexity classifier + steering vectors on hidden states) |
 | Plugin | `coc` | ⬜ not started | 0 | — |
 | Plugin | `compact` | ⬜ not started | 0 | — |
 | Plugin | `deep_research` | ⬜ not started | 0 | — |
@@ -109,7 +109,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-18/42 rows at harness-verified parity, 119 fixtures in total.
+18/42 rows at harness-verified parity, 129 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

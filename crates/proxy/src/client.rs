@@ -272,6 +272,14 @@ impl LlmClient for OpenAiClient {
     }
 }
 
+/// True when `Completions.create` declares a keyword argument named `k`.
+pub fn is_create_param(k: &str) -> bool {
+    schema()["create_params"]
+        .as_array()
+        .map(|a| a.iter().any(|p| p.as_str() == Some(k)))
+        .unwrap_or(false)
+}
+
 /// `Completions.create(**kwargs)` raises `TypeError` for keyword arguments it
 /// does not declare; upstream surfaces that as the request's error string.
 pub fn check_create_kwargs(body: &Value) -> std::result::Result<(), LlmError> {

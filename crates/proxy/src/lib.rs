@@ -10,6 +10,7 @@ pub mod batching;
 pub mod client;
 pub mod config;
 pub mod conversation_logger;
+pub mod decoding;
 pub mod parse;
 pub mod plugins;
 pub mod py;

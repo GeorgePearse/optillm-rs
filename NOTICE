@@ -20,6 +20,9 @@ Derived material:
 A copy of the Apache License, Version 2.0 is in crates/proxy/UPSTREAM_LICENSE.
 crates/proxy is distributed under the same license.
 
+crates/proxy/src/py/stop_words.rs copies scikit-learn's ENGLISH_STOP_WORDS
+(BSD-3-Clause, Copyright the scikit-learn developers).
+
 The CPython-compatible helpers in crates/proxy/src/py reproduce the
 behaviour of CPython's `random` (Mersenne Twister), `difflib` and `json`
 modules (Python Software Foundation License) so that results match the

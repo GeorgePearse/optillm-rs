@@ -103,6 +103,9 @@ class Stack:
             "--base-url",
             f"http://127.0.0.1:{self.mock_port}/v1",
         ]
+        # Per-server scratch space for fixtures that persist state ({SERVER_TMP}).
+        self.tmp = tempfile.mkdtemp(prefix=f"parity-{name}-")
+        env = {k: v.replace("{SERVER_TMP}", self.tmp) for k, v in env.items()}
         self.server = subprocess.Popen(
             cmd, cwd=workdir, env=env, stdout=self.server_log, stderr=subprocess.STDOUT
         )
@@ -131,6 +134,7 @@ class Stack:
                 p.kill()
         self.mock_log.close()
         self.server_log.close()
+        shutil.rmtree(self.tmp, ignore_errors=True)
 
 
 TS_ID = re.compile(r"chatcmpl-\d{12,}(-\d+)?")
@@ -278,6 +282,8 @@ def base_env(extra, seed, rust):
     if rust:
         # The z3 approach executes solver code with CPython + z3 + sympy.
         env["OPTILLM_PYTHON"] = UPSTREAM_PYTHON
+        # spl keeps a strategy database; upstream's lives in its package dir.
+        env["OPTILLM_SPL_DATA_DIR"] = "{SERVER_TMP}/spl"
     else:
         env["PYTHONPATH"] = str(HERE / "upstream_hooks")
         env["PYTHONUNBUFFERED"] = "1"
@@ -320,6 +326,10 @@ def main():
         server_args, extra_env, seed = json.loads(key)
         server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
+        # Upstream's spl plugin persists strategies inside the installed package.
+        for data_dir in Path(args.upstream_python).resolve().parent.parent.glob("lib/python*/site-packages/optillm/plugins/spl/data"):
+            for f in data_dir.glob("*.json"):
+                f.unlink()
         up = rs = None
         try:
             up = Stack(

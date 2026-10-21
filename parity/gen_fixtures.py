@@ -520,6 +520,38 @@ fx("deepthink/no_self_discover", "enable_self_discover=false skips structure dis
 fx("deepthink/bad_json_structure", "unparseable structures fall back to the default structure", chat(model="deepthink-gpt-4o-mini"),
    DT_RULES[:2] + [rule({"content": "{'step': 'one', bad: two,}"}, last_contains="Valid JSON reasoning structure:")] + DT_RULES[3:])
 
+MEM_DOC = ("Ada Lovelace wrote the first published algorithm for Babbage's Analytical Engine. "
+           "She was born in 1815 in London. Charles Babbage designed the engine. Query: When was Ada Lovelace born?")
+fx("memory/basic", "context is mined for margin notes, then the query is answered from them", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": MEM_DOC}]),
+   [rule({"content": "YES#Ada Lovelace was born in 1815 in London."}, last_contains="Copy over all context relevant"), rule({"content": "1815"})])
+fx("memory/no_relevant", "NO# margins leave an empty note list", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": MEM_DOC}]), [rule({"content": "NO#No relevant context."}, last_contains="Copy over all context"), rule({"content": "?"})])
+fx("memory/sentence_split", "without 'Query:' the last sentence becomes the query", chat(model="memory-gpt-4o-mini",
+   messages=[{"role": "user", "content": "Paris is in France. Berlin is in Germany! Which city is in France?"}]),
+   [rule({"content": "YES#Paris is in France."}, last_contains="Copy over all context"), rule({"content": "Paris"})])
+fx("memory/persisted_ranking", "OPTILLM_MEMORY_FILE persists notes; TF-IDF ranks them for later queries",
+   [chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Cats purr. Query: what do cats do?"}]),
+    chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Dogs bark loudly at night. Query: what do dogs do at night?"}]),
+    chat(model="memory-gpt-4o-mini", messages=[{"role": "user", "content": "Birds sing. Query: what do dogs and birds do?"}])],
+   [rule({"content": "YES#Cats purr when happy."}, contains="Cats purr. "), rule({"content": "YES#Dogs bark loudly at night."}, contains="Dogs bark"),
+    rule({"content": "YES#Birds sing in the morning."}, contains="Birds sing. "), rule({"content": "ok"})],
+   env={"OPTILLM_MEMORY_FILE": "{SERVER_TMP}/memory.json"})
+
+SPL_CLASSIFY = rule({"content": "<think>numbers</think>arithmetic_calculation"}, system_contains="You are a problem classifier")
+fx("spl/inference_empty_db", "inference mode with no strategies: classify, then the base prompt", chat(model="spl-gpt-4o-mini"),
+   [SPL_CLASSIFY, rule({"content": "391"})])
+fx("spl/learning", "learning mode creates, evaluates and reuses strategies across requests",
+   [chat(model="spl-gpt-4o-mini", spl_learning=True),
+    chat(model="spl-gpt-4o-mini", spl_learning=True, messages=[{"role": "user", "content": "What is 12 * 13? Answer with the number."}]),
+    chat(model="spl-gpt-4o-mini", max_tokens=100)],
+   [SPL_CLASSIFY,
+    rule({"content": "<think>plan</think>1. Split numbers into tens and units.\n2. Multiply the parts.\n3. Add the partial products."}, system_contains="expert problem-solving strategist"),
+    rule({"content": "<think>no</think>YES"}, system_contains="evaluating the effectiveness"),
+    rule({"content": "<think>17*20+17*3</think>391"})])
+fx("spl/kwarg_fallback", "an unknown body key breaks the main call; the plain fallback answers", chat(model="spl-gpt-4o-mini", foo="bar"),
+   [SPL_CLASSIFY, rule({"content": "391"})])
+
 
 def main():
     if ROOT.exists():

@@ -1,0 +1,37 @@
+{
+ "description": "without 'Query:' the last sentence becomes the query",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "memory-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Paris is in France. Berlin is in Germany! Which city is in France?"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "last_contains": "Copy over all context"
+    },
+    "response": {
+     "content": "YES#Paris is in France."
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "Paris"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

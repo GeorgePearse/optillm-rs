@@ -1,0 +1,42 @@
+{
+ "description": "an unknown body key breaks the main call; the plain fallback answers",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "spl-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "foo": "bar"
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "system_contains": "You are a problem classifier"
+    },
+    "response": {
+     "content": "<think>numbers</think>arithmetic_calculation"
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

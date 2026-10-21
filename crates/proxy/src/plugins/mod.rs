@@ -9,6 +9,8 @@ pub mod compact;
 pub mod deepthink;
 pub mod genselect;
 pub mod majority_voting;
+pub mod memory;
+pub mod spl;
 
 /// Run the plugin registered under `slug` (upstream `plugin_approaches[slug]`).
 pub async fn run(
@@ -22,6 +24,8 @@ pub async fn run(
         "compact" => compact::run(system_prompt, initial_query, ctx).await,
         "genselect" => genselect::run(system_prompt, initial_query, ctx).await,
         "deepthink" => deepthink::run(system_prompt, initial_query, ctx).await,
+        "memory" => memory::run(system_prompt, initial_query, ctx).await,
+        "spl" => spl::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",
             other

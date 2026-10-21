@@ -106,11 +106,11 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `privacy` | ✅ parity | 1 | Presidio + spaCy en_core_web_lg anonymisation through upstream's own code (py_helper.py via $OPTILLM_PYTHON); de-anonymisation native |
 | Plugin | `proxy` | ⬜ not started | 0 | — |
 | Plugin | `readurls` | ✅ parity | 3 | bs4 get_text rules on an HTML5 parser (html5ever instead of lxml: malformed-HTML recovery can differ); requests URL normalisation (empty query dropped); network errors worded differently |
-| Plugin | `router` | ⬜ not started | 0 | — |
+| Plugin | `router` | ⬜ not started | 1 | — |
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
 | Plugin | `web_search` | 🟠 partial | 2 | query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com |
 
-28/42 rows at harness-verified parity, 169 fixtures in total.
+28/42 rows at harness-verified parity, 170 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

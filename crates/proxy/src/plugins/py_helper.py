@@ -6,7 +6,8 @@ functions from optillm/plugins/executecode_plugin.py and coc_plugin.py
 They need `nbformat`, `nbconvert` and an `ipykernel` python3 kernel.
 `privacy_anonymize` is the Presidio part of privacy_plugin.py (needs
 presidio-analyzer / -anonymizer and spaCy's en_core_web_lg, which it downloads
-on first use exactly like upstream).
+on first use exactly like upstream). `router_predict` is the ModernBERT
+classifier from router_plugin.py (torch + transformers + the HF hub).
 
 Protocol: stdin = JSON {"op": ..., ...}; argv[1] = path for the JSON result.
 """
@@ -218,6 +219,69 @@ def privacy_anonymize(text: str):
     return anonymized_result.text, entity_mapping
 
 
+def router_predict(system_prompt: str, initial_query: str) -> str:
+    """Model half of upstream router_plugin.run (ModernBERT-large classifier)."""
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from huggingface_hub import hf_hub_download
+    from safetensors.torch import load_model
+    from transformers import AutoModel, AutoTokenizer
+
+    MAX_LENGTH = 1024
+    APPROACHES = ["none", "mcts", "bon", "moa", "rto", "z3", "self_consistency", "pvg", "rstar", "cot_reflection", "plansearch", "leap", "re2"]
+    BASE_MODEL = "answerdotai/ModernBERT-large"
+    OPTILLM_MODEL_NAME = "codelion/optillm-modernbert-large"
+
+    class OptILMClassifier(nn.Module):
+        def __init__(self, base_model, num_labels):
+            super().__init__()
+            self.base_model = base_model
+            self.effort_encoder = nn.Sequential(
+                nn.Linear(1, 64),
+                nn.ReLU(),
+                nn.Linear(64, 64),
+                nn.ReLU()
+            )
+            self.classifier = nn.Linear(base_model.config.hidden_size + 64, num_labels)
+
+        def forward(self, input_ids, attention_mask, effort):
+            outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask)
+            pooled_output = outputs.last_hidden_state[:, 0]
+            effort_encoded = self.effort_encoder(effort.unsqueeze(1))
+            combined_input = torch.cat((pooled_output, effort_encoded), dim=1)
+            logits = self.classifier(combined_input)
+            return logits
+
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
+    base_model = AutoModel.from_pretrained(BASE_MODEL)
+    model = OptILMClassifier(base_model, num_labels=len(APPROACHES))
+    model.to(device)
+    safetensors_path = hf_hub_download(repo_id=OPTILLM_MODEL_NAME, filename="model.safetensors")
+    load_model(model, safetensors_path)
+    tokenizer = AutoTokenizer.from_pretrained(OPTILLM_MODEL_NAME)
+
+    combined_input = f"{system_prompt}\n\nUser: {initial_query}"
+    encoding = tokenizer.encode_plus(
+        combined_input,
+        add_special_tokens=True,
+        max_length=MAX_LENGTH,
+        padding='max_length',
+        truncation=True,
+        return_attention_mask=True,
+        return_tensors='pt'
+    )
+    model.eval()
+    with torch.no_grad():
+        input_ids = encoding['input_ids'].to(device)
+        attention_mask = encoding['attention_mask'].to(device)
+        effort_tensor = torch.tensor([0.7], dtype=torch.float).to(device)
+        logits = model(input_ids, attention_mask=attention_mask, effort=effort_tensor)
+        probabilities = F.softmax(logits, dim=1)
+        predicted_approach_index = torch.argmax(probabilities, dim=1).item()
+    return APPROACHES[predicted_approach_index]
+
+
 def literal_str(text: str) -> str:
     """str(ast.literal_eval(text)) with upstream's bare-except fallback to the text."""
     try:
@@ -242,6 +306,11 @@ def main():
         try:
             text, mapping = privacy_anonymize(req["text"])
             result = {"text": text, "mapping": mapping}
+        except Exception as e:
+            result = {"error": str(e)}
+    elif op == "router":
+        try:
+            result = {"approach": router_predict(req["system_prompt"], req["initial_query"])}
         except Exception as e:
             result = {"error": str(e)}
     elif op == "literal_str":

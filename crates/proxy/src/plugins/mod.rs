@@ -16,6 +16,7 @@ pub mod memory;
 pub mod privacy;
 pub mod pyhelper;
 pub mod readurls;
+pub mod router;
 pub mod spl;
 pub mod web_search;
 
@@ -38,6 +39,7 @@ pub async fn run(
         "web_search" => web_search::run(system_prompt, initial_query, ctx).await,
         "json" => json::run(system_prompt, initial_query, ctx).await,
         "privacy" => privacy::run(system_prompt, initial_query, ctx).await,
+        "router" => router::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",

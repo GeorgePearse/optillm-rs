@@ -605,6 +605,9 @@ fx("privacy/anonymize_roundtrip", "PII is replaced with <TYPE_n> placeholders be
    chat(model="privacy-gpt-4o-mini", messages=[{"role": "user", "content": "Write a short note to John Smith at john.smith@example.com about the meeting in Paris."}]),
    [rule({"content": "Dear <PERSON_0>, see you in <LOCATION_0>. Reply to <EMAIL_ADDRESS_0>. Unknown <PHONE_NUMBER_7>."})])
 
+fx("router/model_unavailable", "with the router model unavailable (offline hub) both fall back to one direct completion",
+   chat(model="router-gpt-4o-mini", max_tokens=50), [rule({"content": "391"})])
+
 
 def main():
     if ROOT.exists():

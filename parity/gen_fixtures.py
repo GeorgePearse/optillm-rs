@@ -409,7 +409,9 @@ fx("cepo/pairwise", "pairwise rating (config file)", chat(model="cepo-gpt-4o-min
    server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_pairwise.yaml"])
 fx("cepo/majority", "majority vote over MCQ letters (config file)", chat(model="cepo-gpt-4o-mini"),
    [CEPO_RULES[0], CEPO_RULES[1], CEPO_RULES[2],
-    rule(responses=[{"content": "**Answer:** C"}, {"content": "The answer is (B)"}, {"content": "Answer: C"}], contains="Use your final solution from above")],
+    # The parallel completions send identical requests, so their replies must be
+    # identical too (which thread gets which reply is timing-dependent upstream).
+    rule({"content": "Reasoning done.\n**Answer:** C"}, contains="Use your final solution from above")],
    order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_majority.yaml"])
 fx("cepo/reasoning_fallback", "use_reasoning_fallback walks high -> medium on length", chat(model="cepo-gpt-4o-mini"),
    [rule({"content": "too long", "finish_reason": "length"}, contains="concise plan", has=["reasoning_effort"], **{}),

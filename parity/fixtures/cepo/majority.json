@@ -49,17 +49,9 @@
     "match": {
      "contains": "Use your final solution from above"
     },
-    "responses": [
-     {
-      "content": "**Answer:** C"
-     },
-     {
-      "content": "The answer is (B)"
-     },
-     {
-      "content": "Answer: C"
-     }
-    ]
+    "response": {
+     "content": "Reasoning done.\n**Answer:** C"
+    }
    }
   ],
   "serialize_ms": 80

@@ -107,9 +107,9 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `readurls` | ⬜ not started | 3 | — |
 | Plugin | `router` | ⬜ not started | 0 | — |
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
-| Plugin | `web_search` | ⬜ not started | 0 | — |
+| Plugin | `web_search` | ⬜ not started | 2 | — |
 
-26/42 rows at harness-verified parity, 163 fixtures in total.
+26/42 rows at harness-verified parity, 165 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

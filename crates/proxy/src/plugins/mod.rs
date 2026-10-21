@@ -15,6 +15,7 @@ pub mod memory;
 pub mod pyhelper;
 pub mod readurls;
 pub mod spl;
+pub mod web_search;
 
 /// Run the plugin registered under `slug` (upstream `plugin_approaches[slug]`).
 pub async fn run(
@@ -32,6 +33,7 @@ pub async fn run(
         "spl" => spl::run(system_prompt, initial_query, ctx).await,
         "coc" => coc::run(system_prompt, initial_query, ctx).await,
         "readurls" => readurls::run(system_prompt, initial_query, ctx).await,
+        "web_search" => web_search::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",

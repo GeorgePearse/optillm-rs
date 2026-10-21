@@ -1,0 +1,22 @@
+{
+ "description": "queries shorter than 3 characters are not searched",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "web_search-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "hi"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": []
+ },
+ "order": "exact"
+}

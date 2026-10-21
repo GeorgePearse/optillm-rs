@@ -588,6 +588,11 @@ fx("readurls/http_error", "HTTP errors are reported inline like requests.raise_f
 fx("readurls/pipeline", "readurls&re2: fetched content feeds the next approach",
    chat(model="readurls&re2-gpt-4o-mini", messages=[{"role": "user", "content": "Who is in {MOCK}/__page/article?"}]), [rule({"content": "Ada"})], pages=PAGES)
 
+fx("web_search/no_query", "a bare search command has nothing to search: the query passes through",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "search for"}]))
+fx("web_search/too_short", "queries shorter than 3 characters are not searched",
+   chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "hi"}]))
+
 
 def main():
     if ROOT.exists():

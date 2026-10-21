@@ -191,6 +191,63 @@ pub fn argmax_by<T, F: Fn(&T) -> f64>(items: &[T], key: F) -> Option<usize> {
     best.map(|(i, _)| i)
 }
 
+/// CPython 3.12+ `sum(floats)` (start 0): Neumaier-compensated, exactly as
+/// `builtin_sum_impl` does it, so averages print the same digits.
+pub fn py_sum(values: impl IntoIterator<Item = f64>) -> f64 {
+    let mut iter = values.into_iter();
+    let Some(first) = iter.next() else { return 0.0 };
+    // 0 (int) + first float
+    let mut f_result = 0.0 + first;
+    let mut c = 0.0f64;
+    for x in iter {
+        let t = f_result + x;
+        if f_result.abs() >= x.abs() {
+            c += (f_result - t) + x;
+        } else {
+            c += (x - t) + f_result;
+        }
+        f_result = t;
+    }
+    if c != 0.0 && c.is_finite() {
+        f_result += c;
+    }
+    f_result
+}
+
+/// `template.format(**args)` for plain `{name}` fields and `{{` / `}}` escapes.
+pub fn format_named(template: &str, args: &[(&str, &str)]) -> Result<String, String> {
+    let mut out = String::with_capacity(template.len());
+    let mut chars = template.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '{' if chars.peek() == Some(&'{') => {
+                chars.next();
+                out.push('{');
+            }
+            '}' if chars.peek() == Some(&'}') => {
+                chars.next();
+                out.push('}');
+            }
+            '{' => {
+                let mut name = String::new();
+                for n in chars.by_ref() {
+                    if n == '}' {
+                        break;
+                    }
+                    name.push(n);
+                }
+                match args.iter().find(|(k, _)| *k == name) {
+                    Some((_, v)) => out.push_str(v),
+                    None => return Err(format!("'{}'", name)),
+                }
+            }
+            '}' => return Err("Single '}' encountered in format string".into()),
+            c => out.push(c),
+        }
+    }
+    Ok(out)
+}
+
 /// Python's `str.title()` approximation used by a few prompts (ASCII words).
 pub fn capitalize(s: &str) -> String {
     let mut chars = s.chars();
@@ -227,6 +284,14 @@ mod tests {
         assert_eq!(split_whitespace(" a  b\tc "), vec!["a", "b", "c"]);
         assert_eq!(splitlines("a\r\nb\nc"), vec!["a", "b", "c"]);
         assert_eq!(splitlines("a\n"), vec!["a"]);
+    }
+
+    #[test]
+    fn sum_matches_cpython_312() {
+        // python3.12: sum([0.8] * 54) / 54 == 0.8 and sum([0.1, 0.2, 0.3]) == 0.6 (naive: 0.6000000000000001)
+        let v: Vec<f64> = std::iter::repeat(0.8).take(54).collect();
+        assert_eq!(py_sum(v.iter().copied()) / 54.0, 0.8);
+        assert_eq!(py_sum([0.1, 0.2, 0.3]), 0.6);
     }
 
     #[test]

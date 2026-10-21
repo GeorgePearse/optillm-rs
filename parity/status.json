@@ -156,8 +156,8 @@
    "fixtures": [
     "mars"
    ],
-   "status": "not started",
-   "notes": "crates/mars is an independent native design, not a port"
+   "status": "parity",
+   "notes": "port of optillm/mars (not crates/mars). Shared executor = FIFO semaphore; str-vs-int agent-id quirk kept (agent 0 verifies all, improvement never runs); math_verify fails in upstream's server threads (signal-based timeout) so voting uses the regex fallback natively; agg_HHMMSS ids normalised by the harness; CPython 3.12 Neumaier sum() ported"
   },
   {
    "group": "approach",

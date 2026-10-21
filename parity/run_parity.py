@@ -189,8 +189,14 @@ def diff(a, b, label):
 EXEC_FRAME = re.compile(r'File \\"[^"\\]+\\", line \d+, in execute_code_in_process')
 
 
+# MARS names aggregated solutions agg_HHMMSS from the local wall clock.
+AGG_ID = re.compile(r"\bagg_\d{6}\b")
+
+
 def canonical_call(c):
-    return EXEC_FRAME.sub('File \\"<z3 exec frame>\\", line N, in execute_code_in_process', json.dumps(c, sort_keys=True))
+    text = json.dumps(c, sort_keys=True)
+    text = EXEC_FRAME.sub('File \\"<z3 exec frame>\\", line N, in execute_code_in_process', text)
+    return AGG_ID.sub("agg_HHMMSS", text)
 
 
 SHOW = False
@@ -220,10 +226,23 @@ def run_fixture(fx, up, rs):
         ucalls = sorted(ucalls, key=canonical_call)
         rcalls = sorted(rcalls, key=canonical_call)
     if [canonical_call(c) for c in ucalls] != [canonical_call(c) for c in rcalls]:
-        problems.append(
-            f"LLM call sequence differs (upstream {len(ucalls)} calls, rust {len(rcalls)} calls)\n"
-            + diff(ucalls, rcalls, "calls")
-        )
+        header = f"LLM call sequence differs (upstream {len(ucalls)} calls, rust {len(rcalls)} calls)\n"
+        if fx.get("order", "exact") == "any":
+            from collections import Counter
+
+            ucount = Counter(canonical_call(c) for c in ucalls)
+            rcount = Counter(canonical_call(c) for c in rcalls)
+            only_up = list((ucount - rcount).elements())
+            only_rs = list((rcount - ucount).elements())
+            problems.append(
+                header
+                + f"  calls only upstream made ({len(only_up)}):\n"
+                + "\n".join("    " + c[:1500] for c in only_up)
+                + f"\n  calls only rust made ({len(only_rs)}):\n"
+                + "\n".join("    " + c[:1500] for c in only_rs)
+            )
+        else:
+            problems.append(header + diff(ucalls, rcalls, "calls"))
     return problems, len(ucalls)
 
 
@@ -258,7 +277,7 @@ def base_env(extra, seed, rust):
     }
     if rust:
         # The z3 approach executes solver code with CPython + z3 + sympy.
-        env["OPTILLM_Z3_PYTHON"] = UPSTREAM_PYTHON
+        env["OPTILLM_PYTHON"] = UPSTREAM_PYTHON
     else:
         env["PYTHONPATH"] = str(HERE / "upstream_hooks")
         env["PYTHONUNBUFFERED"] = "1"

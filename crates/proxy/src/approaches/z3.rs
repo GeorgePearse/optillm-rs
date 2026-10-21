@@ -2,7 +2,7 @@
 //!
 //! The generated solver code is Python, so it is executed the same way
 //! upstream does it: by CPython with z3 and sympy, here in a subprocess
-//! (`$OPTILLM_Z3_PYTHON`, default `python3`) running `z3_runner.py`, which
+//! (`$OPTILLM_PYTHON`, default `python3`) running `z3_runner.py`, which
 //! carries upstream's execution globals verbatim. Upstream's 30 s timeout is
 //! enforced by killing the subprocess.
 
@@ -38,7 +38,9 @@ fn runner_path() -> std::io::Result<std::path::PathBuf> {
 
 /// `Z3SymPySolverSystem.execute_solver_code`.
 pub async fn execute_solver_code(code: &str) -> String {
-    let python = std::env::var("OPTILLM_Z3_PYTHON").unwrap_or_else(|_| "python3".into());
+    let python = std::env::var("OPTILLM_PYTHON")
+        .or_else(|_| std::env::var("OPTILLM_Z3_PYTHON"))
+        .unwrap_or_else(|_| "python3".into());
     let runner = match runner_path() {
         Ok(p) => p,
         Err(e) => return format!("Error: {}", e),

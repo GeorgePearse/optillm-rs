@@ -416,6 +416,43 @@ fx("cepo/reasoning_fallback", "use_reasoning_fallback walks high -> medium on le
     rule(responses=[{"content": "cut", "finish_reason": "length"}, {"content": "Plan ok"}], contains="concise plan")] + CEPO_RULES[1:],
    order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_fallback.yaml"])
 
+# --------------------------------------------------------------------------
+# mars (asyncio + thread pool upstream: serialised mock, order-independent calls)
+# --------------------------------------------------------------------------
+MARS_EXPLORE = rule(responses=[
+    {"content": "Let x = 17 * 23. Therefore x = 340 + 51 = 391.\n\n\\boxed{391}"},
+    {"content": "We compute 17*23 = 391. Thus the product is \\boxed{391}."},
+    {"content": "Possibly 17*23 is 381? I am not sure. The answer is 381."},
+], contains="in a collaborative reasoning system")
+MARS_COMMON = [
+    MARS_EXPLORE,
+    rule({"content": "Aggregated solution: 17 * 23 = 391, verified by 17*20 + 17*3. \\boxed{391}"}, system_contains="solution aggregation"),
+    rule({"content": "PROBLEM_TYPE: algebra\nAPPROACH_TYPE: direct_computation\nKEY_INSIGHTS: distributivity, splitting 23 into 20+3\nMATHEMATICAL_TECHNIQUES: decomposition, addition\nSOLUTION_PATTERN: split a factor and add partial products\nSUCCESS_INDICATORS: simple arithmetic"},
+         system_contains="strategy analysis expert"),
+    rule({"content": " Algebra "}, system_contains="problem classifier"),
+    rule({"content": "Enhanced: 17*20 = 340, 17*3 = 51, total 391. Therefore \\boxed{391}"}, system_contains="collaborative mathematical agent"),
+    rule({"content": "Final synthesis: the product is \\boxed{391}."}, system_contains="mathematical synthesis expert"),
+]
+MARS_CORRECT = rule({"content": "Overall assessment: CORRECT. Every step checks out. Confidence: 9/10"}, contains="You are a verification expert")
+MARS_INCORRECT = rule({"content": "Overall assessment: INCORRECT - there is an error in step 2. You should recompute. Confidence 4 out of 10"},
+                      contains="You are a verification expert")
+fx("mars/all_verified", "default config: exploration, 3 aggregation loops, strategy network, verification; a verified solution wins",
+   chat(model="mars-gpt-4o-mini"), MARS_COMMON + [MARS_CORRECT], order="any", serialize_ms=60)
+fx("mars/synthesis_vote", "nothing verifies: math_verify voting + synthesis prompt with extracted answers",
+   chat(model="mars-gpt-4o-mini"), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/lightweight", "max_tokens <= 4000 selects the lightweight config (2 agents, no aggregation / strategy network)",
+   chat(model="mars-gpt-4o-mini", max_tokens=2000), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/mars_config", "mars_config overrides in the request body", chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False, "num_agents": 2,
+   "use_thinking_tags": False, "max_verification_attempts": 1}), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/synthesis_formula", "string / set answers feed the EXTRACTED ANSWERS block of the synthesis prompt",
+   chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False, "enable_strategy_network": False}),
+   [rule(responses=[{"content": "Working it out, the answer is three hundred ninety-one."}, {"content": "We get \\boxed{\\{1, 2\\}} hmm"},
+                    {"content": "x = 17 * 23 = 391\n"}], contains="in a collaborative reasoning system")] + MARS_COMMON[1:] + [MARS_INCORRECT],
+   order="any", serialize_ms=60)
+fx("mars/agent_errors", "provider errors during exploration become error solutions", chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False}),
+   [rule({"status": 400, "body": {"error": {"message": "context too long"}}}, contains="in a collaborative reasoning system")] + MARS_COMMON[1:] + [MARS_CORRECT],
+   order="any", serialize_ms=60)
+
 
 def main():
     if ROOT.exists():

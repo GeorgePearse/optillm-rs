@@ -22,6 +22,7 @@ pub mod bon;
 pub mod cepo;
 pub mod cot_reflection;
 pub mod leap;
+pub mod mars;
 pub mod mcts;
 pub mod moa;
 pub mod plansearch;
@@ -201,6 +202,7 @@ pub fn execute_single_approach<'a>(
             "leap" => leap::leap(system_prompt, initial_query, ctx).await,
             "z3" => z3::z3_solver(system_prompt, initial_query, ctx).await,
             "cepo" => cepo::cepo(system_prompt, initial_query, ctx).await,
+            "mars" => mars::multi_agent_reasoning_system(system_prompt, initial_query, ctx).await,
             other if KNOWN_APPROACHES.contains(&other) || PLUGIN_SLUGS.contains(&other) => Err(
                 anyhow!("Approach '{}' is not yet implemented in optillm-rs", other),
             ),

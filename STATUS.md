@@ -69,7 +69,7 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Approach | `rstar` | ✅ parity | 4 | concurrent asyncio rollouts reproduced; harness serialises mock replies so seeded draws line up |
 | Approach | `plansearch` | ✅ parity | 4 | — |
 | Approach | `leap` | ✅ parity | 7 | Python json/iteration error semantics for malformed example JSON |
-| Approach | `mars` | ⬜ not started | 0 | crates/mars is an independent native design, not a port |
+| Approach | `mars` | ✅ parity | 6 | port of optillm/mars (not crates/mars). Shared executor = FIFO semaphore; str-vs-int agent-id quirk kept (agent 0 verifies all, improvement never runs); math_verify fails in upstream's server threads (signal-based timeout) so voting uses the regex fallback natively; agg_HHMMSS ids normalised by the harness; CPython 3.12 Neumaier sum() ported |
 | Approach | `cepo` | ✅ parity | 8 | nested thread pools + as_completed reproduced; process-global mutable config; --cepo_bestofn_rating_type / --cepo_rating_model accepted as str (upstream argparse rejects them, use --cepo_config_file); majority vote uses the MCQ path only (math_verify is unreachable with non-empty completions) |
 | Approach | `z3` | ✅ parity | 5 | solver code runs in CPython+z3+sympy subprocess ($OPTILLM_Z3_PYTHON) with upstream exec globals; harness normalises the exec frame path in tracebacks |
 | Local-inference approach | `cot_decoding` | ⬜ not started | 0 | upstream: local inference only |
@@ -95,5 +95,5 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-17/42 rows at harness-verified parity, 113 fixtures in total.
+18/42 rows at harness-verified parity, 119 fixtures in total.
 <!-- parity-table:end -->

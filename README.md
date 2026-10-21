@@ -99,9 +99,9 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `executecode` | ✅ parity | 4 | same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced |
 | Plugin | `genselect` | ✅ parity | 4 | — |
 | Plugin | `json` | 🟠 partial | 3 | no-schema and error paths at parity; with a json_schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines), optillm-rs asks the provider for strict structured output (xfail fixture) |
-| Plugin | `longcepo` | ⬜ not started | 0 | — |
+| Plugin | `longcepo` | ✅ parity | 3 | upstream v0.4.0 loads longcepo/main.py as a top-level module, so its relative imports raise 'attempted relative import with no known parent package' on every request; that error is reproduced. The LongCePO pipeline itself is not ported, since upstream cannot run it |
 | Plugin | `majority_voting` | ✅ parity | 4 | — |
-| Plugin | `mcp` | ⬜ not started | 0 | — |
+| Plugin | `mcp` | ✅ parity | 10 | native MCP client (stdio, legacy SSE, Streamable HTTP; initialize handshake as the mcp 2.3 SDK) against ~/.optillm/mcp_config.json; server.tool functions, per-call fresh connections, result/error JSON verbatim. Not reproduced: upstream's extra pre-spawned stdio process and 2 s startup sleep; the output-schema check covers missing structured content but does not jsonschema-validate it |
 | Plugin | `memory` | ✅ parity | 4 | sklearn TfidfVectorizer + cosine ported; OPTILLM_MEMORY_FILE persistence |
 | Plugin | `privacy` | ✅ parity | 1 | Presidio + spaCy en_core_web_lg anonymisation through upstream's own code (py_helper.py via $OPTILLM_PYTHON); de-anonymisation native |
 | Plugin | `proxy` | ✅ parity | 7 | ~/.optillm/proxy_config.yaml (env interpolation, defaults, validation), round_robin / failover routing, model_map, system-message probe + merge, unhealthy marking, fallback client, wrapped approaches with upstream's handler quirks (rstar / cepo TypeErrors), /v1/models listing. Weighted routing draws from its own RNG rather than the request-seeded one |
@@ -110,7 +110,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
 | Plugin | `web_search` | 🟠 partial | 2 | query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com |
 
-30/42 rows at harness-verified parity, 177 fixtures in total.
+32/42 rows at harness-verified parity, 190 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

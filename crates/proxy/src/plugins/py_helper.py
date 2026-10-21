@@ -315,6 +315,11 @@ def main():
             result = {"error": str(e)}
     elif op == "literal_str":
         result = {"ok": literal_str(req["text"])}
+    elif op == "json_loads":
+        try:
+            result = {"ok": json.loads(req["text"])}
+        except Exception as e:
+            result = {"error": str(e)}
     else:
         result = {"error": f"unknown op {op}"}
     with open(sys.argv[1], "w") as fh:

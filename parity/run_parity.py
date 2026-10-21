@@ -84,7 +84,7 @@ def wait_for(url, proc, name, timeout=120):
 class Stack:
     """A mock backend plus one server under test."""
 
-    def __init__(self, name, server_cmd, env, workdir, logdir, files=None):
+    def __init__(self, name, server_cmd, env, workdir, logdir, files=None, services=None):
         self.name = name
         self.mock_port = free_port()
         self.port = free_port()
@@ -109,9 +109,31 @@ class Stack:
         home = os.path.join(self.tmp, "home")
         os.makedirs(home)
         mock_base = f"http://127.0.0.1:{self.mock_port}"
+        # One spare port per stack for fixture services (e.g. an HTTP MCP server).
+        svc_port = str(free_port())
 
         def expand(v):
-            return v.replace("{SERVER_TMP}", self.tmp).replace("{HOME}", home).replace("{MOCK}", mock_base)
+            for k, val in (("{SERVER_TMP}", self.tmp), ("{HOME}", home), ("{MOCK}", mock_base),
+                           ("{PARITY_DIR}", str(HERE)), ("{PYTHON}", UPSTREAM_PYTHON or sys.executable),
+                           ("{SVCPORT}", svc_port)):
+                v = v.replace(k, val)
+            return v
+
+        self.services = []
+        for i, svc in enumerate(services or []):
+            log = open(logdir / f"{name}-svc{i}.log", "w")
+            self.services.append(subprocess.Popen([expand(a) for a in svc["cmd"]], stdout=log, stderr=subprocess.STDOUT))
+            deadline = time.time() + 60
+            while True:
+                if self.services[-1].poll() is not None:
+                    raise RuntimeError(f"{name} service {i} exited early")
+                try:
+                    socket.create_connection(("127.0.0.1", int(svc_port)), timeout=1).close()
+                    break
+                except OSError:
+                    if time.time() > deadline:
+                        raise RuntimeError(f"{name} service {i} did not listen on {svc_port}")
+                    time.sleep(0.2)
 
         for rel, content in (files or {}).items():
             path = expand(rel)
@@ -141,7 +163,7 @@ class Stack:
         return http(r.get("method", "POST"), f"http://127.0.0.1:{self.port}{r.get('path', '/v1/chat/completions')}", body, headers)
 
     def close(self):
-        for p in (self.server, self.mock):
+        for p in (self.server, self.mock, *self.services):
             p.terminate()
             try:
                 p.wait(timeout=10)
@@ -284,7 +306,8 @@ def load_fixtures(root, flt):
 
 
 def group_key(fx):
-    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed"), fx.get("files", {})], sort_keys=True)
+    return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed"), fx.get("files", {}),
+                       fx.get("services", [])], sort_keys=True)
 
 
 UPSTREAM_PYTHON = None
@@ -344,7 +367,7 @@ def main():
 
     results = []
     for gi, (key, group) in enumerate(groups.items()):
-        server_args, extra_env, seed, files = json.loads(key)
+        server_args, extra_env, seed, files, services = json.loads(key)
         server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
         # Upstream's spl plugin persists strategies inside the installed package.
@@ -360,8 +383,10 @@ def main():
                 workdir,
                 logdir,
                 files,
+                services,
             )
-            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir, files)
+            rs = Stack(f"g{gi}-rust", [rust_bin] + server_args, base_env(extra_env, seed, rust=True), workdir, logdir, files,
+                       services)
             for fx in group:
                 t0 = time.time()
                 try:

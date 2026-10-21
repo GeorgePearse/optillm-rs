@@ -394,13 +394,20 @@ pub fn normalize(value: &Value, schema: &Value) -> Value {
     value.clone()
 }
 
-/// A chat completion response, normalised like `response.model_dump()`.
+/// A chat completion response, normalised like `response.model_dump()`,
+/// plus the wire JSON (what `model_dump(exclude_unset=True)` yields when the
+/// SDK echoes a response object back into a request).
 #[derive(Clone, Debug)]
-pub struct ChatCompletion(pub Value);
+pub struct ChatCompletion(pub Value, pub Value);
 
 impl ChatCompletion {
     pub fn from_raw(raw: Value) -> Self {
-        ChatCompletion(normalize(&raw, &schema()["ChatCompletion"]))
+        ChatCompletion(normalize(&raw, &schema()["ChatCompletion"]), raw)
+    }
+
+    /// `response.choices[i].message` as sent on the wire.
+    pub fn raw_message(&self, i: usize) -> Option<&Value> {
+        self.1.get("choices")?.get(i)?.get("message")
     }
 
     pub fn choices(&self) -> &[Value] {

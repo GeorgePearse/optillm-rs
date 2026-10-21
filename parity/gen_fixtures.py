@@ -34,7 +34,7 @@ def rule(response=None, responses=None, **match):
 
 
 def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
-       serialize_ms=None, pages=None, files=None):
+       serialize_ms=None, pages=None, files=None, services=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
@@ -46,6 +46,8 @@ def fx(name, description, requests, rules=(), order="exact", server_args=(), env
         data["mock"]["pages"] = pages
     if files:
         data["files"] = files
+    if services:
+        data["services"] = services
     if server_args:
         data["server_args"] = list(server_args)
     if env:
@@ -643,6 +645,65 @@ fx("proxy/system_merge", "providers rejecting system messages get them merged in
                                       rule({"content": "merged ok"})], files={k: v + "# system merge\n" for k, v in PROXY_FILES.items()})
 fx("proxy/models", "/v1/models with --approach proxy lists provider models and model_map aliases", {"method": "GET", "path": "/v1/models"},
    models=[{"id": "m1", "object": "model", "created": 1, "owned_by": "mock"}], files=PROXY_FILES, server_args=["--approach", "proxy"])
+
+fx("longcepo/import_error", "upstream v0.4.0 cannot import longcepo/main.py (relative imports): every request errors",
+   chat(model="longcepo-gpt-4o-mini", messages=[{"role": "user", "content": "Some context.<CONTEXT_END>What is it?"}]))
+fx("longcepo/no_delimiter", "same import error before the <CONTEXT_END> split", chat(model="longcepo-gpt-4o-mini"))
+fx("longcepo/pipeline", "the import error inside a & pipeline", chat(model="re2&longcepo-gpt-4o-mini"), [rule({"content": "391"})])
+
+MCP_SERVER = ["{PYTHON}", "{PARITY_DIR}/fixture_data/mcp_server.py"]
+
+
+def mcp_files(servers):
+    return {"{HOME}/.optillm/mcp_config.json": json.dumps({"mcpServers": servers}, indent=2)}
+
+
+MCP_STDIO = mcp_files({"calc": {"command": "{PYTHON}", "args": ["{PARITY_DIR}/fixture_data/mcp_server.py"],
+                                "description": "Calculator"}})
+
+
+def tool_call(i, name, arguments):
+    return {"id": f"call_{i}", "type": "function", "function": {"name": name, "arguments": arguments}}
+
+
+MCP_FINAL = rule({"content": "The answer is 5."}, last_contains="is_error")
+MCP_ADD = rule({"content": None, "finish_reason": "tool_calls", "tool_calls": [tool_call(1, "calc.add", '{"a": 2, "b": 3}')]},
+               has="tools")
+fx("mcp/no_config", "no ~/.optillm/mcp_config.json: a default is written and the query passes through (temperature 0.7)",
+   chat(model="mcp-gpt-4o-mini"), [rule({"content": "391"})])
+fx("mcp/invalid_config", "unparsable config: load fails twice, plain completion", chat(model="mcp-gpt-4o-mini"),
+   [rule({"content": "391"})], files={"{HOME}/.optillm/mcp_config.json": "{not json"})
+fx("mcp/stdio_tool_call", "stdio server: tools offered as server.tool, call executed, follow-up completion",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=MCP_STDIO)
+fx("mcp/stdio_no_tool_call", "model answers without tools: its first reply is returned", chat(model="mcp-gpt-4o-mini"),
+   [rule({"content": "391 (no tools needed)"})], files=MCP_STDIO)
+fx("mcp/tool_errors", "tool errors, unknown tools, bad names, invalid JSON arguments and unknown servers",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "user", "content": "Do many things"}]),
+   [rule({"content": "done"}, last_contains="error"),
+    rule({"content": "Calling.", "finish_reason": "tool_calls", "tool_calls": [
+        tool_call(1, "calc.echo", '{"text": "h\u00e9 \u2603"}'), tool_call(2, "calc.boom", "{}"),
+        tool_call(3, "calc.nope", "{}"), tool_call(4, "add", "{}"), tool_call(5, "calc.add", "{a: 1"),
+        tool_call(6, "zzz.add", "{}"), tool_call(7, "calc.add", '{"a": "x"}'), tool_call(8, "calc.add", "")]}, has="tools")],
+   files=MCP_STDIO)
+fx("mcp/failed_servers", "unreachable servers are listed as failed next to a working one",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD],
+   files=mcp_files({"missing": {"command": "definitely-not-a-command-xyz"}, "ws": {"transport": "websocket", "url": "ws://x"},
+                    "odd": {"transport": "carrier-pigeon"}, "nourl": {"transport": "sse"},
+                    "calc": {"command": "{PYTHON}", "args": ["{PARITY_DIR}/fixture_data/mcp_server.py"]}}))
+fx("mcp/all_failed", "no server connects: plain completion", chat(model="mcp-gpt-4o-mini"), [rule({"content": "391"})],
+   files=mcp_files({"missing": {"command": "definitely-not-a-command-xyz"}, "ws": {"transport": "websocket", "url": "ws://x"}}))
+fx("mcp/backend_error", "a failing first completion takes the except-path fallback", chat(model="mcp-gpt-4o-mini"),
+   [rule({"status": 400, "body": {"error": {"message": "bad request"}}})], files=MCP_STDIO)
+fx("mcp/streamable_http", "Streamable HTTP server (mcp 2.x MCPServer)",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=mcp_files({"calc": {"transport": "streamable_http", "url": "http://127.0.0.1:{SVCPORT}/mcp"}}),
+   services=[{"cmd": MCP_SERVER + ["streamable-http", "{SVCPORT}"]}])
+fx("mcp/sse", "legacy SSE server",
+   chat(model="mcp-gpt-4o-mini", messages=[{"role": "system", "content": SYS}, {"role": "user", "content": "Add 2 and 3"}]),
+   [MCP_FINAL, MCP_ADD], files=mcp_files({"calc": {"transport": "sse", "url": "http://127.0.0.1:{SVCPORT}/sse"}}),
+   services=[{"cmd": MCP_SERVER + ["sse", "{SVCPORT}"]}])
 
 
 def main():

@@ -12,6 +12,7 @@ pub mod executecode;
 pub mod genselect;
 pub mod json;
 pub mod majority_voting;
+pub mod mcp;
 pub mod memory;
 pub mod privacy;
 pub mod proxy;
@@ -43,6 +44,12 @@ pub async fn run(
         "router" => router::run(system_prompt, initial_query, ctx).await,
         "proxy" => proxy::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
+        "mcp" => mcp::run(system_prompt, initial_query, ctx).await,
+        // Upstream v0.4.0 loads longcepo/main.py as a top-level module, so its
+        // relative imports fail before any work: every request errors.
+        "longcepo" => Err(anyhow!(
+            "attempted relative import with no known parent package"
+        )),
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",
             other

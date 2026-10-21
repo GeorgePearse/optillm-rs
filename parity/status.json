@@ -291,8 +291,8 @@
    "fixtures": [
     "longcepo"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "upstream v0.4.0 loads longcepo/main.py as a top-level module, so its relative imports raise 'attempted relative import with no known parent package' on every request; that error is reproduced. The LongCePO pipeline itself is not ported, since upstream cannot run it"
   },
   {
    "group": "plugin",
@@ -309,8 +309,8 @@
    "fixtures": [
     "mcp"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "native MCP client (stdio, legacy SSE, Streamable HTTP; initialize handshake as the mcp 2.3 SDK) against ~/.optillm/mcp_config.json; server.tool functions, per-call fresh connections, result/error JSON verbatim. Not reproduced: upstream's extra pre-spawned stdio process and 2 s startup sleep; the output-schema check covers missing structured content but does not jsonschema-validate it"
   },
   {
    "group": "plugin",

@@ -248,7 +248,7 @@ fn build_completion(
         Some(lp) => json!({"role": "assistant", "content": content, "logprobs": lp}),
         None => json!({"role": "assistant", "content": content}),
     };
-    ChatCompletion(json!({
+    let v = json!({
         "id": format!("chatcmpl-{}", now),
         "object": "chat.completion",
         "created": (now / 1000) as i64,
@@ -260,7 +260,8 @@ fn build_completion(
             "total_tokens": prompt_tokens + completion_tokens,
             "completion_tokens_details": {"reasoning_tokens": crate::parse::count_reasoning_tokens(content)}
         }
-    }))
+    });
+    ChatCompletion(v.clone(), v)
 }
 
 fn split_request(body: Value) -> Result<Request> {

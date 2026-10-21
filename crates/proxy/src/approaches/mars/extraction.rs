@@ -192,7 +192,7 @@ fn parse_boxed_content(content: &str) -> anyhow::Result<Answer> {
         if inner.contains(',') {
             let nums: Vec<i64> = inner
                 .split(',')
-                .map(|x| py::strings::strip(x))
+                .map(py::strings::strip)
                 .filter(|x| is_py_digit(x))
                 .filter_map(|x| x.parse().ok())
                 .collect();

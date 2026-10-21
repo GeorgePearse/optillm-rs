@@ -289,7 +289,7 @@ mod tests {
     #[test]
     fn sum_matches_cpython_312() {
         // python3.12: sum([0.8] * 54) / 54 == 0.8 and sum([0.1, 0.2, 0.3]) == 0.6 (naive: 0.6000000000000001)
-        let v: Vec<f64> = std::iter::repeat(0.8).take(54).collect();
+        let v: Vec<f64> = std::iter::repeat_n(0.8, 54).collect();
         assert_eq!(py_sum(v.iter().copied()) / 54.0, 0.8);
         assert_eq!(py_sum([0.1, 0.2, 0.3]), 0.6);
     }

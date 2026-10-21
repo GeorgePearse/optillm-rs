@@ -1,0 +1,99 @@
+{
+ "description": "a 400 'think value' error disables reasoning for the rest of the process",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "cepo-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "has": [
+      "reasoning_effort"
+     ]
+    },
+    "response": {
+     "status": 400,
+     "body": {
+      "error": {
+       "message": "think value high is not supported"
+      }
+     }
+    }
+   },
+   {
+    "match": {
+     "contains": "come up with a concise plan"
+    },
+    "response": {
+     "content": "Plan: 1) multiply 17 by 20, 2) add 17*3. Confidence high."
+    }
+   },
+   {
+    "match": {
+     "last_contains": "Can you execute the above plan"
+    },
+    "response": {
+     "content": "<think>working</think>  Executed: 340 + 51 = 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "identify any inconsistency between them"
+    },
+    "response": {
+     "content": "Final solution: 17*23 = 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "Use your final solution from above"
+    },
+    "response": {
+     "content": "<think>check</think>The answer is 391."
+    }
+   },
+   {
+    "match": {
+     "system_contains": "impartial judge and evaluate"
+    },
+    "response": {
+     "content": "Explanation: correct\n\nRating: [[1]]"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "impartial judge and compare"
+    },
+    "response": {
+     "content": "Response 1 is clearer. Better Response: [[1]]"
+    }
+   }
+  ],
+  "serialize_ms": 80
+ },
+ "order": "any",
+ "server_args": [
+  "--cepo_bestofn_n",
+  "1",
+  "--cepo_planning_m",
+  "1",
+  "--cepo_planning_n",
+  "1"
+ ]
+}

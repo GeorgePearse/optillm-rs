@@ -10,6 +10,9 @@ Derived material:
   * All prompt text in crates/proxy/src/approaches and crates/proxy/src/plugins
     is copied verbatim from the corresponding optillm/*.py and
     optillm/plugins/*.py modules.
+  * crates/proxy/src/approaches/cepo_config.yaml is copied from
+    optillm/cepo/configs/cepo_config.yaml, and the execution globals in
+    crates/proxy/src/approaches/z3_runner.py from optillm/z3_solver.py.
   * The approach, plugin and server logic in crates/proxy is a port of
     optillm/server.py, optillm/batching.py, optillm/conversation_logger.py and
     the approach / plugin modules.

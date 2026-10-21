@@ -1,0 +1,43 @@
+{
+ "description": "solver code runs and its stdout feeds the final answer",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "z3-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "determine if it can be solved using Z3"
+    },
+    "response": {
+     "content": "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nx = Int('x')\ns = Solver()\ns.add(x == 17 * 23)\nprint(s.check())\nprint(s.model()[x])\n```\n\nAnalysis:\nmultiply"
+    }
+   },
+   {
+    "match": {
+     "contains": "Solver Result:"
+    },
+    "response": {
+     "content": "The answer is 391."
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

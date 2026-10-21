@@ -1,0 +1,33 @@
+{
+ "description": "'cot_decoding-' is not an approach slug: the whole string is the model name",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "cot_decoding-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

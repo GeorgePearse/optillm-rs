@@ -184,8 +184,19 @@ def diff(a, b, label):
     return "\n".join(out[:120]) + ("\n..." if len(out) > 120 else "")
 
 
+# Tracebacks of z3 solver code name the file that ran exec(): upstream's
+# site-packages z3_solver.py vs optillm-rs's z3_runner.py temp file.
+EXEC_FRAME = re.compile(r'File \\"[^"\\]+\\", line \d+, in execute_code_in_process')
+
+
+# MARS names aggregated solutions agg_HHMMSS from the local wall clock.
+AGG_ID = re.compile(r"\bagg_\d{6}\b")
+
+
 def canonical_call(c):
-    return json.dumps(c, sort_keys=True)
+    text = json.dumps(c, sort_keys=True)
+    text = EXEC_FRAME.sub('File \\"<z3 exec frame>\\", line N, in execute_code_in_process', text)
+    return AGG_ID.sub("agg_HHMMSS", text)
 
 
 SHOW = False
@@ -215,10 +226,23 @@ def run_fixture(fx, up, rs):
         ucalls = sorted(ucalls, key=canonical_call)
         rcalls = sorted(rcalls, key=canonical_call)
     if [canonical_call(c) for c in ucalls] != [canonical_call(c) for c in rcalls]:
-        problems.append(
-            f"LLM call sequence differs (upstream {len(ucalls)} calls, rust {len(rcalls)} calls)\n"
-            + diff(ucalls, rcalls, "calls")
-        )
+        header = f"LLM call sequence differs (upstream {len(ucalls)} calls, rust {len(rcalls)} calls)\n"
+        if fx.get("order", "exact") == "any":
+            from collections import Counter
+
+            ucount = Counter(canonical_call(c) for c in ucalls)
+            rcount = Counter(canonical_call(c) for c in rcalls)
+            only_up = list((ucount - rcount).elements())
+            only_rs = list((rcount - ucount).elements())
+            problems.append(
+                header
+                + f"  calls only upstream made ({len(only_up)}):\n"
+                + "\n".join("    " + c[:1500] for c in only_up)
+                + f"\n  calls only rust made ({len(only_rs)}):\n"
+                + "\n".join("    " + c[:1500] for c in only_rs)
+            )
+        else:
+            problems.append(header + diff(ucalls, rcalls, "calls"))
     return problems, len(ucalls)
 
 
@@ -238,6 +262,9 @@ def group_key(fx):
     return json.dumps([fx.get("server_args", []), fx.get("env", {}), fx.get("seed")], sort_keys=True)
 
 
+UPSTREAM_PYTHON = None
+
+
 def base_env(extra, seed, rust):
     env = {
         "PATH": os.environ.get("PATH", ""),
@@ -248,7 +275,10 @@ def base_env(extra, seed, rust):
         "HF_HUB_OFFLINE": "1",
         "TRANSFORMERS_OFFLINE": "1",
     }
-    if not rust:
+    if rust:
+        # The z3 approach executes solver code with CPython + z3 + sympy.
+        env["OPTILLM_PYTHON"] = UPSTREAM_PYTHON
+    else:
         env["PYTHONPATH"] = str(HERE / "upstream_hooks")
         env["PYTHONUNBUFFERED"] = "1"
     if seed is not None:
@@ -268,8 +298,9 @@ def main():
     ap.add_argument("--logs", default=None, help="directory for server / mock logs")
     ap.add_argument("--show", action="store_true", help="print both raw responses")
     args = ap.parse_args()
-    global SHOW
+    global SHOW, UPSTREAM_PYTHON
     SHOW = args.show
+    UPSTREAM_PYTHON = args.upstream_python
 
     fixtures = load_fixtures(Path(args.fixtures), args.filter)
     if not fixtures:
@@ -287,6 +318,7 @@ def main():
     results = []
     for gi, (key, group) in enumerate(groups.items()):
         server_args, extra_env, seed = json.loads(key)
+        server_args = [a.replace("{PARITY_DIR}", str(HERE)) for a in server_args]
         workdir = Path(tempfile.mkdtemp(prefix="parity-cwd-"))
         up = rs = None
         try:

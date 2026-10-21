@@ -361,6 +361,109 @@ fx("leap/dict_json", "a JSON object instead of a list raises like Python's itera
    [rule({"content": '<output>{"question": "x", "answer": "y"}</output>'}, contains="few-shot examples")])
 fx("leap/truncated", "truncated responses raise", chat(model="leap-gpt-4o-mini"), [rule({"content": "x", "finish_reason": "length"})])
 
+# --------------------------------------------------------------------------
+# z3 (solver code is executed by CPython with z3 + sympy, like upstream)
+# --------------------------------------------------------------------------
+Z3_OK = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nx = Int('x')\ns = Solver()\ns.add(x == 17 * 23)\nprint(s.check())\nprint(s.model()[x])\n```\n\nAnalysis:\nmultiply"
+Z3_BAD = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nprint(undefined_name)\n```\n"
+Z3_SYNTAX = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\ndef broken(:\n```\n"
+fx("z3/not_applicable", "analysis says no solver: plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": "SOLVER_CAN_BE_APPLIED: False"}, contains="determine if it can be solved using Z3"), rule({"content": "391"})])
+fx("z3/solves", "solver code runs and its stdout feeds the final answer", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_OK}, contains="determine if it can be solved using Z3"), rule({"content": "The answer is 391."}, contains="Solver Result:")])
+fx("z3/fix_runtime_error", "a runtime error's traceback is sent back for a fix", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_BAD}, contains="determine if it can be solved using Z3"),
+    rule({"content": "```python\nprint(17 * 23)\n```"}, contains="Fix the Z3 or SymPy code"),
+    rule({"content": "391"}, contains="Solver Result:")])
+fx("z3/syntax_errors_give_up", "three failed attempts fall back to plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_SYNTAX}, contains="determine if it can be solved using Z3"),
+    rule({"content": "```python\nreturn (\n```"}, contains="Fix the Z3 or SymPy code"), rule({"content": "391"})])
+fx("z3/no_code_block", "a missing code block falls back to plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": "SOLVER_CAN_BE_APPLIED: True but no code"}, contains="determine if it can be solved using Z3"), rule({"content": "391"})])
+
+# --------------------------------------------------------------------------
+# cepo (nested thread pools upstream: serialised mock, order-independent calls)
+# --------------------------------------------------------------------------
+CEPO_RULES = [
+    rule({"content": "Plan: 1) multiply 17 by 20, 2) add 17*3. Confidence high."}, contains="come up with a concise plan"),
+    rule({"content": "<think>working</think>  Executed: 340 + 51 = 391."}, last_contains="Can you execute the above plan"),
+    rule({"content": "Final solution: 17*23 = 391."}, contains="identify any inconsistency between them"),
+    rule({"content": "<think>check</think>The answer is 391."}, contains="Use your final solution from above"),
+    rule({"content": "Explanation: correct\n\nRating: [[1]]"}, system_contains="impartial judge and evaluate"),
+    rule({"content": "Response 1 is clearer. Better Response: [[1]]"}, system_contains="impartial judge and compare"),
+]
+SMALL = ["--cepo_bestofn_n", "2", "--cepo_planning_m", "3", "--cepo_planning_n", "2"]
+fx("cepo/default_config", "default cepo_config.yaml: 3 completions x 6 plan attempts (first 3 kept), absolute rating",
+   chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=60)
+fx("cepo/small", "--cepo_* overrides shrink the search", chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=80,
+   server_args=SMALL)
+fx("cepo/plan_truncation", "length-truncated plan executions are dropped", chat(model="cepo-gpt-4o-mini"),
+   [CEPO_RULES[0], rule(responses=[{"content": "cut", "finish_reason": "length"}, {"content": "Executed: 391."}], last_contains="Can you execute the above plan")]
+   + CEPO_RULES[2:], order="any", serialize_ms=80, server_args=SMALL)
+fx("cepo/no_reasoning", "--cepo_use_reasoning '' (argparse bool('') is False) drops reasoning_effort", chat(model="cepo-gpt-4o-mini"),
+   CEPO_RULES, order="any", serialize_ms=80, server_args=SMALL + ["--cepo_use_reasoning", ""])
+fx("cepo/think_value_error", "a 400 'think value' error disables reasoning for the rest of the process", chat(model="cepo-gpt-4o-mini"),
+   [rule({"status": 400, "body": {"error": {"message": "think value high is not supported"}}}, has=["reasoning_effort"])] + CEPO_RULES,
+   order="any", serialize_ms=80, server_args=["--cepo_bestofn_n", "1", "--cepo_planning_m", "1", "--cepo_planning_n", "1"])
+fx("cepo/pairwise", "pairwise rating (config file)", chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=80,
+   server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_pairwise.yaml"])
+fx("cepo/majority", "majority vote over MCQ letters (config file)", chat(model="cepo-gpt-4o-mini"),
+   [CEPO_RULES[0], CEPO_RULES[1], CEPO_RULES[2],
+    # The parallel completions send identical requests, so their replies must be
+    # identical too (which thread gets which reply is timing-dependent upstream).
+    rule({"content": "Reasoning done.\n**Answer:** C"}, contains="Use your final solution from above")],
+   order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_majority.yaml"])
+fx("cepo/reasoning_fallback", "use_reasoning_fallback walks high -> medium on length", chat(model="cepo-gpt-4o-mini"),
+   [rule({"content": "too long", "finish_reason": "length"}, contains="concise plan", has=["reasoning_effort"], **{}),
+    rule(responses=[{"content": "cut", "finish_reason": "length"}, {"content": "Plan ok"}], contains="concise plan")] + CEPO_RULES[1:],
+   order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_fallback.yaml"])
+
+# --------------------------------------------------------------------------
+# mars (asyncio + thread pool upstream: serialised mock, order-independent calls)
+# --------------------------------------------------------------------------
+MARS_EXPLORE = rule(responses=[
+    {"content": "Let x = 17 * 23. Therefore x = 340 + 51 = 391.\n\n\\boxed{391}"},
+    {"content": "We compute 17*23 = 391. Thus the product is \\boxed{391}."},
+    {"content": "Possibly 17*23 is 381? I am not sure. The answer is 381."},
+], contains="in a collaborative reasoning system")
+MARS_COMMON = [
+    MARS_EXPLORE,
+    rule({"content": "Aggregated solution: 17 * 23 = 391, verified by 17*20 + 17*3. \\boxed{391}"}, system_contains="solution aggregation"),
+    rule({"content": "PROBLEM_TYPE: algebra\nAPPROACH_TYPE: direct_computation\nKEY_INSIGHTS: distributivity, splitting 23 into 20+3\nMATHEMATICAL_TECHNIQUES: decomposition, addition\nSOLUTION_PATTERN: split a factor and add partial products\nSUCCESS_INDICATORS: simple arithmetic"},
+         system_contains="strategy analysis expert"),
+    rule({"content": " Algebra "}, system_contains="problem classifier"),
+    rule({"content": "Enhanced: 17*20 = 340, 17*3 = 51, total 391. Therefore \\boxed{391}"}, system_contains="collaborative mathematical agent"),
+    rule({"content": "Final synthesis: the product is \\boxed{391}."}, system_contains="mathematical synthesis expert"),
+]
+MARS_CORRECT = rule({"content": "Overall assessment: CORRECT. Every step checks out. Confidence: 9/10"}, contains="You are a verification expert")
+MARS_INCORRECT = rule({"content": "Overall assessment: INCORRECT - there is an error in step 2. You should recompute. Confidence 4 out of 10"},
+                      contains="You are a verification expert")
+fx("mars/all_verified", "default config: exploration, 3 aggregation loops, strategy network, verification; a verified solution wins",
+   chat(model="mars-gpt-4o-mini"), MARS_COMMON + [MARS_CORRECT], order="any", serialize_ms=60)
+fx("mars/synthesis_vote", "nothing verifies: math_verify voting + synthesis prompt with extracted answers",
+   chat(model="mars-gpt-4o-mini"), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/lightweight", "max_tokens <= 4000 selects the lightweight config (2 agents, no aggregation / strategy network)",
+   chat(model="mars-gpt-4o-mini", max_tokens=2000), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/mars_config", "mars_config overrides in the request body", chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False, "num_agents": 2,
+   "use_thinking_tags": False, "max_verification_attempts": 1}), MARS_COMMON + [MARS_INCORRECT], order="any", serialize_ms=60)
+fx("mars/synthesis_formula", "string / set answers feed the EXTRACTED ANSWERS block of the synthesis prompt",
+   chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False, "enable_strategy_network": False}),
+   [rule(responses=[{"content": "Working it out, the answer is three hundred ninety-one."}, {"content": "We get \\boxed{\\{1, 2\\}} hmm"},
+                    {"content": "x = 17 * 23 = 391\n"}], contains="in a collaborative reasoning system")] + MARS_COMMON[1:] + [MARS_INCORRECT],
+   order="any", serialize_ms=60)
+fx("mars/agent_errors", "provider errors during exploration become error solutions", chat(model="mars-gpt-4o-mini", mars_config={"enable_aggregation": False}),
+   [rule({"status": 400, "body": {"error": {"message": "context too long"}}}, contains="in a collaborative reasoning system")] + MARS_COMMON[1:] + [MARS_CORRECT],
+   order="any", serialize_ms=60)
+
+# --------------------------------------------------------------------------
+# local-inference decoders: with a remote provider upstream rejects them
+# --------------------------------------------------------------------------
+for name in ["cot_decoding", "entropy_decoding", "thinkdeeper", "deepconf", "autothink"]:
+    fx(f"{name}/remote_provider_rejects", f"decoding={name} is a TypeError in openai-python's create() with a remote provider",
+       chat(decoding=name))
+    fx(f"{name}/not_a_slug", f"'{name}-' is not an approach slug: the whole string is the model name",
+       chat(model=f"{name}-gpt-4o-mini"), [rule({"content": "391"})])
+
 
 def main():
     if ROOT.exists():

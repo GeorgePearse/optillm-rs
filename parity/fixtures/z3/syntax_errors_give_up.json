@@ -1,0 +1,49 @@
+{
+ "description": "three failed attempts fall back to plain inference",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "z3-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "determine if it can be solved using Z3"
+    },
+    "response": {
+     "content": "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\ndef broken(:\n```\n"
+    }
+   },
+   {
+    "match": {
+     "contains": "Fix the Z3 or SymPy code"
+    },
+    "response": {
+     "content": "```python\nreturn (\n```"
+    }
+   },
+   {
+    "match": {},
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -1,0 +1,51 @@
+{
+ "description": "a runtime error's traceback is sent back for a fix",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "z3-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "determine if it can be solved using Z3"
+    },
+    "response": {
+     "content": "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nprint(undefined_name)\n```\n"
+    }
+   },
+   {
+    "match": {
+     "contains": "Fix the Z3 or SymPy code"
+    },
+    "response": {
+     "content": "```python\nprint(17 * 23)\n```"
+    }
+   },
+   {
+    "match": {
+     "contains": "Solver Result:"
+    },
+    "response": {
+     "content": "391"
+    }
+   }
+  ]
+ },
+ "order": "exact"
+}

@@ -24,6 +24,7 @@ BADGE = {
     "parity": "✅ parity",
     "implemented": "🟡 implemented, not yet harness-verified",
     "partial": "🟠 partial",
+    "emulated": "🟣 remote mode at parity; local mode emulated over API logprobs",
     "gap": "🔴 documented gap",
     "not started": "⬜ not started",
 }

@@ -1,0 +1,96 @@
+{
+ "description": "string / set answers feed the EXTRACTED ANSWERS block of the synthesis prompt",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "mars-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ],
+    "mars_config": {
+     "enable_aggregation": false,
+     "enable_strategy_network": false
+    }
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "in a collaborative reasoning system"
+    },
+    "responses": [
+     {
+      "content": "Working it out, the answer is three hundred ninety-one."
+     },
+     {
+      "content": "We get \\boxed{\\{1, 2\\}} hmm"
+     },
+     {
+      "content": "x = 17 * 23 = 391\n"
+     }
+    ]
+   },
+   {
+    "match": {
+     "system_contains": "solution aggregation"
+    },
+    "response": {
+     "content": "Aggregated solution: 17 * 23 = 391, verified by 17*20 + 17*3. \\boxed{391}"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "strategy analysis expert"
+    },
+    "response": {
+     "content": "PROBLEM_TYPE: algebra\nAPPROACH_TYPE: direct_computation\nKEY_INSIGHTS: distributivity, splitting 23 into 20+3\nMATHEMATICAL_TECHNIQUES: decomposition, addition\nSOLUTION_PATTERN: split a factor and add partial products\nSUCCESS_INDICATORS: simple arithmetic"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "problem classifier"
+    },
+    "response": {
+     "content": " Algebra "
+    }
+   },
+   {
+    "match": {
+     "system_contains": "collaborative mathematical agent"
+    },
+    "response": {
+     "content": "Enhanced: 17*20 = 340, 17*3 = 51, total 391. Therefore \\boxed{391}"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "mathematical synthesis expert"
+    },
+    "response": {
+     "content": "Final synthesis: the product is \\boxed{391}."
+    }
+   },
+   {
+    "match": {
+     "contains": "You are a verification expert"
+    },
+    "response": {
+     "content": "Overall assessment: INCORRECT - there is an error in step 2. You should recompute. Confidence 4 out of 10"
+    }
+   }
+  ],
+  "serialize_ms": 60
+ },
+ "order": "any"
+}

@@ -33,6 +33,16 @@ pub struct AppState {
 
 /// Upstream `get_config()`: choose the provider client from the environment.
 pub fn build_default_client(config: &ServerConfig) -> (Option<SharedClient>, Option<String>) {
+    let (client, key) = build_provider_client(config);
+    if let Ok(local_key) = std::env::var("OPTILLM_API_KEY") {
+        // Upstream's local-inference mode: requests may carry `decoding=...`.
+        let wrapped = client.map(|c| crate::decoding::wrap(c, config.random_seed));
+        return (wrapped, Some(local_key));
+    }
+    (client, key)
+}
+
+fn build_provider_client(config: &ServerConfig) -> (Option<SharedClient>, Option<String>) {
     let env = |k: &str| {
         std::env::var(k)
             .ok()
@@ -41,8 +51,9 @@ pub fn build_default_client(config: &ServerConfig) -> (Option<SharedClient>, Opt
     let ssl_cert = Some(config.ssl_cert_path.as_str());
     if std::env::var("OPTILLM_API_KEY").is_ok() {
         tracing::warn!(
-            "OPTILLM_API_KEY is set: upstream switches to its local PyTorch inference engine, \
-             which optillm-rs does not ship; falling back to the next configured provider"
+            "OPTILLM_API_KEY is set: upstream switches to its local PyTorch inference engine. \
+             optillm-rs emulates it on the configured provider (decoding=cot_decoding / \
+             thinkdeeper / deepconf / entropy_decoding via logprobs and assistant prefill)"
         );
     }
     if let Some(key) = env("CEREBRAS_API_KEY") {

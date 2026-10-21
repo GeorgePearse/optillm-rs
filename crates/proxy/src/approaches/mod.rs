@@ -19,6 +19,7 @@ use crate::parse::{self, Operation};
 use crate::py::random::PyRandom;
 
 pub mod bon;
+pub mod cepo;
 pub mod cot_reflection;
 pub mod leap;
 pub mod mcts;
@@ -29,6 +30,7 @@ pub mod reread;
 pub mod rstar;
 pub mod rto;
 pub mod self_consistency;
+pub mod z3;
 
 /// Upstream `known_approaches`.
 pub const KNOWN_APPROACHES: [&str; 15] = [
@@ -197,6 +199,8 @@ pub fn execute_single_approach<'a>(
                 plansearch::plansearch(system_prompt, initial_query, ctx, ctx.config.n).await
             }
             "leap" => leap::leap(system_prompt, initial_query, ctx).await,
+            "z3" => z3::z3_solver(system_prompt, initial_query, ctx).await,
+            "cepo" => cepo::cepo(system_prompt, initial_query, ctx).await,
             other if KNOWN_APPROACHES.contains(&other) || PLUGIN_SLUGS.contains(&other) => Err(
                 anyhow!("Approach '{}' is not yet implemented in optillm-rs", other),
             ),

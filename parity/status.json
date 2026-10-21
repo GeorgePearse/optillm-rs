@@ -165,8 +165,8 @@
    "fixtures": [
     "cepo"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "nested thread pools + as_completed reproduced; process-global mutable config; --cepo_bestofn_rating_type / --cepo_rating_model accepted as str (upstream argparse rejects them, use --cepo_config_file); majority vote uses the MCQ path only (math_verify is unreachable with non-empty completions)"
   },
   {
    "group": "approach",
@@ -174,8 +174,8 @@
    "fixtures": [
     "z3"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "solver code runs in CPython+z3+sympy subprocess ($OPTILLM_Z3_PYTHON) with upstream exec globals; harness normalises the exec frame path in tracebacks"
   },
   {
    "group": "local",

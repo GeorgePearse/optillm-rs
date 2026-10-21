@@ -361,6 +361,61 @@ fx("leap/dict_json", "a JSON object instead of a list raises like Python's itera
    [rule({"content": '<output>{"question": "x", "answer": "y"}</output>'}, contains="few-shot examples")])
 fx("leap/truncated", "truncated responses raise", chat(model="leap-gpt-4o-mini"), [rule({"content": "x", "finish_reason": "length"})])
 
+# --------------------------------------------------------------------------
+# z3 (solver code is executed by CPython with z3 + sympy, like upstream)
+# --------------------------------------------------------------------------
+Z3_OK = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nx = Int('x')\ns = Solver()\ns.add(x == 17 * 23)\nprint(s.check())\nprint(s.model()[x])\n```\n\nAnalysis:\nmultiply"
+Z3_BAD = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\nprint(undefined_name)\n```\n"
+Z3_SYNTAX = "SOLVER_CAN_BE_APPLIED: True\n\nSOLVER_FORMULATION:\n```python\ndef broken(:\n```\n"
+fx("z3/not_applicable", "analysis says no solver: plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": "SOLVER_CAN_BE_APPLIED: False"}, contains="determine if it can be solved using Z3"), rule({"content": "391"})])
+fx("z3/solves", "solver code runs and its stdout feeds the final answer", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_OK}, contains="determine if it can be solved using Z3"), rule({"content": "The answer is 391."}, contains="Solver Result:")])
+fx("z3/fix_runtime_error", "a runtime error's traceback is sent back for a fix", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_BAD}, contains="determine if it can be solved using Z3"),
+    rule({"content": "```python\nprint(17 * 23)\n```"}, contains="Fix the Z3 or SymPy code"),
+    rule({"content": "391"}, contains="Solver Result:")])
+fx("z3/syntax_errors_give_up", "three failed attempts fall back to plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": Z3_SYNTAX}, contains="determine if it can be solved using Z3"),
+    rule({"content": "```python\nreturn (\n```"}, contains="Fix the Z3 or SymPy code"), rule({"content": "391"})])
+fx("z3/no_code_block", "a missing code block falls back to plain inference", chat(model="z3-gpt-4o-mini"),
+   [rule({"content": "SOLVER_CAN_BE_APPLIED: True but no code"}, contains="determine if it can be solved using Z3"), rule({"content": "391"})])
+
+# --------------------------------------------------------------------------
+# cepo (nested thread pools upstream: serialised mock, order-independent calls)
+# --------------------------------------------------------------------------
+CEPO_RULES = [
+    rule({"content": "Plan: 1) multiply 17 by 20, 2) add 17*3. Confidence high."}, contains="come up with a concise plan"),
+    rule({"content": "<think>working</think>  Executed: 340 + 51 = 391."}, last_contains="Can you execute the above plan"),
+    rule({"content": "Final solution: 17*23 = 391."}, contains="identify any inconsistency between them"),
+    rule({"content": "<think>check</think>The answer is 391."}, contains="Use your final solution from above"),
+    rule({"content": "Explanation: correct\n\nRating: [[1]]"}, system_contains="impartial judge and evaluate"),
+    rule({"content": "Response 1 is clearer. Better Response: [[1]]"}, system_contains="impartial judge and compare"),
+]
+SMALL = ["--cepo_bestofn_n", "2", "--cepo_planning_m", "3", "--cepo_planning_n", "2"]
+fx("cepo/default_config", "default cepo_config.yaml: 3 completions x 6 plan attempts (first 3 kept), absolute rating",
+   chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=60)
+fx("cepo/small", "--cepo_* overrides shrink the search", chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=80,
+   server_args=SMALL)
+fx("cepo/plan_truncation", "length-truncated plan executions are dropped", chat(model="cepo-gpt-4o-mini"),
+   [CEPO_RULES[0], rule(responses=[{"content": "cut", "finish_reason": "length"}, {"content": "Executed: 391."}], last_contains="Can you execute the above plan")]
+   + CEPO_RULES[2:], order="any", serialize_ms=80, server_args=SMALL)
+fx("cepo/no_reasoning", "--cepo_use_reasoning '' (argparse bool('') is False) drops reasoning_effort", chat(model="cepo-gpt-4o-mini"),
+   CEPO_RULES, order="any", serialize_ms=80, server_args=SMALL + ["--cepo_use_reasoning", ""])
+fx("cepo/think_value_error", "a 400 'think value' error disables reasoning for the rest of the process", chat(model="cepo-gpt-4o-mini"),
+   [rule({"status": 400, "body": {"error": {"message": "think value high is not supported"}}}, has=["reasoning_effort"])] + CEPO_RULES,
+   order="any", serialize_ms=80, server_args=["--cepo_bestofn_n", "1", "--cepo_planning_m", "1", "--cepo_planning_n", "1"])
+fx("cepo/pairwise", "pairwise rating (config file)", chat(model="cepo-gpt-4o-mini"), CEPO_RULES, order="any", serialize_ms=80,
+   server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_pairwise.yaml"])
+fx("cepo/majority", "majority vote over MCQ letters (config file)", chat(model="cepo-gpt-4o-mini"),
+   [CEPO_RULES[0], CEPO_RULES[1], CEPO_RULES[2],
+    rule(responses=[{"content": "**Answer:** C"}, {"content": "The answer is (B)"}, {"content": "Answer: C"}], contains="Use your final solution from above")],
+   order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_majority.yaml"])
+fx("cepo/reasoning_fallback", "use_reasoning_fallback walks high -> medium on length", chat(model="cepo-gpt-4o-mini"),
+   [rule({"content": "too long", "finish_reason": "length"}, contains="concise plan", has=["reasoning_effort"], **{}),
+    rule(responses=[{"content": "cut", "finish_reason": "length"}, {"content": "Plan ok"}], contains="concise plan")] + CEPO_RULES[1:],
+   order="any", serialize_ms=80, server_args=["--cepo_config_file", "{PARITY_DIR}/fixture_data/cepo_fallback.yaml"])
+
 
 def main():
     if ROOT.exists():

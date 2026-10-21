@@ -1,0 +1,98 @@
+{
+ "description": "use_reasoning_fallback walks high -> medium on length",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "cepo-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "system",
+      "content": "You are a helpful assistant."
+     },
+     {
+      "role": "user",
+      "content": "What is 17 * 23? Answer with the number."
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {
+     "contains": "concise plan",
+     "has": [
+      "reasoning_effort"
+     ]
+    },
+    "response": {
+     "content": "too long",
+     "finish_reason": "length"
+    }
+   },
+   {
+    "match": {
+     "contains": "concise plan"
+    },
+    "responses": [
+     {
+      "content": "cut",
+      "finish_reason": "length"
+     },
+     {
+      "content": "Plan ok"
+     }
+    ]
+   },
+   {
+    "match": {
+     "last_contains": "Can you execute the above plan"
+    },
+    "response": {
+     "content": "<think>working</think>  Executed: 340 + 51 = 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "identify any inconsistency between them"
+    },
+    "response": {
+     "content": "Final solution: 17*23 = 391."
+    }
+   },
+   {
+    "match": {
+     "contains": "Use your final solution from above"
+    },
+    "response": {
+     "content": "<think>check</think>The answer is 391."
+    }
+   },
+   {
+    "match": {
+     "system_contains": "impartial judge and evaluate"
+    },
+    "response": {
+     "content": "Explanation: correct\n\nRating: [[1]]"
+    }
+   },
+   {
+    "match": {
+     "system_contains": "impartial judge and compare"
+    },
+    "response": {
+     "content": "Response 1 is clearer. Better Response: [[1]]"
+    }
+   }
+  ],
+  "serialize_ms": 80
+ },
+ "order": "any",
+ "server_args": [
+  "--cepo_config_file",
+  "{PARITY_DIR}/fixture_data/cepo_fallback.yaml"
+ ]
+}

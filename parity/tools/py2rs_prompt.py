@@ -9,6 +9,7 @@ placeholders `{p0}`, `{p1}`, ... and a comment naming each original
 expression.
 
 Usage:
+    python parity/tools/py2rs_prompt.py --all <file.py> [min_len]  # every long literal
     python parity/tools/py2rs_prompt.py <file.py> <line>   # literal starting on <line>
     python parity/tools/py2rs_prompt.py <file.py> <NAME>   # module/class constant NAME
 """
@@ -75,7 +76,31 @@ def convert(node, source: str) -> str:
     raise SystemExit(f"unsupported node {type(node).__name__}")
 
 
+def dump_all(path, min_len):
+    """Print every string / f-string literal of at least min_len characters."""
+    source = open(path).read()
+    tree = ast.parse(source)
+    seen = set()
+    nodes = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.JoinedStr):
+            for v in node.values:
+                seen.add(id(v))
+            nodes.append(node)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in seen:
+            nodes.append(node)
+    for node in sorted(nodes, key=lambda n: (n.lineno, n.col_offset)):
+        text = ast.unparse(node)
+        if len(text) >= min_len:
+            print(f"=== line {node.lineno}")
+            print(convert(node, source))
+
+
 def main():
+    if sys.argv[1] == "--all":
+        dump_all(sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 60)
+        return
     path, target = sys.argv[1], sys.argv[2]
     source = open(path).read()
     tree = ast.parse(source)

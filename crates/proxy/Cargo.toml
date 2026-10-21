@@ -28,6 +28,7 @@ clap = { version = "4.4", features = ["derive", "env", "string"] }
 regex = "1.10"
 fancy-regex = "0.14"
 indexmap = "2"
+serde_yaml = "0.9"
 async-stream = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }

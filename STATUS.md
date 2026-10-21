@@ -70,8 +70,8 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Approach | `plansearch` | ✅ parity | 4 | — |
 | Approach | `leap` | ✅ parity | 7 | Python json/iteration error semantics for malformed example JSON |
 | Approach | `mars` | ⬜ not started | 0 | crates/mars is an independent native design, not a port |
-| Approach | `cepo` | ⬜ not started | 0 | — |
-| Approach | `z3` | ⬜ not started | 0 | — |
+| Approach | `cepo` | ✅ parity | 8 | nested thread pools + as_completed reproduced; process-global mutable config; --cepo_bestofn_rating_type / --cepo_rating_model accepted as str (upstream argparse rejects them, use --cepo_config_file); majority vote uses the MCQ path only (math_verify is unreachable with non-empty completions) |
+| Approach | `z3` | ✅ parity | 5 | solver code runs in CPython+z3+sympy subprocess ($OPTILLM_Z3_PYTHON) with upstream exec globals; harness normalises the exec frame path in tracebacks |
 | Local-inference approach | `cot_decoding` | ⬜ not started | 0 | upstream: local inference only |
 | Local-inference approach | `entropy_decoding` | ⬜ not started | 0 | upstream: local inference only |
 | Local-inference approach | `thinkdeeper` | ⬜ not started | 0 | upstream: local inference only |
@@ -95,5 +95,5 @@ match of upstream [codelion/optillm](https://github.com/codelion/optillm).
 | Plugin | `spl` | ⬜ not started | 0 | — |
 | Plugin | `web_search` | ⬜ not started | 0 | — |
 
-15/42 rows at harness-verified parity, 100 fixtures in total.
+17/42 rows at harness-verified parity, 113 fixtures in total.
 <!-- parity-table:end -->

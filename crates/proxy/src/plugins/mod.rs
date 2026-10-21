@@ -13,6 +13,7 @@ pub mod genselect;
 pub mod json;
 pub mod majority_voting;
 pub mod memory;
+pub mod privacy;
 pub mod pyhelper;
 pub mod readurls;
 pub mod spl;
@@ -36,6 +37,7 @@ pub async fn run(
         "readurls" => readurls::run(system_prompt, initial_query, ctx).await,
         "web_search" => web_search::run(system_prompt, initial_query, ctx).await,
         "json" => json::run(system_prompt, initial_query, ctx).await,
+        "privacy" => privacy::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",

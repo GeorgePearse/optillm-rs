@@ -601,6 +601,10 @@ fx("json/schema", "with a schema upstream generates locally (Qwen2.5-Coder-0.5B 
    [rule({"content": "{\"answer\": 391}"})],
    xfail="upstream uses a local outlines model for schema-constrained output; optillm-rs asks the provider for structured output")
 
+fx("privacy/anonymize_roundtrip", "PII is replaced with <TYPE_n> placeholders before the LLM call and restored after",
+   chat(model="privacy-gpt-4o-mini", messages=[{"role": "user", "content": "Write a short note to John Smith at john.smith@example.com about the meeting in Paris."}]),
+   [rule({"content": "Dear <PERSON_0>, see you in <LOCATION_0>. Reply to <EMAIL_ADDRESS_0>. Unknown <PHONE_NUMBER_7>."})])
+
 
 def main():
     if ROOT.exists():

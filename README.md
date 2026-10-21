@@ -56,6 +56,7 @@ the Rust server uses a bit-exact port of CPython's MT19937 (`OPTILLM_RANDOM_SEED
 # run the harness locally
 uv venv -p 3.12 ~/optillm-upstream/venv
 VIRTUAL_ENV=~/optillm-upstream/venv uv pip install -r parity/requirements-upstream.txt
+VIRTUAL_ENV=~/optillm-upstream/venv ~/optillm-upstream/venv/bin/python -m spacy download en_core_web_lg
 cargo build -p optillm-proxy
 python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python \
     --rust-bin target/debug/optillm-proxy
@@ -97,19 +98,19 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `deepthink` | ✅ parity | 4 | SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum) |
 | Plugin | `executecode` | ✅ parity | 4 | same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced |
 | Plugin | `genselect` | ✅ parity | 4 | — |
-| Plugin | `json` | ⬜ not started | 3 | — |
+| Plugin | `json` | 🟠 partial | 3 | no-schema and error paths at parity; with a json_schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines), optillm-rs asks the provider for strict structured output (xfail fixture) |
 | Plugin | `longcepo` | ⬜ not started | 0 | — |
 | Plugin | `majority_voting` | ✅ parity | 4 | — |
 | Plugin | `mcp` | ⬜ not started | 0 | — |
 | Plugin | `memory` | ✅ parity | 4 | sklearn TfidfVectorizer + cosine ported; OPTILLM_MEMORY_FILE persistence |
-| Plugin | `privacy` | ⬜ not started | 0 | — |
+| Plugin | `privacy` | ✅ parity | 1 | Presidio + spaCy en_core_web_lg anonymisation through upstream's own code (py_helper.py via $OPTILLM_PYTHON); de-anonymisation native |
 | Plugin | `proxy` | ⬜ not started | 0 | — |
-| Plugin | `readurls` | ⬜ not started | 3 | — |
+| Plugin | `readurls` | ✅ parity | 3 | bs4 get_text rules on an HTML5 parser (html5ever instead of lxml: malformed-HTML recovery can differ); requests URL normalisation (empty query dropped); network errors worded differently |
 | Plugin | `router` | ⬜ not started | 0 | — |
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
-| Plugin | `web_search` | ⬜ not started | 2 | — |
+| Plugin | `web_search` | 🟠 partial | 2 | query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com |
 
-26/42 rows at harness-verified parity, 168 fixtures in total.
+28/42 rows at harness-verified parity, 169 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

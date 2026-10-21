@@ -4,6 +4,9 @@
 functions from optillm/plugins/executecode_plugin.py and coc_plugin.py
 (v0.4.0, Apache-2.0), unchanged, so notebook outputs and error strings match.
 They need `nbformat`, `nbconvert` and an `ipykernel` python3 kernel.
+`privacy_anonymize` is the Presidio part of privacy_plugin.py (needs
+presidio-analyzer / -anonymizer and spaCy's en_core_web_lg, which it downloads
+on first use exactly like upstream).
 
 Protocol: stdin = JSON {"op": ..., ...}; argv[1] = path for the JSON result.
 """
@@ -154,6 +157,67 @@ else:
         return None, error
 
 
+def privacy_anonymize(text: str):
+    """Anonymisation half of upstream privacy_plugin.run (Presidio + spaCy en_core_web_lg)."""
+    import spacy
+    from presidio_analyzer import AnalyzerEngine
+    from presidio_anonymizer import AnonymizerEngine, OperatorConfig
+    from presidio_anonymizer.operators import Operator, OperatorType
+
+    class InstanceCounterAnonymizer(Operator):
+        REPLACING_FORMAT = "<{entity_type}_{index}>"
+
+        def operate(self, text: str, params=None) -> str:
+            entity_type = params["entity_type"]
+            entity_mapping = params["entity_mapping"]
+            entity_mapping_for_type = entity_mapping.get(entity_type)
+            if not entity_mapping_for_type:
+                new_text = self.REPLACING_FORMAT.format(entity_type=entity_type, index=0)
+                entity_mapping[entity_type] = {}
+            else:
+                if text in entity_mapping_for_type:
+                    return entity_mapping_for_type[text]
+                previous_index = self._get_last_index(entity_mapping_for_type)
+                new_text = self.REPLACING_FORMAT.format(entity_type=entity_type, index=previous_index + 1)
+            entity_mapping[entity_type][text] = new_text
+            return new_text
+
+        @staticmethod
+        def _get_last_index(entity_mapping_for_type) -> int:
+            def get_index(value: str) -> int:
+                return int(value.split("_")[-1][:-1])
+            indices = [get_index(v) for v in entity_mapping_for_type.values()]
+            return max(indices)
+
+        def validate(self, params=None) -> None:
+            if "entity_mapping" not in params:
+                raise ValueError("An input Dict called `entity_mapping` is required.")
+            if "entity_type" not in params:
+                raise ValueError("An entity_type param is required.")
+
+        def operator_name(self) -> str:
+            return "entity_counter"
+
+        def operator_type(self) -> OperatorType:
+            return OperatorType.Anonymize
+
+    model_name = "en_core_web_lg"
+    if not spacy.util.is_package(model_name):
+        spacy.cli.download(model_name)
+    analyzer = AnalyzerEngine()
+    analyzer.analyze(text="warm up", language="en")
+    analyzer_results = analyzer.analyze(text=text, language="en")
+    anonymizer_engine = AnonymizerEngine()
+    anonymizer_engine.add_anonymizer(InstanceCounterAnonymizer)
+    entity_mapping = dict()
+    anonymized_result = anonymizer_engine.anonymize(
+        text,
+        analyzer_results,
+        {"DEFAULT": OperatorConfig("entity_counter", {"entity_mapping": entity_mapping})},
+    )
+    return anonymized_result.text, entity_mapping
+
+
 def literal_str(text: str) -> str:
     """str(ast.literal_eval(text)) with upstream's bare-except fallback to the text."""
     try:
@@ -174,6 +238,12 @@ def main():
     elif op == "coc":
         answer, error = coc_execute(req["code"])
         result = {"answer": None if error is not None else str(answer), "error": error}
+    elif op == "privacy":
+        try:
+            text, mapping = privacy_anonymize(req["text"])
+            result = {"text": text, "mapping": mapping}
+        except Exception as e:
+            result = {"error": str(e)}
     elif op == "literal_str":
         result = {"ok": literal_str(req["text"])}
     else:

@@ -282,8 +282,8 @@
    "fixtures": [
     "json"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "no-schema and error paths at parity; with a json_schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines), optillm-rs asks the provider for strict structured output (xfail fixture)"
   },
   {
    "group": "plugin",
@@ -327,8 +327,8 @@
    "fixtures": [
     "privacy"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "Presidio + spaCy en_core_web_lg anonymisation through upstream's own code (py_helper.py via $OPTILLM_PYTHON); de-anonymisation native"
   },
   {
    "group": "plugin",
@@ -345,8 +345,8 @@
    "fixtures": [
     "readurls"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "parity",
+   "notes": "bs4 get_text rules on an HTML5 parser (html5ever instead of lxml: malformed-HTML recovery can differ); requests URL normalisation (empty query dropped); network errors worded differently"
   },
   {
    "group": "plugin",
@@ -372,8 +372,8 @@
    "fixtures": [
     "web_search"
    ],
-   "status": "not started",
-   "notes": ""
+   "status": "partial",
+   "notes": "query extraction / formatting / enhanced-query layout verbatim and the no-search paths at parity; the search itself uses an HTTP backend (DuckDuckGo HTML or SearXNG) instead of upstream's Selenium-driven Chrome on google.com"
   }
  ]
 }

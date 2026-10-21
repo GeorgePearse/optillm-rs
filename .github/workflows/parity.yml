@@ -41,6 +41,10 @@ jobs:
           uv venv -p 3.12 "$RUNNER_TEMP/optillm-venv"
           VIRTUAL_ENV="$RUNNER_TEMP/optillm-venv" uv pip install -r parity/requirements-upstream.txt \
             --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+          # The privacy plugin (Presidio) needs spaCy's en_core_web_lg; upstream would
+          # try to download it mid-request and exit if that fails.
+          VIRTUAL_ENV="$RUNNER_TEMP/optillm-venv" PATH="$RUNNER_TEMP/optillm-venv/bin:$PATH" \
+            "$RUNNER_TEMP/optillm-venv/bin/python" -m spacy download en_core_web_lg
       - name: Check fixtures and parity table are up to date
         run: |
           python3 parity/gen_fixtures.py

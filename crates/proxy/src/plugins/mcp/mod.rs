@@ -131,15 +131,23 @@ fn create_default_config(path: &Path) {
     );
 }
 
+/// `os.access(path, os.X_OK)` for a regular file.
+#[cfg(unix)]
+fn is_exec(p: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    p.is_file()
+        && p.metadata()
+            .map(|m| m.permissions().mode() & 0o111 != 0)
+            .unwrap_or(false)
+}
+
+#[cfg(not(unix))]
+fn is_exec(p: &Path) -> bool {
+    p.is_file()
+}
+
 /// `find_executable`.
 fn find_executable(cmd: &str) -> Option<String> {
-    use std::os::unix::fs::PermissionsExt;
-    let is_exec = |p: &Path| {
-        p.is_file()
-            && p.metadata()
-                .map(|m| m.permissions().mode() & 0o111 != 0)
-                .unwrap_or(false)
-    };
     if is_exec(Path::new(cmd)) {
         return Some(cmd.to_string());
     }

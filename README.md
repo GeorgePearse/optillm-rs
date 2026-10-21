@@ -97,7 +97,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `deepthink` | ✅ parity | 4 | SELF-DISCOVER 39 modules + 4 JSON-recovery strategies + uncertainty routing (difflib, Neumaier sum) |
 | Plugin | `executecode` | ✅ parity | 4 | same helper; upstream's tuple-unpacking bug for code blocks in the request is reproduced |
 | Plugin | `genselect` | ✅ parity | 4 | — |
-| Plugin | `json` | ⬜ not started | 0 | — |
+| Plugin | `json` | ⬜ not started | 3 | — |
 | Plugin | `longcepo` | ⬜ not started | 0 | — |
 | Plugin | `majority_voting` | ✅ parity | 4 | — |
 | Plugin | `mcp` | ⬜ not started | 0 | — |
@@ -109,7 +109,7 @@ python parity/run_parity.py --upstream-python ~/optillm-upstream/venv/bin/python
 | Plugin | `spl` | ✅ parity | 3 | strategy DB in $OPTILLM_SPL_DATA_DIR (upstream: inside its package dir); TF-IDF with sklearn English stop words; set() order in strategy merges is hash-seed dependent upstream (first-seen order here) |
 | Plugin | `web_search` | ⬜ not started | 2 | — |
 
-26/42 rows at harness-verified parity, 165 fixtures in total.
+26/42 rows at harness-verified parity, 168 fixtures in total.
 <!-- parity-table:end -->
 
 ## Quick Start

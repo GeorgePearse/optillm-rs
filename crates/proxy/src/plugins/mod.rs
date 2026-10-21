@@ -10,6 +10,7 @@ pub mod compact;
 pub mod deepthink;
 pub mod executecode;
 pub mod genselect;
+pub mod json;
 pub mod majority_voting;
 pub mod memory;
 pub mod pyhelper;
@@ -34,6 +35,7 @@ pub async fn run(
         "coc" => coc::run(system_prompt, initial_query, ctx).await,
         "readurls" => readurls::run(system_prompt, initial_query, ctx).await,
         "web_search" => web_search::run(system_prompt, initial_query, ctx).await,
+        "json" => json::run(system_prompt, initial_query, ctx).await,
         "executecode" => executecode::run(system_prompt, initial_query, ctx).await,
         other => Err(anyhow!(
             "Plugin '{}' is not yet implemented in optillm-rs",

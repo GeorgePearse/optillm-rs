@@ -593,6 +593,14 @@ fx("web_search/no_query", "a bare search command has nothing to search: the quer
 fx("web_search/too_short", "queries shorter than 3 characters are not searched",
    chat(model="web_search-gpt-4o-mini", messages=[{"role": "user", "content": "hi"}]))
 
+fx("json/no_schema", "no response_format schema: plain completion", chat(model="json-gpt-4o-mini"), [rule({"content": "391"})])
+fx("json/non_schema_format", "response_format json_object is not a schema: plain completion", chat(model="json-gpt-4o-mini", response_format={"type": "json_object"}),
+   [rule({"content": "{\"a\": 1}"})])
+fx("json/schema", "with a schema upstream generates locally (Qwen2.5-Coder-0.5B via outlines; offline here, so it falls back)",
+   chat(model="json-gpt-4o-mini", response_format={"type": "json_schema", "json_schema": {"name": "x", "schema": {"type": "object", "properties": {"answer": {"type": "integer"}}, "required": ["answer"]}}}),
+   [rule({"content": "{\"answer\": 391}"})],
+   xfail="upstream uses a local outlines model for schema-constrained output; optillm-rs asks the provider for structured output")
+
 
 def main():
     if ROOT.exists():

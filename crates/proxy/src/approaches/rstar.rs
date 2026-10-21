@@ -65,7 +65,7 @@ pub fn extract_answer(final_state: &str) -> (String, f64) {
 }
 
 fn normalized_words(s: &str) -> std::collections::HashSet<String> {
-    py::strings::split_whitespace(&s.to_lowercase().replace('.', "").replace(',', ""))
+    py::strings::split_whitespace(&s.to_lowercase().replace(['.', ','], ""))
         .into_iter()
         .map(|w| w.to_string())
         .collect()

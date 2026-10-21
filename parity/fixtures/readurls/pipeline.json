@@ -1,0 +1,41 @@
+{
+ "description": "readurls&re2: fetched content feeds the next approach",
+ "requests": [
+  {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "model": "readurls&re2-gpt-4o-mini",
+    "messages": [
+     {
+      "role": "user",
+      "content": "Who is in {MOCK}/__page/article?"
+     }
+    ]
+   }
+  }
+ ],
+ "mock": {
+  "rules": [
+   {
+    "match": {},
+    "response": {
+     "content": "Ada"
+    }
+   }
+  ],
+  "pages": {
+   "article": {
+    "html": "<html><head><style>p{}</style></head><body><nav><p>menu</p></nav><article><h2>Ada</h2><p>Ada Lovelace wrote the <em>first</em> algorithm.[3]</p><script>track()</script><table><tr><th>Year</th><th>Event</th></tr><tr><td>1843</td><td>Notes</td></tr></table></article></body></html>"
+   },
+   "plain": {
+    "html": "<html><body><h1>Plain page</h1><p>Line one.</p>\n<p>Line   two.</p></body></html>"
+   },
+   "missing": {
+    "status": 404,
+    "html": "nope"
+   }
+  }
+ },
+ "order": "exact"
+}

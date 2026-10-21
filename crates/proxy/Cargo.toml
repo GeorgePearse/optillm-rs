@@ -31,6 +31,7 @@ indexmap = "2"
 serde_yaml = "0.9"
 tiktoken-rs = "0.7"
 scraper = "0.20"
+ego-tree = "0.6.2"
 url = "2"
 async-stream = { workspace = true }
 chrono = { workspace = true }

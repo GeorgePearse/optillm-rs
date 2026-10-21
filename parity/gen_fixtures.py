@@ -34,7 +34,7 @@ def rule(response=None, responses=None, **match):
 
 
 def fx(name, description, requests, rules=(), order="exact", server_args=(), env=None, seed=None, xfail=None, models=None,
-       serialize_ms=None):
+       serialize_ms=None, pages=None):
     if isinstance(requests, dict):
         requests = [requests]
     data = {"description": description, "requests": list(requests), "mock": {"rules": list(rules)}, "order": order}
@@ -42,6 +42,8 @@ def fx(name, description, requests, rules=(), order="exact", server_args=(), env
         data["mock"]["models"] = models
     if serialize_ms:
         data["mock"]["serialize_ms"] = serialize_ms
+    if pages:
+        data["mock"]["pages"] = pages
     if server_args:
         data["server_args"] = list(server_args)
     if env:
@@ -571,6 +573,20 @@ fx("coc/simulate", "three failed executions fall back to LLM simulation (literal
    [rule({"content": CODE_BAD}, system_contains="Write Python code"), rule({"content": CODE_BAD}, system_contains="failed to execute"),
     rule({"content": " {'a': 3.0, 'b': (1, 2)} "}, system_contains="could not be executed directly")])
 fx("coc/no_code", "no code block returns the model text", chat(model="coc-gpt-4o-mini"), [rule({"content": "just 391"})])
+
+PAGES = {
+    "article": {"html": "<html><head><style>p{}</style></head><body><nav><p>menu</p></nav><article><h2>Ada</h2>"
+                        "<p>Ada Lovelace wrote the <em>first</em> algorithm.[3]</p><script>track()</script>"
+                        "<table><tr><th>Year</th><th>Event</th></tr><tr><td>1843</td><td>Notes</td></tr></table></article></body></html>"},
+    "plain": {"html": "<html><body><h1>Plain page</h1><p>Line one.</p>\n<p>Line   two.</p></body></html>"},
+    "missing": {"status": 404, "html": "nope"},
+}
+fx("readurls/fetch", "URLs in the query are fetched and their text spliced in (no LLM call)",
+   chat(model="readurls-gpt-4o-mini", messages=[{"role": "user", "content": "Summarise {MOCK}/__page/article and {MOCK}/__page/plain."}]), pages=PAGES)
+fx("readurls/http_error", "HTTP errors are reported inline like requests.raise_for_status()",
+   chat(model="readurls-gpt-4o-mini", messages=[{"role": "user", "content": "Read '{MOCK}/__page/missing'"}]), pages=PAGES)
+fx("readurls/pipeline", "readurls&re2: fetched content feeds the next approach",
+   chat(model="readurls&re2-gpt-4o-mini", messages=[{"role": "user", "content": "Who is in {MOCK}/__page/article?"}]), [rule({"content": "Ada"})], pages=PAGES)
 
 
 def main():

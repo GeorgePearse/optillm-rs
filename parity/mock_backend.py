@@ -50,7 +50,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
-STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None}
+STATE = {"rules": [], "counters": {}, "calls": [], "models": None, "serialize_ms": None, "pages": {}}
 GATE = threading.Condition()
 PENDING = []  # [canonical_body, released_flag_list]
 LAST_EVENT = [0.0]
@@ -245,6 +245,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, {"calls": list(STATE["calls"])})
         self._record(None)
         path = self.path.split("?")[0]
+        if path.startswith("/__page/"):
+            page = STATE["pages"].get(path[len("/__page/"):])
+            if page is None:
+                return self._send(404, {"error": "no such page"})
+            data = page.get("html", "").encode()
+            self.send_response(page.get("status", 200))
+            self.send_header("Content-Type", page.get("content_type", "text/html; charset=utf-8"))
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if "/models/" in path:
             model_id = path.split("/models/", 1)[1]
             for m in STATE["models"] or []:
@@ -265,6 +276,7 @@ class Handler(BaseHTTPRequestHandler):
                 STATE["rules"] = body.get("rules", [])
                 STATE["models"] = body.get("models")
                 STATE["serialize_ms"] = body.get("serialize_ms")
+                STATE["pages"] = body.get("pages") or {}
                 STATE["counters"] = {}
                 STATE["calls"] = []
             return self._send(200, {"ok": True})

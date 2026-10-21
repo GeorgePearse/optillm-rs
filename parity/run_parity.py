@@ -120,7 +120,8 @@ class Stack:
 
     def request(self, r):
         headers = dict(r.get("headers", {}))
-        body = r.get("body")
+        # "{MOCK}" in a request expands to this stack's mock backend (e.g. pages for readurls).
+        body = json.loads(json.dumps(r.get("body")).replace("{MOCK}", f"http://127.0.0.1:{self.mock_port}"))
         if "raw_body" in r:
             body = r["raw_body"].encode()
         return http(r.get("method", "POST"), f"http://127.0.0.1:{self.port}{r.get('path', '/v1/chat/completions')}", body, headers)
@@ -211,9 +212,12 @@ def run_fixture(fx, up, rs):
     for stack in (up, rs):
         stack.script(fx.get("mock", {"rules": []}))
     requests = fx.get("requests") or [fx["request"]]
+    def localize(stack, res):
+        return (res[0], res[1], res[2].replace(f"127.0.0.1:{stack.mock_port}", "MOCKHOST"))
+
     for i, r in enumerate(requests):
-        ures = up.request(r)
-        rres = rs.request(r)
+        ures = localize(up, up.request(r))
+        rres = localize(rs, rs.request(r))
         if SHOW:
             print(f"--- {fx['_name']} request {i}\n  upstream [{ures[0]}]: {ures[2][:600]}\n  rust     [{rres[0]}]: {rres[2][:600]}")
         ukind, ubody, uraw = normalize_body(ures[1], ures[2])
@@ -225,7 +229,10 @@ def run_fixture(fx, up, rs):
         elif uraw != rraw:
             # Same structure but different bytes (key order, escaping, separators).
             problems.append(f"request {i}: response bytes differ\n" + diff(uraw, rraw, "raw"))
-    ucalls, rcalls = up.calls(), rs.calls()
+    def localize_calls(stack):
+        return json.loads(json.dumps(stack.calls()).replace(f"127.0.0.1:{stack.mock_port}", "MOCKHOST"))
+
+    ucalls, rcalls = localize_calls(up), localize_calls(rs)
     if fx.get("order", "exact") == "any":
         ucalls = sorted(ucalls, key=canonical_call)
         rcalls = sorted(rcalls, key=canonical_call)
